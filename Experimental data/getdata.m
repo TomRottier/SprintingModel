@@ -1,8 +1,8 @@
 clear; close all; clc; warning off MATLAB:interp1:NaNstrip;
 %% Import data
+getCM;
 p = [pwd '\Vicon\Vicon files\'];
 fname = 'run9_7_TM.c3d';
-load(strrep(strrep(strrep(p,'\Vicon files\',['\' fname]), 'run', 'CM_unfiltered'), '_TM.c3d', '.mat'));
 din = readC3D([p fname]);
 % Use only modelled markers (joint centres)
 names = {'Toe', 'AJC', 'KJC', 'HJC', 'SJC', 'EJC', 'WJC', 'Head'};
@@ -30,7 +30,7 @@ force = interp1(din.ForcePlate.Time, din.ForcePlate.Data, time, 'spline');
 angles = interp1(din.Markers.Time, din.ModelOutputs.Angles.Data, time, 'spline');
 angles = cat(3, angles, tr_diff(angles, 1/hz));     % Angular velocities 
 moments = interp1(din.Markers.Time, din.ModelOutputs.Moments.Data, time, 'spline') ./ 1000;     % N.m
-com = interp1(din.Markers.Time, [WBCM WBCMv], time, 'spline');
+com = interp1(din.Markers.Time, CMout(:,:,1:2), time, 'spline');
 markers = interp1(din.Markers.Time, din.Markers.Data, time, 'spline') ./ 1000; % m
 jointcentres = interp1(din.Markers.Time, din.Markers.Data(:,:,jc), time, 'spline') ./ 1000; % m
 
@@ -54,7 +54,7 @@ dout.Information.Rate = hz;
 dout.Information.Threshold = threshold;
 
 % Tidy up
-clearvars fname p fhz mhz din names time WBCM WBCMv jc i;
+clearvars fname p fhz mhz din names time CMout jc i;
 
 %% Seperate out contacts and time normalise
 % First contact leg
