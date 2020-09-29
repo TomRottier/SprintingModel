@@ -1,9 +1,9 @@
 clear; close all; clc; warning off MATLAB:interp1:NaNstrip;
 %% Import data
-getCM;
 p = [pwd '\Vicon\Vicon files\'];
 fname = 'run9_7_TM.c3d';
 din = readC3D([p fname]);
+CMout = getCM(din, 0);
 % Use only modelled markers (joint centres)
 names = {'Toe', 'AJC', 'KJC', 'HJC', 'SJC', 'EJC', 'WJC', 'Head'};
 jc = contains(din.Markers.Names, names);
@@ -20,7 +20,7 @@ sa = eval('dout.Average');           % Shortcut to average stride
 [sa.Markers.Names, si.Markers.Names] = deal(din.Markers.Names);
 [sa.JointCentres.Names, si.JointCentres.Names] = deal(din.Markers.Names(jc));
                                         
-[sa.CoM.Names, si.CoM.Names] = deal({'CM_x','CM_y','CM_z','CM_xp','CM_yp','CM_zp'});
+[sa.CoM.Names, si.CoM.Names] = deal(CMout.Names);
 
 % Match sampling frequency of data
 hz = 1000;          % Desired frequency
@@ -30,7 +30,7 @@ force = interp1(din.ForcePlate.Time, din.ForcePlate.Data, time, 'spline');
 angles = interp1(din.Markers.Time, din.ModelOutputs.Angles.Data, time, 'spline');
 angles = cat(3, angles, tr_diff(angles, 1/hz));     % Angular velocities 
 moments = interp1(din.Markers.Time, din.ModelOutputs.Moments.Data, time, 'spline') ./ 1000;     % N.m
-com = interp1(din.Markers.Time, CMout(:,:,1:2), time, 'spline');
+com = interp1(din.Markers.Time, CMout.Data, time, 'spline');
 markers = interp1(din.Markers.Time, din.Markers.Data, time, 'spline') ./ 1000; % m
 jointcentres = interp1(din.Markers.Time, din.Markers.Data(:,:,jc), time, 'spline') ./ 1000; % m
 
@@ -40,7 +40,6 @@ contacts = tr_eventDetect(force(:,3), threshold);    % Find points where Fz > th
 contacts((contacts(:,2) - contacts(:,1)) < 50 ,:) = [];    % Remove contacts lasting < 50 frames
 
 % Filter
-% force = tr_filterDP(force, 1000, 25, 'low', 2);
 
 % Remove force from aerial phase
 for i = 1:length(contacts)-1
@@ -52,9 +51,10 @@ force(contacts(end,2)+1:end,:) = 0.0;
 % Info in dout
 dout.Information.Rate = hz;
 dout.Information.Threshold = threshold;
+dout.Information.Inertia = CMout.Inertia;
 
 % Tidy up
-clearvars fname p fhz mhz din names time CMout jc i;
+clearvars fname p fhz mhz din names time CMout CMout_names jc i;
 
 %% Seperate out contacts and time normalise
 % First contact leg
@@ -81,6 +81,7 @@ for i = 1:length(contacts)-2
     % Calculate and store stride variables e.g. contact time,impulse etc
     si.Parameters.StrideTime(i) = tstr;
     si.Parameters.ContactTime(i) = tc;
+    si.Parameters.ContactTimeIndex(i) = round(tc*dout.Information.Rate);
     
     % Time
     si.Time{i} = linspace(0, tstr, tstr*hz)';
@@ -112,7 +113,7 @@ for i = 1:length(contacts)-2
         tnorm,  'spline');
     
     % CoM
-    si.CoM.Data{i} = com(contacts(i,1):contacts(i+2,1)-1,:);
+    si.CoM.Data{i} = com(contacts(i,1):contacts(i+2,1)-1,:,:);
     si.CoM.DataNorm{i} = interp1(ttemp, si.CoM.Data{i}, tnorm,  'spline');
     
     % Initial conditions
@@ -132,6 +133,7 @@ idx = mid-n+1:2:mid+n-1;                % Indicies of strides used
 % Mean stride parameters
 sa.Parameters.StrideTime = mean(si.Parameters.StrideTime(idx));
 sa.Parameters.ContactTime   = mean(si.Parameters.ContactTime(idx));
+sa.Parameters.ContactTimeIndex   = round(mean(si.Parameters.ContactTimeIndex(idx)));
 
 % Average stride
 fields = fieldnames(sa);
@@ -176,3 +178,4 @@ clearvars fields i
 %% Output
 dout.Average = sa;
 clearvars sa
+save data.mat

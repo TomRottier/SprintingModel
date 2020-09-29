@@ -1,3 +1,15 @@
+function [CMout, CMout_names] = getCM(data, draw)
+% Returns segmental and whole-body CoM locations for a 13 segment
+% rigid-body model.
+% Inputs:
+%   - data:  c3d file structure (from readC3D.m)
+%   - draw:  logical, draw plots or not
+%
+% Outputs:
+%   - CMout: 3D array containing whole-body CoM location (x,y,z) and 
+%            velocity along with CoM locations for each segment
+%
+%--------------------------------------------------------------------------
 % Inertia data taken from McErlain-Naylor (2017) 
 % Actual body mass 88.6 kg (when measured) 91.1 kg (when running)
 % [segment length, segment mass, CM location from prox end, MoI about CM]
@@ -14,17 +26,20 @@
 % HT    = [0.869 40.90 0.427 1.4890];   % Combined head and trunk
 %
 %--------------------------------------------------------------------------
-clear; close all; clc;
+% clear; close all; clc;
+% p = [pwd '\Vicon\Vicon files\'];
+% f = 'run9_7_TM.c3d';
+% data = readC3D([p f]);
+
 %% Import data
-p = [pwd '\Vicon\Vicon files\'];
-f = 'run9_7_TM.c3d';
-data = readC3D([p f]);
 hz = data.Parameters.POINT.RATE;
 points = data.Markers.Data ./ 1000;     % In metres
 mnames = data.Markers.Names;
 mnames = strrep(mnames, '_', '');       % Remove all '_' from marker names
 M = 89.3;
-draw = 0;                               % Draw segments with CoM's
+
+% Output structure
+CMout = struct('Names', [], 'Data', [], 'Inertia', []);
 
 % Remove combined HJC and SJC
 points(:,:, strcmp(mnames,'HJC')|strcmp(mnames,'SJC')) = [];
@@ -32,8 +47,8 @@ mnames(strcmp(mnames,'HJC')|strcmp(mnames,'SJC')) = [];
 
 
 % Set up sgement objects
-segments = {'foot', 'shank', 'thigh', 'lwTrunk', 'upTrunk', 'head',...
-            'upArm', 'lwArm'};
+segments = {'Foot', 'Shank', 'Thigh', 'LwTrunk', 'UpTrunk', 'Head',...
+            'UpArm', 'LwArm'};
 proxJC = {'AJC', 'KJC', 'HJC', 'HJC', 'LTJC', 'UTJC', 'SJC', 'EJC'};
 distJC = {'Toe', 'AJC', 'KJC', 'LTJC', 'UTJC', 'APEX', 'EJC', 'WJC'};
     
@@ -51,6 +66,11 @@ proxKey = containers.Map(segments, proxJC);
 distKey = containers.Map(segments, distJC);
 inertiaKey = containers.Map(segments, inertia);
        
+CMout.Inertia.Segments = segments;
+CMout.Inertia.Information = {'Segment length', 'Segment mass', ...
+    'CoM location proximal', 'MoI about CoM'}';
+CMout.Inertia.Data = inertia;
+
 %% Get CoM
 CM = [];
 WBCM = zeros(size(points, 1), 3);
@@ -63,24 +83,22 @@ for i = 1:length(segments)
     
     % Calculate CoM from proximal JC
     segCM = points(:,:,prox) + (points(:,:,dist) - points(:,:,prox)) .* r;
-    if strcmp(segment, 'lwTrunk')
+    if strcmp(segment, 'LwTrunk')
         segCM = mean(segCM, 3); 
     end
     CM = cat(3, CM, segCM);
         
     % Whole-body CoM
-    dim = size(segCM, 3);   % Multiply segment mass by number of segments
-    segCM = mean(segCM, 3);
-    WBCM = WBCM + segCM.*(I(2)/M)*dim;
-               
+    segCM = sum(segCM, 3);      % Accounts for both sides
+    WBCM = WBCM + segCM.*(I(2)/M);              
 end
 
 %% Output
-CMout_names = {'WBCM', 'WBCMv', 'RFoot', 'LFoot', 'RShank', 'LShank', ...
+CMout.Names = {'WBCM', 'WBCMv', 'RFoot', 'LFoot', 'RShank', 'LShank', ...
                'RThigh', 'LThigh', 'LwTrunk', 'UpTrunk', 'Head', ...
                'RUpArm', 'LUpArm', 'RLwArm', 'LLwArm'};
 WBCMv = tr_diff(WBCM, 1/hz);
-CMout = cat(3, WBCM, WBCMv, CM);
+CMout.Data = cat(3, WBCM, WBCMv, CM);
 
 %% Plot to check
 if draw == 1
@@ -128,5 +146,4 @@ if draw == 1
     end
 end
 
-%% Clear variables 
-clearvars -except CMout
+end
