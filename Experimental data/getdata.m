@@ -1,5 +1,6 @@
 clear; close all; clc; warning off MATLAB:interp1:NaNstrip;
 %% Import data
+output = 0;         % Output data to .mat and .txt
 p = [pwd '\Vicon\Vicon files\'];
 fname = 'run9_7_TM.c3d';
 din = readC3D([p fname]);
@@ -126,11 +127,11 @@ end
 dout.IndvStrides = si;
 clearvars force angles moments markers jointcentres com ttemp tstr tc i j
 %% Average stride
-n = 6;                                  % Number of strides - takes middle n 
+n = 10;                                  % Number of strides - takes middle n 
 mid = ceil((length(contacts)-2)/2);     % Middle stride
-idx = mid-n+1:2:mid+n-1;                % Indicies of strides used
+idx = mid-n/2:1:mid+n/2;                % Indicies of strides used
 
-% Mean stride parameters
+% Average stride parameters
 sa.Parameters.StrideTime = mean(si.Parameters.StrideTime(idx));
 sa.Parameters.ContactTime   = mean(si.Parameters.ContactTime(idx));
 sa.Parameters.ContactTimeIndex   = round(mean(si.Parameters.ContactTimeIndex(idx)));
@@ -138,11 +139,11 @@ sa.Parameters.ContactTimeIndex   = round(mean(si.Parameters.ContactTimeIndex(idx
 % Average stride
 fields = fieldnames(sa);
 tabs = (0:1/hz:sa.Parameters.StrideTime)';
-for i = 1:6
+for i = 1:length(fields)-1
     sa.(fields{i}).('DataNorm').('Avg') = mean(cell2mat(reshape( ...
-        si.(fields{i}).('DataNorm')(idx), [1 1 1 n])), 4);
+        si.(fields{i}).('DataNorm')(idx), 1, 1, 1, [])), 4);
     sa.(fields{i}).('DataNorm').('Std') = std(cell2mat(reshape( ...
-        si.(fields{i}).('DataNorm')(idx), [1 1 1 n])), [], 4);
+        si.(fields{i}).('DataNorm')(idx), 1, 1, 1, [])), [], 4);
     sa.(fields{i}).('Data').('Avg') = interp1(tnorm/100*sa.Parameters.StrideTime, ...
         sa.(fields{i}).('DataNorm').('Avg'), tabs, 'spline');
     sa.(fields{i}).('Data').('Std') = interp1(tnorm/100*sa.Parameters.StrideTime, ...
@@ -160,6 +161,8 @@ else
     leg1 = 'R';
 end
 sa.Information.Leg = leg1;
+sa.Information.StridesUsed = idx;
+sa.Information.NStrides = length(contacts);
 
 % Tidy up
 sa.Time.Normalised = tnorm;
@@ -178,4 +181,39 @@ clearvars fields i
 %% Output
 dout.Average = sa;
 clearvars sa
-save data.mat
+if output
+    save data.mat           % Saves to .mat
+    
+    % Save to .txt
+    n = size(dout.Average.Force.Data.Avg, 1);
+    
+    % Column names
+    colwidth = 13;
+    precision = 5;
+    colnames = ["Time" "RX" "RY" "Thigh angle" "Shank angle" "Foot angle"];
+    nametype = ['%-' num2str(colwidth) 's'];
+    datatype = ['%' num2str(colwidth) '.' num2str(precision) 'E'];
+    namefmt = [repmat([nametype ' '], 1, size(colnames,2)-1) nametype '\n'];
+    datafmt = [repmat([datatype ' '], 1, size(colnames,2)-1) datatype '\n'];
+    
+    % Matching data
+    fid = fopen('matchingData.txt', 'w');
+    fprintf(fid, '%4d', n);                 % Data size
+    fprintf(fid, '%4d', 2);                        % Header rows
+    fprintf(fid, '%4d\n', colwidth+1);               % Column width
+    fprintf(fid, namefmt, pad(colnames, colwidth, 'both'));
+    leg = dout.Average.Information.Leg;
+    idx = contains(dout.Average.Angles.Names,...
+            {[leg 'ThighAngle'], [leg 'ShankAngle' ], [leg 'FootAngle']});  
+    dataout = [dout.Average.Time.Absolute...
+        dout.Average.Force.Data.Avg(:,[2 3]) ...
+        reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n 3])]';
+    fprintf(fid, datafmt, ...
+            string([dout.Average.Time.Absolute...
+                    dout.Average.Force.Data.Avg(:,[2 3]) ...
+                    reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n 3])]'));
+    fclose(fid);
+
+end
+
+clearvars -except dout

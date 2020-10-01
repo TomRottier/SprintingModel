@@ -3,6 +3,7 @@ clear; close all; clc;
 sprinter = importdata('sprinter_xypts.csv', ',', 1);
 teamsport = importdata('teamsport_xypts.csv', ',', 1);
 
+output = 1;     % Write to output
 %% Fill gaps with elite's hip marker
 set(figure(1),'WindowStyle','docked'); cla
 hold on
@@ -26,9 +27,6 @@ end
 % 3D array with sprinter 1 and teamsport 2
 points = cat(3, sprinter.data, teamsport.data);
 
-% Tidy up
-clearvars idx1 idx2 sprinter teamsport
-
 %% Process data, filter etc
 % Find appropiate cutoff
 % for i = 1:size(pointsG, 2)
@@ -47,20 +45,19 @@ clearvars idx1 idx2 sprinter teamsport
 % end
 
 % Filter
-cutoff = 20;
+cutoff = 15;
 
 % Reorder to 2D array then filter
 points_f = reshape(...
-              tr_filterDP(reshape(points, [456 16]), 1000, 20, 'low', 2),...
+              tr_filterDP(reshape(points, [456 16]), 1000, cutoff, 'low', 2),...
               [456 8 2]);
 
 set(figure(2),'WindowStyle','docked')
 hold on
 plot(points(:,1,1))
 plot(points_f(:,1,1))
-
-% Tidy up
-clearvars cutoff pointsB pointsG
+title('Filtered data')
+legend('raw', 'filtered')
 
 %% Calculate segment angles
 Q = nan(size(points_f, 1), 3, 2);
@@ -93,9 +90,6 @@ end
 %     drawnow
 % end
 
-% Tidy up
-clearvars n p1 p2 d
-
     %% Calculate CoM
 % Segment: mass, length, CMprox, CMdist
 % Foot:    1.385, 0.224, 0.142, 0.082
@@ -116,21 +110,6 @@ cm(:,2,:) = (ma*(l1-l2).*sind(Q(:,1,:))-(l4*ma-mb*(l3-l4)).* ...
             sind(Q(:,2,:))-(l6*ma+l6*mb-mc*(l5-l6)).* ...
             sind(Q(:,3,:)))/(ma+mb+mc);
 
-
-% set(figure(4),'WindowStyle','docked'); clf
-% subplot(2,1,1); hold on
-% plot(cm(:,1,1)); plot(cm(:,1,2))
-% title('CoM position relative to hip joint')
-% ylabel('x (m)')
-% legend('sprinter', 'teamsport', 'location', 'southeast')
-% 
-% subplot(2,1,2); hold on
-% plot(cm(:,2,1)); plot(cm(:,2,2))
-% ylabel('y (m)')
-
-% Tidy up
-clearvars l1 l2 l3 l4 l5 l6 ma mb mc
-
 %% Reorder data
 % Takeoff and touchdown frames for both legs estimated from video
 % Videos recorded at 1000 Hz and synchronised to takeoff of markered leg
@@ -139,70 +118,84 @@ clearvars l1 l2 l3 l4 l5 l6 ma mb mc
 % sprinter  to/td: 58/416        286/181
 % teamsport to/td: 58/413        287/175 
 
-% Swing leg CoM during contralateral stance
-cm_stance(1) = {cm(181:286,:,1)};
-cm_stance(2) = {cm(175:287,:,2)};
+% Swing leg CoM during contralateral stance (index to end incase simulation
+% takes longer)
+swingCM(1) = {cm(181:end,:,1)};
+swingCM(2) = {cm(175:end,:,2)};
 
 % Ipsilateral thigh angle during stance (assumed to be same for both legs)
-q3(1) = {[Q(416:end,3,1); Q(1:58,3,1)]};
-q3(2) = {[Q(413:end,3,2); Q(1:58,3,2)]};
+% q3(1) = {[Q(416:end,3,1); Q(1:58,3,1)]};
+% q3(2) = {[Q(413:end,3,2); Q(1:58,3,2)]};
 
-set(figure(5),'WindowStyle','docked'); clf
-set(figure(5),'DefaultLineMarkerSize', 2)
-subplot(2,1,1); hold on
-title('Thigh angle')
-plot(Q(:,3,1),'^'); plot(Q(:,3,2), '^')
-legend('sprinter','teamsport', 'location', 'southeast')
-subplot(2,1,2); hold on
-title('Thigh angle stance')
-plot(q3{1}, 's'); plot(q3{2}, 's')
+set(figure(4),'WindowStyle','docked')
+subplot(2,1,1); hold on; cla
+plot(swingCM{1}(1:105,1)); plot(swingCM{2}(1:112,1));
+title('CoM position relative to hip joint')
+ylabel('x')
+legend('sprinter', 'teamsport', 'location', 'southeast')
 
-% % Tidy up
-% clearvars td to cmxG cmyG cmxB cmyB q_G q_B
+subplot(2,1,2); hold on; cla
+plot(swingCM{1}(1:105,2)); plot(swingCM{2}(1:112,2));
+ylabel('y')
 
-%% Take derivative and fit a function
-% Derivatives
-cm_stance(2,:) = cellfun(@(x) tr_diff(x, 0.001), cm_stance(1,:),...
-    'UniformOutput', false);
-cm_stance(3,:) = cellfun(@(x) tr_diff(x, 0.001), cm_stance(2,:),...
-    'UniformOutput', false);
+%% Derivatives 
+% Swing CoM
+swingCM(2,:) = cellfun(@(x) tr_diff(x, 0.001), swingCM(1,:), ...
+                        'UniformOutput', false);
+swingCM(3,:) = cellfun(@(x) tr_diff(x, 0.001), swingCM(2,:), ...
+                        'UniformOutput', false);
 
-% Swing leg CoM as a function of contralateral thigh angle
-n1 = min([length(q3{1,1}) length(cm_stance{1,1})]); % Fit same length
-n2 = min([length(q3{1,2}) length(cm_stance{1,2})]);
-n = [n1 n2];
-norder = 10;
-coef = nan(1,norder+1,2,3);
-for i = 1:2         % x,y loop
-    for j = 1:2     % sprinter,teamsport loop
-        for k = 1:3 % derivative loop
-            coef(i,:,j,k) = polyfit(q3{j}(1:n(j)), ...
-                cm_stance{k,j}(1:n(j),i), norder);
-        end
-    end
-end
-
-
-
-set(figure(6),'WindowStyle','docked')
-set(figure(6),'DefaultLineMarkerSize', 0.5, 'DefaultLineLineWidth', 1.2)
-ylabels = {'position', 'velocity', 'acceleration'};
+% Plot 
+set(figure(5),'WindowStyle','docked')
+set(figure(5), 'DefaultLineMarkerSize', 1.5)
+titles = {'position','velocity','acceleration'};
 for i = 1:3
-    % CoM x
-    subplot(3,2,2*i-1); cla; hold on
-    plot(q3{1}(1:n1), cm_stance{i,1}(1:n1,1), 'ks') % Raw data
-    plot(q3{2}(1:n2), cm_stance{i,2}(1:n2,1), 'rs')
-    plot(q3{1}(1:n1), polyval(coef(1,:,1,i),q3{1}(1:n1)),'k-') %Fitted poly
-    plot(q3{2}(1:n2), polyval(coef(1,:,2,i),q3{2}(1:n2)),'r-')
-    ylabel(ylabels{i})
+    subplot(3,2,2*i-1); hold on; cla
+    plot(swingCM{i,1}(1:105,1), 's')
+    plot(swingCM{i,2}(1:112,1), 's')
+    title([titles{i} ' x'])
     
-    % CoM y
-    subplot(3,2,2*i); cla; hold on
-    plot(q3{1}(1:n1), cm_stance{i,1}(1:n1,2), 'ks') % Raw data
-    plot(q3{2}(1:n2), cm_stance{i,2}(1:n2,2), 'rs')
-    plot(q3{1}(1:n1), polyval(coef(2,:,1,i),q3{1}(1:n1)),'k-') %Fitted poly
-    plot(q3{2}(1:n2), polyval(coef(2,:,2,i),q3{2}(1:n2)),'r-')
+    subplot(3,2,2*i); hold on; cla
+    plot(swingCM{i,1}(1:105,2), 's')
+    plot(swingCM{i,2}(1:112,2), 's')
+    title([titles{i} ' y'])
 end
-subplot(3,2,1); title('x'); subplot(3,2,2); title('y');
-subplot(3,2,5); xlabel('Thigh angle'); 
-subplot(3,2,6); xlabel('Thigh angle');
+subplot(3,2,2); legend('sprinter', 'teamsport');
+
+%% Export data
+if output
+    % Column names
+    colwidth = 13;
+    precision = 5;
+    colnames = ["PositionX","PositionY","VelocityX","VelocityY",...
+                "AccelerationX","AccelerationY"];
+    nametype = ['%-' num2str(colwidth) 's'];
+    datatype = ['%' num2str(colwidth) '.' num2str(precision) 'E'];
+    namefmt = [repmat([nametype ' '], 1, size(colnames,2)-1) nametype '\n'];
+    datafmt = [repmat([datatype ' '], 1, size(colnames,2)-1) datatype '\n'];
+    
+    % Sprinter's technique
+    fid = fopen('sprinter.txt', 'w');
+    fprintf(fid, '%4d', size(swingCM{1,1},1));  % Data size
+    fprintf(fid, '%4d', 2);                     % Header rows
+    fprintf(fid, '%4d\n', colwidth+1);          % Column width
+    fprintf(fid, namefmt, pad(colnames, colwidth, 'left'));
+    fprintf(fid, datafmt, ...
+                string(reshape(cat(3,swingCM{:,1}), ...
+                        [size(swingCM{1,1}, 1) 6])));
+    fclose(fid);
+    
+    % Teamsports's technique
+    fid = fopen('teamsport.txt', 'w');
+    fprintf(fid, '%4d', size(swingCM{1,2},1));  % Data size
+    fprintf(fid, '%4d', 2);                     % Header rows
+    fprintf(fid, '%4d\n', colwidth+1);          % Column width
+    fprintf(fid, namefmt, pad(colnames, colwidth, 'left'));
+    fprintf(fid, datafmt, ...
+                string(reshape(cat(3,swingCM{:,2}), ...
+                        [size(swingCM{1,2}, 1) 6])));
+    fclose(fid);
+
+
+end
+

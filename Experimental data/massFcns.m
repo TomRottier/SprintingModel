@@ -1,9 +1,16 @@
 clear; close all; clc;
 %% Load data
 load data.mat           % Experimental data
-                        % Technique comparison
-                        
+output = 1;             % Output data or not
+
 cm = dout.Average.CoM;  % Shortcut
+
+% Combined HJC
+HJC = dout.Average.Markers.Data.Avg(:,:,strcmp(dout.Average.Markers.Names, 'HJC'));
+
+% Filter data
+cm.Data.Avg = tr_filterDP(cm.Data.Avg, 1000, 20, 'low', 2);
+HJC = tr_filterDP(HJC, 1000, 15, 'low', 2);
 
 to = dout.Average.Parameters.ContactTimeIndex;  % Takeoff
 legs = ['L', 'R'];
@@ -18,11 +25,6 @@ upArmM = inertia(7,2); lwArmM = inertia(8,2);
 legM = footM+shankM+thighM;
 upperM = lwTrunkM+upTrunkM+headM+2*upArmM+2*lwArmM;
 
-% Combined HJC
-HJC = dout.Average.Markers.Data.Avg(:,:,strcmp(dout.Average.Markers.Names, 'HJC'));
-
-% Tidy up
-clearvars inertia legs 
 %% CoM of trunk and arms
 upperCM = (cm.Data.Avg(:,:,contains(cm.Names, 'LwTrunk')).*lwTrunkM + ...
         cm.Data.Avg(:,:,contains(cm.Names, 'UpTrunk')).*upTrunkM + ...
@@ -33,9 +35,6 @@ upperCM = (cm.Data.Avg(:,:,contains(cm.Names, 'LwTrunk')).*lwTrunkM + ...
 
 % Relative to hip joint
 upperCM_HJC = upperCM - HJC;
-
-% Tidy up
-clearvars lwTrunkM upTrunkM headM upArmM lwArmM
 
 %% CoM of swing leg
 swingCM = (cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Foot'])).*footM + ...
@@ -53,9 +52,6 @@ legCM = (cm.Data.Avg(:,:,contains(cm.Names, [leg 'Foot'])).*footM + ...
 % Relative to combined HJC
 legCM_HJC = legCM - HJC;
 
-% Tidy up
-clearvars footM shankM thighM swleg leg
-
 %% Check WBCM
 WBCM = (legCM.*legM + swingCM.*legM + upperCM.*upperM) / (2*legM+upperM);
 WBCM_HJC = WBCM - HJC;      % Relative to HJC
@@ -71,46 +67,73 @@ plot(WBCM_true(:,3))
 title(['RMSE: ' num2str(round(tr_rmse(WBCM(:,3),WBCM_true(:,3))*1000, 2)) ' mm'])
 legend('model','true', 'location', 'bestoutside')
 
-% Tidy up
-clearvars legM upperM WBCM WBCM_HJC WBCM_true WBCM_true_HJC upperCM legCM swingCM
-
-%% Fit function to upper body CoM data
-% Filter 
-upperCM_HJC_filt = tr_filterDP(upperCM_HJC, 1000, 25, 'low', 2);
-
-% Derivatives
+%% Derivatives 
+% HAT CoM
 upperCM_HJC(:,:,2) = tr_diff(upperCM_HJC(:,:,1), 1/dout.Information.Rate);
 upperCM_HJC(:,:,3) = tr_diff(upperCM_HJC(:,:,2), 1/dout.Information.Rate);
 
-upperCM_HJC_filt(:,:,2) = tr_diff(upperCM_HJC_filt(:,:,1), 1/dout.Information.Rate);
-upperCM_HJC_filt(:,:,3) = tr_diff(upperCM_HJC_filt(:,:,2), 1/dout.Information.Rate);
+% Swing CoM
+swingCM_HJC(:,:,2) = tr_diff(swingCM_HJC(:,:,1), 1/dout.Information.Rate);
+swingCM_HJC(:,:,3) = tr_diff(swingCM_HJC(:,:,2), 1/dout.Information.Rate);
 
+
+% Plot 
 set(figure(2),'WindowStyle','docked')
 set(figure(2), 'DefaultLineMarkerSize', 2)
+titles = {'position','velocity','acceleration'};
 for i = 1:3
     subplot(3,2,2*i-1); hold on; cla
     plot(upperCM_HJC(1:to,2,i), 's')
-    plot(upperCM_HJC_filt(1:to,2,i), '-')
-
+    title([titles{i} ' x'])
     
     subplot(3,2,2*i); hold on; cla
     plot(upperCM_HJC(1:to,3,i), 's')
-    plot(upperCM_HJC_filt(1:to,3,i), '-')
-
+    title([titles{i} ' y'])
 end
-
-%% Fit function to swing CoM data
-% Derivatives
-swingCM_HJC(:,:,2) = tr_diff(swingCM_HJC(:,:,1), 1/dout.Information.Rate);
-swingCM_HJC(:,:,3) = tr_diff(swingCM_HJC(:,:,2), 1/dout.Information.Rate);
 
 set(figure(3),'WindowStyle','docked')
 set(figure(3), 'DefaultLineMarkerSize', 2)
 for i = 1:3
     subplot(3,2,2*i-1); hold on; cla
     plot(swingCM_HJC(1:to,2,i), 's')
+    title([titles{i} ' x'])
     
     subplot(3,2,2*i); hold on; cla
     plot(swingCM_HJC(1:to,3,i), 's')
+    title([titles{i} ' y'])
+end
 
+%% Export data
+if output
+    % Column names
+    colwidth = 13;
+    precision = 5;
+    colnames = ["PositionX","PositionY","VelocityX","VelocityY",...
+                "AccelerationX","AccelerationY"];
+    nametype = ['%-' num2str(colwidth) 's'];
+    datatype = ['%' num2str(colwidth) '.' num2str(precision) 'E'];
+    namefmt = [repmat([nametype ' '], 1, size(colnames,2)-1) nametype '\n'];
+    datafmt = [repmat([datatype ' '], 1, size(colnames,2)-1) datatype '\n'];
+    
+    % HAT CoM
+    fid = fopen('HAT.txt', 'w');
+    fprintf(fid, '%4d', size(upperCM_HJC,1));    % Data size
+    fprintf(fid, '%4d', 2);                        % Header rows
+    fprintf(fid, '%4d\n', colwidth+1);               % Column width
+    fprintf(fid, namefmt, pad(colnames, colwidth, 'left'));
+    fprintf(fid, datafmt, ...
+                string(reshape(upperCM_HJC(:,[2 3],:),...
+                        [size(upperCM_HJC, 1) 6])'));
+    fclose(fid);
+    
+    % Swing CoM
+    fid = fopen('swing.txt', 'w');
+    fprintf(fid, '%4d', size(swingCM_HJC,1));    % Data size
+    fprintf(fid, '%4d', 2);                        % Header rows
+    fprintf(fid, '%4d\n', colwidth+1);               % Column width
+    fprintf(fid, namefmt, pad(colnames, colwidth, 'left'));
+    fprintf(fid, datafmt, ...
+                string(reshape(swingCM_HJC(:,[2 3],:),...
+                        [size(swingCM_HJC, 1) 6])'));
+    fclose(fid);
 end

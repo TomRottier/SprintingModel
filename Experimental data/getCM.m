@@ -1,4 +1,4 @@
-function [CMout, CMout_names] = getCM(data, draw)
+function CMout = getCM(data, draw)
 % Returns segmental and whole-body CoM locations for a 13 segment
 % rigid-body model.
 % Inputs:

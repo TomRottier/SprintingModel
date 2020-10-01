@@ -1,8 +1,14 @@
 # Log
 
+## 01/10/2020
+
+- Change scripts to output .txt files
+- Create all data files for simulations as .txt
+- Edit getData.m to average across both legs
+
 ## 29/09/2020
 
-- Mass fucntions script for upper body mass
+- Mass functions script for upper body mass
 - Tidy up other functions
 
 ## 26/09/2020
