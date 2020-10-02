@@ -45,15 +45,15 @@ swingCM = (cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Foot'])).*footM + ...
 swingCM_HJC = swingCM - HJC;
 
 %% CoM of stance leg
-legCM = (cm.Data.Avg(:,:,contains(cm.Names, [leg 'Foot'])).*footM + ...
+stanceCM = (cm.Data.Avg(:,:,contains(cm.Names, [leg 'Foot'])).*footM + ...
     cm.Data.Avg(:,:,contains(cm.Names, [leg 'Shank'])).*shankM + ...
     cm.Data.Avg(:,:,contains(cm.Names, [leg 'Thigh'])).*thighM) ./ legM;
 
 % Relative to combined HJC
-legCM_HJC = legCM - HJC;
+legCM_HJC = stanceCM - HJC;
 
 %% Check WBCM
-WBCM = (legCM.*legM + swingCM.*legM + upperCM.*upperM) / (2*legM+upperM);
+WBCM = (stanceCM.*legM + swingCM.*legM + upperCM.*upperM) / (2*legM+upperM);
 WBCM_HJC = WBCM - HJC;      % Relative to HJC
 
 % All segments CoM - slight difference maybe due to using joint centres in

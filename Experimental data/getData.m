@@ -6,8 +6,8 @@ fname = 'run9_7_TM.c3d';
 din = readC3D([p fname]);
 CMout = getCM(din, 0);
 % Use only modelled markers (joint centres)
-names = {'Toe', 'AJC', 'KJC', 'HJC', 'SJC', 'EJC', 'WJC', 'Head'};
-jc = contains(din.Markers.Names, names);
+% names = {'Toe', 'AJC', 'KJC', 'HJC', 'SJC', 'EJC', 'WJC', 'Head'};
+% jc = contains(din.Markers.Names, names);
 % jc(contains(din.Markers.Names, '_')) = 0;
 
 % Set up output structure
@@ -19,7 +19,7 @@ sa = eval('dout.Average');           % Shortcut to average stride
     strrep(din.ModelOutputs.Angles.Names,'Angles','AngularVelocity')]);
 [sa.Moments.Names, si.Moments.Names] = deal(din.ModelOutputs.Moments.Names);
 [sa.Markers.Names, si.Markers.Names] = deal(din.Markers.Names);
-[sa.JointCentres.Names, si.JointCentres.Names] = deal(din.Markers.Names(jc));
+% [sa.JointCentres.Names, si.JointCentres.Names] = deal(din.Markers.Names(jc));
                                         
 [sa.CoM.Names, si.CoM.Names] = deal(CMout.Names);
 
@@ -33,7 +33,7 @@ angles = cat(3, angles, tr_diff(angles, 1/hz));     % Angular velocities
 moments = interp1(din.Markers.Time, din.ModelOutputs.Moments.Data, time, 'spline') ./ 1000;     % N.m
 com = interp1(din.Markers.Time, CMout.Data, time, 'spline');
 markers = interp1(din.Markers.Time, din.Markers.Data, time, 'spline') ./ 1000; % m
-jointcentres = interp1(din.Markers.Time, din.Markers.Data(:,:,jc), time, 'spline') ./ 1000; % m
+% jointcentres = interp1(din.Markers.Time, din.Markers.Data(:,:,jc), time, 'spline') ./ 1000; % m
 
 % Get TD,TO
 threshold = 80;
@@ -41,6 +41,11 @@ contacts = tr_eventDetect(force(:,3), threshold);    % Find points where Fz > th
 contacts((contacts(:,2) - contacts(:,1)) < 50 ,:) = [];    % Remove contacts lasting < 50 frames
 
 % Filter
+cutoff = 15;
+angles = tr_filterDP(angles, hz, cutoff, 'low', 2);
+moments = tr_filterDP(moments, hz, cutoff, 'low', 2);
+com = tr_filterDP(com, hz, cutoff, 'low', 2);
+markers = tr_filterDP(markers, hz, cutoff, 'low', 2);
 
 % Remove force from aerial phase
 for i = 1:length(contacts)-1
@@ -68,7 +73,7 @@ end
 si.Information.Leg = leg1;
 
 % Fields for initial conditions
-fields = {'Angles', 'Markers', 'JointCentres', 'CoM'};
+fields = {'Angles', 'Markers', 'CoM'};
 
 % Time normalised base
 tnorm = linspace(0,100,1001)';
@@ -109,9 +114,9 @@ for i = 1:length(contacts)-2
     si.Markers.DataNorm{i} = interp1(ttemp, si.Markers.Data{i}, tnorm,  'spline');
     
     % Joint centres
-    si.JointCentres.Data{i} = jointcentres(contacts(i,1):contacts(i+2,1)-1,:,:);
-    si.JointCentres.DataNorm{i} = interp1(ttemp, si.JointCentres.Data{i},...
-        tnorm,  'spline');
+%     si.JointCentres.Data{i} = jointcentres(contacts(i,1):contacts(i+2,1)-1,:,:);
+%     si.JointCentres.DataNorm{i} = interp1(ttemp, si.JointCentres.Data{i},...
+%         tnorm,  'spline');
     
     % CoM
     si.CoM.Data{i} = com(contacts(i,1):contacts(i+2,1)-1,:,:);
@@ -146,10 +151,9 @@ for i = 1:length(fields)-1
         si.(fields{i}).('DataNorm')(idx), 1, 1, 1, [])), 4);
     sa.(fields{i}).('DataNorm').('Std') = std(cell2mat(reshape( ...
         si.(fields{i}).('DataNorm')(idx), 1, 1, 1, [])), [], 4);
-    sa.(fields{i}).('Data').('Avg') = reshape(...
-        interp1(tnorm/100*sa.Parameters.StrideTime, ...
-        reshape(sa.(fields{i}).('DataNorm').('Avg'), 1001, []),...
-        tabs, 'spline'), 485, 3, []);
+    sa.(fields{i}).('Data').('Avg') = interp1(tnorm/100*sa.Parameters.StrideTime, ...
+        sa.(fields{i}).('DataNorm').('Avg'),...
+        tabs, 'spline');
     sa.(fields{i}).('Data').('Std') = interp1(tnorm/100*sa.Parameters.StrideTime, ...
         sa.(fields{i}).('DataNorm').('Std'), tabs, 'spline');
 end 
@@ -174,7 +178,7 @@ sa.Time.Absolute = tabs;
 clearvars si tabs tnorm fields contacts n mid idx i hz leg1 leg2 threshold
 
 %% Initial conditions
-fields = {'Angles', 'Markers', 'JointCentres', 'CoM'};
+fields = {'Angles', 'Markers', 'CoM'};
 for i = 1:length(fields)
     sa.InitialConditions.(fields{i}) = sa.(fields{i}).('Data').('Avg')(1,:,:);
 end 
