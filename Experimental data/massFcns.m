@@ -12,7 +12,7 @@ HJC = dout.Average.Markers.Data.Avg(:,:,strcmp(dout.Average.Markers.Names, 'HJC'
 cm.Data.Avg = tr_filterDP(cm.Data.Avg, 1000, 15, 'low', 2);
 HJC = tr_filterDP(HJC, 1000, 15, 'low', 2);
 
-to = dout.Average.Parameters.ContactTimeIndex;  % Takeoff
+to = find(dout.Average.Force.Data.Avg(:,3) < 80, 1);  % Takeoff
 legs = ['L', 'R'];
 leg = dout.Average.Information.Leg;         % Stance leg
 swleg = legs(~(legs == leg));               % Swing leg

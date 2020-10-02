@@ -1,6 +1,6 @@
 clear; close all; clc; warning off MATLAB:interp1:NaNstrip;
 %% Import data
-output = 0;         % Output data to .mat and .txt
+output = 1;         % Output data to .mat and .txt
 p = [pwd '\Vicon\Vicon files\'];
 fname = 'run9_7_TM.c3d';
 din = readC3D([p fname]);
@@ -127,9 +127,11 @@ end
 dout.IndvStrides = si;
 clearvars force angles moments markers jointcentres com ttemp tstr tc i j
 %% Average stride
-n = 10;                                  % Number of strides - takes middle n 
-mid = ceil((length(contacts)-2)/2);     % Middle stride
-idx = mid-n/2:1:mid+n/2;                % Indicies of strides used
+n = 6;                            % Number of strides - takes middle n 
+idx = 1:2:length(contacts);       
+idx = idx(n-(n/2)+1:n+n/2);       % Indicies of strides used
+
+
 
 % Average stride parameters
 sa.Parameters.StrideTime = mean(si.Parameters.StrideTime(idx));
@@ -144,8 +146,10 @@ for i = 1:length(fields)-1
         si.(fields{i}).('DataNorm')(idx), 1, 1, 1, [])), 4);
     sa.(fields{i}).('DataNorm').('Std') = std(cell2mat(reshape( ...
         si.(fields{i}).('DataNorm')(idx), 1, 1, 1, [])), [], 4);
-    sa.(fields{i}).('Data').('Avg') = interp1(tnorm/100*sa.Parameters.StrideTime, ...
-        sa.(fields{i}).('DataNorm').('Avg'), tabs, 'spline');
+    sa.(fields{i}).('Data').('Avg') = reshape(...
+        interp1(tnorm/100*sa.Parameters.StrideTime, ...
+        reshape(sa.(fields{i}).('DataNorm').('Avg'), 1001, []),...
+        tabs, 'spline'), 485, 3, []);
     sa.(fields{i}).('Data').('Std') = interp1(tnorm/100*sa.Parameters.StrideTime, ...
         sa.(fields{i}).('DataNorm').('Std'), tabs, 'spline');
 end 
