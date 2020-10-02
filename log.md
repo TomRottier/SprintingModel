@@ -1,5 +1,11 @@
 # Log
 
+## 02/10/2020
+
+- Create model Autolev file
+- Create plotting scripts for data and model
+- Add filter to getData.m
+
 ## 01/10/2020
 
 - Change scripts to output .txt files
