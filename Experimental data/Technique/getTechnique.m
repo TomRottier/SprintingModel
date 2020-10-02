@@ -182,7 +182,7 @@ if output
     fprintf(fid, namefmt, pad(colnames, colwidth, 'left'));
     fprintf(fid, datafmt, ...
                 string(reshape(cat(3,swingCM{:,1}), ...
-                        [size(swingCM{1,1}, 1) 6])));
+                        [size(swingCM{1,1}, 1) 6])'));
     fclose(fid);
     
     % Teamsports's technique
@@ -193,7 +193,7 @@ if output
     fprintf(fid, namefmt, pad(colnames, colwidth, 'left'));
     fprintf(fid, datafmt, ...
                 string(reshape(cat(3,swingCM{:,2}), ...
-                        [size(swingCM{1,2}, 1) 6])));
+                        [size(swingCM{1,2}, 1) 6])'));
     fclose(fid);
 
 

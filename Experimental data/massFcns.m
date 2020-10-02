@@ -9,7 +9,7 @@ cm = dout.Average.CoM;  % Shortcut
 HJC = dout.Average.Markers.Data.Avg(:,:,strcmp(dout.Average.Markers.Names, 'HJC'));
 
 % Filter data
-cm.Data.Avg = tr_filterDP(cm.Data.Avg, 1000, 20, 'low', 2);
+cm.Data.Avg = tr_filterDP(cm.Data.Avg, 1000, 15, 'low', 2);
 HJC = tr_filterDP(HJC, 1000, 15, 'low', 2);
 
 to = dout.Average.Parameters.ContactTimeIndex;  % Takeoff
