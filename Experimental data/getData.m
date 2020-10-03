@@ -58,9 +58,12 @@ force(contacts(end,2)+1:end,:) = 0.0;
 dout.Information.Rate = hz;
 dout.Information.Threshold = threshold;
 dout.Information.Inertia = CMout.Inertia;
+dout.Information.Filter.Cutoff = cutoff;
+dout.Information.Filter.Type = 'Low pass butterworth';
+dout.Information.Filter.Passes = 2;
 
 % Tidy up
-clearvars fname p fhz mhz din names time CMout CMout_names jc i;
+clearvars fname p fhz mhz din names time CMout CMout_names jc i cutoff;
 
 %% Seperate out contacts and time normalise
 % First contact leg
@@ -188,8 +191,9 @@ clearvars fields i
 
 %% Output
 dout.Average = sa;
-clearvars sa
+clearvars sa 
 if output
+    clearvars output
     save data.mat           % Saves to .mat
     
     % Save to .txt

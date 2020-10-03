@@ -1,11 +1,37 @@
-C**   The name of this program is sprintmodel.f
-C**   Created by AUTOLEV 3.2 on Fri Oct 02 18:14:27 2020
+C Three segment model used to examine the effects of the swinging limb
+C on sprint performance.
+C
+C Segments include thigh, shank and one part foot. Two point masses
+C representing the CoM of the swinging limb and and the HAT. The 
+C position (and derivatives) of these masses relative to the hip joint
+C are specified at each input from the input file.
+C
+C Torque generators in series with rotational spring for flexion and 
+C extension at each joint.
+C
+C Inertia parameters taken from McErlain-Naylor (2017), on which the 
+C experimental data was collected, albeit two years apart. Torque 
+C parameters from Allen (2009) and scaled by body mass to the subject.
+C
+C Initial conditions are segment angles and angular velocities and CoM
+C velocities, specified in the .in file. Activation function parameters
+C define how the activation or the torque generators varies with time
+C read in from activation7.in.
+C
+C   Tom Rottier 2020
+C***********************************************************************
       PROGRAM MAIN
       IMPLICIT         DOUBLE PRECISION (A - Z)
       INTEGER          ILOOP, IPRINT, PRINTINT
+      INTEGER          I,NACTP,NROW,IDX
+      PARAMETER        (NACTP=7)
       CHARACTER        MESSAGE(99)
       EXTERNAL         EQNS1
       DIMENSION        VAR(10)
+      DIMENSION        HAT(500,6),SWING(500,6)
+      DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
+     &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
+     &,AEACTP(NACTP),AFACTP(NACTP)
       COMMON/CONSTNTS/ G,IA,IB,IC,K1,K2,K3,K4,L1,L2,L3,L4,L5,L6,MA,MB,MC
      &,MD,ME
       COMMON/SPECFIED/ DX,DY,EX,EY,DXp,DYp,EXp,EYp,DXpp,DYpp,EXpp,EYpp
@@ -20,6 +46,10 @@ C**   Created by AUTOLEV 3.2 on Fri Oct 02 18:14:27 2020
      &PODX,PODY,POEX,POEY,POP1X,POP1Y,POP2X,POP2Y,POP3X,POP3Y,POP4X,POP4
      &Y,TE2,VOCMX,VOCMY
       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,COEF(5,5),RHS(5)
+      COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
+      COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP
+      COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
+      COMMON/MASSDATA/ HAT,SWING
 
 C**   Open input and output files
       OPEN(UNIT=20, FILE='sprintmodel.in', STATUS='OLD')
@@ -48,7 +78,7 @@ C**   Read integration parameters from input file
      &ABSERR,RELERR
 
 C**   Write heading(s) to output file(s)
-      WRITE(*, 6021) (MESSAGE(ILOOP), ILOOP = 1,99) 
+      ! WRITE(*, 6021) (MESSAGE(ILOOP), ILOOP = 1,99) 
       WRITE(21,6021) (MESSAGE(ILOOP), ILOOP = 1,99) 
       WRITE(22,6022) (MESSAGE(ILOOP), ILOOP = 1,99) 
       WRITE(23,6023) (MESSAGE(ILOOP), ILOOP = 1,99) 
@@ -59,6 +89,26 @@ C**   Write heading(s) to output file(s)
       WRITE(28,6028) (MESSAGE(ILOOP), ILOOP = 1,99) 
       WRITE(29,6029) (MESSAGE(ILOOP), ILOOP = 1,99) 
 
+C** Read torque parameters
+      OPEN(UNIT=30, FILE='torque.in', STATUS='OLD')
+      READ(30, 7200, ERR=7210) HETQP,KETQP,AETQP,HFTQP,KFTQP,AFTQP
+
+C** Read activation parameters
+      OPEN(UNIT=31, FILE='activation.in', STATUS='OLD')
+      READ(31, 7300, ERR=7310) HEACTP,KEACTP,AEACTP,HFACTP,KFACTP,AFACTP
+
+
+C** Read values for swing leg and HAT CoM (first two rows headers)
+      OPEN(UNIT=32, FILE='HAT.txt', STATUS='OLD')
+      OPEN(UNIT=33, FILE='swing.txt', STATUS='OLD')
+      READ(32, '(I4)', ERR=7410) NROW
+      READ(33, *)
+      READ(32, *)
+      READ(33, *)
+      READ(32, '(6E14.5)', ERR=7410) (HAT(I,:), I=1, NROW)
+      READ(33, '(6E14.5)', ERR=7510) (SWING(I,:), I=1, NROW)
+
+
 C**   Degree to radian conversion
       PI       = 4*ATAN(1.0D0)
       DEGtoRAD = PI/180.0D0
@@ -66,8 +116,27 @@ C**   Degree to radian conversion
       Q3 = Q3*DEGtoRAD
       Q4 = Q4*DEGtoRAD
       Q5 = Q5*DEGtoRAD
+      U3 = U3*DEGtoRAD
+      U4 = U4*DEGtoRAD
+      U5 = U5*DEGtoRAD
 
-C**   Evaluate constants
+C** Initialise integration count
+      IDX = 1
+
+C** Initial velocities of masses (swing leg D, HAT E)
+      DXp = SWING(1,3)
+      DYp = SWING(1,4)
+      EXp = HAT(1,3)
+      EYp = HAT(1,4)
+
+C** Convert CoM velocity to U1,U2
+      U1 = ((MA+MB+MC+MD+ME)*U1+(L5*MC+L6*MD+L6*ME)*SIN(Q5)*U5+(L3*MB+L4
+     &*MC+L4*MD+L4*ME)*SIN(Q4)*U4+(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*SIN(Q3
+     &)*U3-MD*DXp-ME*EXp)/(MA+MB+MC+MD+ME)
+      U2 = ((MA+MB+MC+MD+ME)*U2-(L5*MC+L6*MD+L6*ME)*COS(Q5)*U5-(L3*MB+L4
+     &*MC+L4*MD+L4*ME)*COS(Q4)*U4-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*COS(Q3
+     &)*U3-MD*DYp-ME*EYp)/(MA+MB+MC+MD+ME)
+
 C**   Initialize time, print counter, variables array for integrator
       T      = TINITIAL
       IPRINT = 0
@@ -82,18 +151,30 @@ C**   Initialize time, print counter, variables array for integrator
       VAR(9) = U4
       VAR(10) = U5
 
+C** Initialise values for integration
+      CALL UPDATE(T,IDX)
+
 C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
       CALL KUTTA(EQNS1, 10, VAR, T, INTEGSTP, ABSERR, RELERR, 0, *5920)
 
-C**   Numerically integrate; print results
+C**   Check exit conditions
 5900  IF( TFINAL.GE.TINITIAL .AND. T+.01D0*INTEGSTP.GE.TFINAL) IPRINT=-7
       IF( TFINAL.LE.TINITIAL .AND. T+.01D0*INTEGSTP.LE.TFINAL) IPRINT=-7
+C** Print      
       IF( IPRINT .LE. 0 ) THEN
         CALL IO(T)
         IF( IPRINT .EQ. -7 ) GOTO 5930
         IPRINT = PRINTINT
       ENDIF
+
+C** Integrate      
       CALL KUTTA(EQNS1, 10, VAR, T, INTEGSTP, ABSERR, RELERR, 1, *5920)
+
+
+C** Update values after integration
+      IDX = IDX + 1
+      CALL UPDATE(T,IDX)
+
       IPRINT = IPRINT - 1
       GOTO 5900
 
@@ -170,10 +251,91 @@ C**   Inform user of input and output filename(s)
 7011  FORMAT( 3(59X,E30.0,/), 1(59X,I30,/), 2(59X,E30.0,/) )
       STOP
 7100  WRITE(*,*) 'Premature end of file while reading sprintmodel.in '
+      STOP
 7101  WRITE(*,*) 'Error while reading file sprintmodel.in'
+      STOP
+7200  FORMAT(//, 6(///, 10(8X, F7.2, /)))
+7210  WRITE(*,*) 'Error reading torque parameters'
+      STOP
+7300  FORMAT(//, 6(///, 7(6X, F11.6, /)))
+7310  WRITE(*,*) 'Error reading activation parameters'
+      STOP
+7410  WRITE(*,*) 'Error while reading in HAT.txt'
+      STOP
+7510  WRITE(*,*) 'Error while reading in swing.txt'
       STOP
       END PROGRAM MAIN
 
+
+C***********************************************************************
+      SUBROUTINE UPDATE(T,IDX)
+C Wrapper to calculate joint torques and mass positions and derivatives 
+C Input/Output all through COMMON blocks
+C
+C***********************************************************************
+      IMPLICIT DOUBLE PRECISION(A -Z)
+
+      INTEGER          NACTP,IDX
+      PARAMETER        (NACTP=7)
+      DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
+     &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
+     &,AEACTP(NACTP),AFACTP(NACTP)
+      DIMENSION        HAT(500,6),SWING(500,6)
+      COMMON/VARIBLES/ Q1,Q2,Q3,Q4,Q5,U1,U2,U3,U4,U5
+      COMMON/SPECFIED/ DX,DY,EX,EY,DXp,DYp,EXp,EYp,DXpp,DYpp,EXpp,EYpp
+      COMMON/ALGBRAIC/ AANG,AANGVEL,AETOR,AFTOR,ATOR,H,HANG,HANGVEL,HETO
+     &R,HFTOR,HTOR,KANG,KANGVEL,KECM,KETOR,KFTOR,KTOR,PECM,RX,RY,TE,Q1p,
+     &Q2p,Q3p,Q4p,Q5p,U1p,U2p,U3p,U4p,U5p,AEACT,AECCANG,AECCANGVEL,AESEC
+     &ANG,AESECANGVEL,AFACT,AFCCANG,AFCCANGVEL,AFSECANG,AFSECANGVEL,HEAC
+     &T,HECCANG,HECCANGVEL,HESECANG,HESECANGVEL,HFACT,HFCCANG,HFCCANGVEL
+     &,HFSECANG,HFSECANGVEL,KEACT,KECCANG,KECCANGVEL,KESECANG,KESECANGVE
+     &L,KFACT,KFCCANG,KFCCANGVEL,KFSECANG,KFSECANGVEL,KECM2,POCMX,POCMY,
+     &PODX,PODY,POEX,POEY,POP1X,POP1Y,POP2X,POP2Y,POP3X,POP3Y,POP4X,POP4
+     &Y,TE2,VOCMX,VOCMY
+      COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,COEF(5,5),RHS(5)
+      COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
+      COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP
+      COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
+      COMMON/MASSDATA/ HAT,SWING
+
+      HANG = 4.71238898038469D0 - Q5
+      KANG = 3.141592653589793D0 + Q4 - Q5
+      AANG = 3.141592653589793D0 + Q4 - Q3
+      HANGVEL = -U5
+      KANGVEL = U4 - U5
+      AANGVEL = U4 - U3
+
+      CALL MUSCLEMODEL(T,HETQP(1:9),HEACTP,HETQP(10),2*PI-HANG,-HANGVEL,
+     &HETOR,HESECANG,HESECANGVEL,HECCANG,HECCANGVEL,INTEGSTP,2)
+      CALL MUSCLEMODEL(T,KETQP(1:9),KEACTP,KETQP(10),2*PI-KANG,-KANGVEL,
+     &KETOR,KESECANG,KESECANGVEL,KECCANG,KECCANGVEL,INTEGSTP,2)
+      CALL MUSCLEMODEL(T,AETQP(1:9),AEACTP,AETQP(10),2*PI-AANG,-AANGVEL,
+     &AETOR,AESECANG,AESECANGVEL,AECCANG,AECCANGVEL,INTEGSTP,2)
+      CALL MUSCLEMODEL(T,HFTQP(1:9),HFACTP,HFTQP(10),HANG,HANGVEL,HFTOR,
+     &HFSECANG,HFSECANGVEL,HFCCANG,HFCCANGVEL,INTEGSTP,2)
+      CALL MUSCLEMODEL(T,KFTQP(1:9),KFACTP,KFTQP(10),KANG,KANGVEL,KFTOR,
+     &KFSECANG,KFSECANGVEL,KFCCANG,KFCCANGVEL,INTEGSTP,2)
+      CALL MUSCLEMODEL(T,AFTQP(1:9),AFACTP,AFTQP(10),AANG,AANGVEL,AFTOR,
+     &AFSECANG,AFSECANGVEL,AFCCANG,AFCCANGVEL,INTEGSTP,2)
+
+      HTOR = HTORF - HTORE
+      KTOR = KTORE - KTORF
+      ATOR = ATORF - ATORE 
+
+      DX   = SWING(IDX,1)
+      DY   = SWING(IDX,2)
+      DXp  = SWING(IDX,3)
+      DYp  = SWING(IDX,4)
+      DXpp = SWING(IDX,5)
+      DYpp = SWING(IDX,6)
+      EX   = HAT(IDX,1)
+      EY   = HAT(IDX,2)
+      EXp  = HAT(IDX,3)
+      EYp  = HAT(IDX,4)
+      EXpp = HAT(IDX,5)
+      EYpp = HAT(IDX,6)
+
+      END SUBROUTINE UPDATE
 
 C**********************************************************************
       SUBROUTINE       EQNS1(T, VAR, VARp, BOUNDARY)
@@ -212,65 +374,18 @@ C**   Update variables after integration step
       Q3p = U3
       Q4p = U4
       Q5p = U5
-      RX = -K1*Q1 - K2*U1
-      RY = -K3*Q2 - K4*U2
 
-C**   Quantities which were specified
-      HEACT = T
-      HFACT = T
-      KEACT = T
-      KFACT = T
-      AEACT = T
-      AFACT = T
-      HECCANG = T
-      HECCANGVEL = T
-      HESECANG = T
-      HESECANGVEL = T
-      HFCCANG = T
-      HFCCANGVEL = T
-      HFSECANG = T
-      HFSECANGVEL = T
-      KECCANG = T
-      KECCANGVEL = T
-      KESECANG = T
-      KESECANGVEL = T
-      KFCCANG = T
-      KFCCANGVEL = T
-      KFSECANG = T
-      KFSECANGVEL = T
-      AECCANG = T
-      AECCANGVEL = T
-      AESECANG = T
-      AESECANGVEL = T
-      AFCCANG = T
-      AFCCANGVEL = T
-      AFSECANG = T
-      AFSECANGVEL = T
 
-      HETOR = T*HEACT*HECCANG*HECCANGVEL*HESECANG*HESECANGVEL
-      HFTOR = T*HFACT*HFCCANG*HFCCANGVEL*HFSECANG*HFSECANGVEL
-      KETOR = T*KEACT*KECCANG*KECCANGVEL*KESECANG*KESECANGVEL
-      KFTOR = T*KFACT*KFCCANG*KFCCANGVEL*KFSECANG*KFSECANGVEL
-      AETOR = T*AEACT*AECCANG*AECCANGVEL*AESECANG*AESECANGVEL
-      AFTOR = T*AFACT*AFCCANG*AFCCANGVEL*AFSECANG*AFSECANGVEL
-      HTOR = HFTOR - HETOR
-      KTOR = KETOR - KFTOR
-      ATOR = AFTOR - AETOR
+C** Calculate forces
+        IF (Q2 .LT. 0.0D0) THEN
+          RY = -K3*Q2 - K4*U2*ABS(Q2)
+          RX = (-K1*Q1 - K2*U1)*RY
+        ELSE
+          RX = 0.0D0
+          RY = 0.0D0
+        ENDIF      
 
-C**   Quantities to be specified
-      DX = 0
-      DY = 0
-      EX = 0
-      EY = 0
-      DXp = 0
-      DYp = 0
-      EXp = 0
-      EYp = 0
-      DXpp = 0
-      DYpp = 0
-      EXpp = 0
-      EYpp = 0
-
+C** Set up inertia matrix (COEF) and force vector (RHS)
       COEF(1,1) = -MA - MB - MC - MD - ME
       COEF(1,2) = 0
       COEF(1,3) = (L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*SIN(Q3)

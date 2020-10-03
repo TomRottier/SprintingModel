@@ -91,7 +91,7 @@ C Max SEC angle
     
 C Initial CC angle if T = 0
 C Joint angular velocity opposite to CC angular velocity
-      IF (T .EQ. 0.0D0) THEN
+      IF (ABS(T) .LT. DT) THEN
         CCANGVEL = -OMEGA
         SECANGVEL = 0.0D0
 C Set TV to < 0 to get it as output         
@@ -153,10 +153,11 @@ C Yeadon and Hiley (2000).
 C
 C Inputs:
 C   - T: time
-C   - P: parameters: A0 - inital activation level, T0 - on time for 
-C                    first ramp/on time since end of previous ramp,
-C                    TR - ramp time for ramp, A1 - final activation 
-C                    level (will be A0 for next ramp)
+C   - P: actiavation function parameters (3*N + 1):
+C                    A0 - inital activation level
+C                    T0 - ramp time on (since start/previous ramp)
+C                    TR - ramp time for ramp
+C                    A1 - final activation level (will be A0 for next ramp)
 C   - N: number of ramps
 C
 C Outputs:
