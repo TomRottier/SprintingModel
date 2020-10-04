@@ -15,7 +15,7 @@ n = length(time);
 I = 1;
 set(figure(I),'WindowStyle','docked'); cla; hold on
 xlim([-1 1.5]); ylim([-.1 2.4]);
-for i = 1:1:n
+for i = 1%:1:n
     cla
     line(data{I}(i,2:2:end-8), data{1}(i,3:2:end-8))
     plot(data{I}(i,10),data{I}(i,11), 'ko')
@@ -30,4 +30,6 @@ I = 5;
 set(figure(I),'WindowStyle','docked'); hold on; cla
 plot(time, data{I}(:,[2 4 5]))
 plot(time, data{I}(:,[3 6]))
-legend('KECM','PECM','TE','KECM2','TE2')
+legend('KECM','PECM','TE','KECM2','TE2', 'location','bestoutside')
+
+%% 

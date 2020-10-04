@@ -1,5 +1,10 @@
 # Log
 
+## 04/10/2020
+
+- Energy and momentum conservation checks
+- Change some outputs in base model
+
 ## 02/10/2020
 
 - Create model Autolev file

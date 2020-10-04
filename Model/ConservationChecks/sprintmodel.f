@@ -334,6 +334,32 @@ C***********************************************************************
       EXpp = HAT(IDX,5)
       EYpp = HAT(IDX,6)
 
+      ! DX   = 0.0D0
+      ! DY   = 0.0D0
+      ! DXp  = 0.0D0
+      ! DYp  = 0.0D0
+      ! DXpp = 0.0D0
+      ! DYpp = 0.0D0
+      ! EX   = 0.0D0
+      ! EY   = 0.0D0
+      ! EXp  = 0.0D0
+      ! EYp  = 0.0D0
+      ! EXpp = 0.0D0
+      ! EYpp = 0.0D0
+
+      ! DX   = 0.05*T**2
+      ! DY   = 0.05*T**2
+      ! DXp  = 0.1*T
+      ! DYp  = 0.1*T
+      ! DXpp = 0.1
+      ! DYpp = 0.1
+      ! EX   = 0.005*T**2
+      ! EY   = 0.05*T**2
+      ! EXp  = 0.01*T
+      ! EYp  = 0.1*T
+      ! EXpp = 0.01
+      ! EYpp = 0.1
+
       END SUBROUTINE UPDATE
 
 C**********************************************************************
@@ -375,14 +401,9 @@ C**   Update variables after integration step
       Q5p = U5
 
 
-C** Calculate forces
-        IF (Q2 .LT. 0.0D0) THEN
-          RY = -K3*Q2 - K4*U2*ABS(Q2)
-          RX = (-K1*Q1 - K2*U1)*RY
-        ELSE
-          RX = 0.0D0
-          RY = 0.0D0
-        ENDIF      
+C** Calculate forces - contact model changed to linear
+          RY = -K3*Q2
+          RX = -K1*Q1
 
 C** Set up inertia matrix (COEF) and force vector (RHS)
       COEF(1,1) = -MA - MB - MC - MD - ME
