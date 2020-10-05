@@ -195,10 +195,8 @@ GRAVITY(G*N2>)
 % ------------------------------------------------------------------------------
 % Energy and momentum of system
 KECM = KE()
-KECM2 = 0.5*(MA+MB+MC+MD+ME)*(VOCMX^2+VOCMY^2)
 PECM = -1*(MA+MB+MC+MD+ME)*G*POCMY + 0.5*K1*POP1X^2 + 0.5*K3*POP1Y^2
 TE = KECM + PECM
-TE2 = KECM2 + PECM
 H> = MOMENTUM(ANGULAR,CM)
 H = DOT(H>,N3>)
 %
