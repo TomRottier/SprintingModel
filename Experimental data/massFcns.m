@@ -8,10 +8,6 @@ cm = dout.Average.CoM;  % Shortcut
 % Combined HJC
 HJC = dout.Average.Markers.Data.Avg(:,:,strcmp(dout.Average.Markers.Names, 'HJC'));
 
-% Filter data
-cm.Data.Avg = tr_filterDP(cm.Data.Avg, 1000, 15, 'low', 2);
-HJC = tr_filterDP(HJC, 1000, 15, 'low', 2);
-
 to = find(dout.Average.Force.Data.Avg(:,3) < 80, 1);  % Takeoff
 legs = ['L', 'R'];
 leg = dout.Average.Information.Leg;         % Stance leg
