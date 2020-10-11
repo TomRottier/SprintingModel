@@ -382,7 +382,7 @@ C** Calculate forces
         ELSE
           RX = 0.0D0
           RY = 0.0D0
-        ENDIF      
+        ENDIF     
 
 C** Set up inertia matrix (COEF) and force vector (RHS)
       COEF(1,1) = -MA - MB - MC - MD - ME
