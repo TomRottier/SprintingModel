@@ -1,5 +1,6 @@
 Experimental data/Vicon/Vicon files/**
 Experimental data/data.mat
 Experimental data/*.asv
+Experimental data/Spline test/**
 *.obj
 *.exe

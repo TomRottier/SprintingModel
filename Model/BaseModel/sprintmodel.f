@@ -1,10 +1,10 @@
 C Three segment model used to examine the effects of the swinging limb
-C on sprint performance.
+C on sprint performance during the stance phase.
 C
 C Segments include thigh, shank and one part foot. Two point masses
-C representing the CoM of the swinging limb and and the HAT. The 
-C position (and derivatives) of these masses relative to the hip joint
-C are specified at each input from the input file.
+C representing the CoM of the swinging limb and and the HAT. Quintic 
+C splines are used to specify the position, velocity and acceleration of
+C these points masses throughout a simulation.
 C
 C Torque generators in series with rotational spring for flexion and 
 C extension at each joint.
@@ -23,12 +23,13 @@ C***********************************************************************
       PROGRAM MAIN
       IMPLICIT         DOUBLE PRECISION (A - Z)
       INTEGER          ILOOP, IPRINT, PRINTINT
-      INTEGER          I,NACTP,NROW,IDX
+      INTEGER          I,J,NACTP,NROW
       PARAMETER        (NACTP=7)
       CHARACTER        MESSAGE(99)
       EXTERNAL         EQNS1
       DIMENSION        VAR(10)
-      DIMENSION        HAT(500,6),SWING(500,6)
+      DIMENSION        TT(500),CCHATX(6,500),CCHATY(6,500),CCSWINGX(6,50
+     &0),CCSWINGY(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP)
@@ -49,7 +50,7 @@ C***********************************************************************
       COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
-      COMMON/MASSDATA/ HAT,SWING
+      COMMON/SPLNCOEF/ TT,CCHATX,CCHATY,CCSWINGX,CCSWINGY,NROW
 
 C**   Open input and output files
       OPEN(UNIT=20, FILE='sprintmodel.in', STATUS='OLD')
@@ -92,22 +93,37 @@ C**   Write heading(s) to output file(s)
 C** Read torque parameters
       OPEN(UNIT=30, FILE='torque.in', STATUS='OLD')
       READ(30, 7200, ERR=7210) HETQP,KETQP,AETQP,HFTQP,KFTQP,AFTQP
+      CLOSE(UNIT=30)
 
 C** Read activation parameters
       OPEN(UNIT=31, FILE='activation.in', STATUS='OLD')
       READ(31, 7300, ERR=7310) HEACTP,KEACTP,AEACTP,HFACTP,KFACTP,AFACTP
-
+      CLOSE(UNIT=31)
 
 C** Read values for swing leg and HAT CoM (first two rows headers)
-      OPEN(UNIT=32, FILE='HAT.txt', STATUS='OLD')
-      OPEN(UNIT=33, FILE='swing.txt', STATUS='OLD')
-      READ(32, '(I4)', ERR=7410) NROW
-      READ(33, *)
-      READ(32, *)
-      READ(33, *)
-      READ(32, '(6E14.5)', ERR=7410) (HAT(I,:), I=1, NROW)
-      READ(33, '(6E14.5)', ERR=7510) (SWING(I,:), I=1, NROW)
+      ! OPEN(UNIT=32, FILE='HAT.txt', STATUS='OLD')
+      ! OPEN(UNIT=33, FILE='swing.txt', STATUS='OLD')
+      ! READ(32, '(I4)', ERR=7410) NROW
+      ! READ(33, *)
+      ! READ(32, *)
+      ! READ(33, *)
+      ! READ(32, '(6E14.5)', ERR=7410) (HAT(I,:), I=1, NROW)
+      ! READ(33, '(6E14.5)', ERR=7510) (SWING(I,:), I=1, NROW)
 
+C** Read spline coefficients
+      OPEN(UNIT=34, FILE='HAT_coef.csv', STATUS='OLD')
+      READ(34,*) NROW
+      READ(34,*) (TT(I), I=1, NROW)
+      READ(34,*) ((CCHATX(J,I), J=1, 6), I=1, NROW)
+      READ(34,*) ((CCHATY(J,I), J=1, 6), I=1, NROW)
+      CLOSE(UNIT=34)
+
+      OPEN(UNIT=35, FILE='swing_coef.csv', STATUS='OLD')
+      READ(35,*) NROW
+      READ(35,*) (TT(I), I=1, NROW)
+      READ(35,*) ((CCSWINGX(J,I), J=1, 6), I=1, NROW)
+      READ(35,*) ((CCSWINGY(J,I), J=1, 6), I=1, NROW)
+      CLOSE(UNIT=35)
 
 C**   Degree to radian conversion
       PI       = 4*ATAN(1.0D0)
@@ -120,14 +136,11 @@ C**   Degree to radian conversion
       U4 = U4*DEGtoRAD
       U5 = U5*DEGtoRAD
 
-C** Initialise integration count
-      IDX = 1
-
 C** Initial velocities of masses (swing leg D, HAT E)
-      DXp = SWING(1,3)
-      DYp = SWING(1,4)
-      EXp = HAT(1,3)
-      EYp = HAT(1,4)
+      CALL EVALSPLINE(0.0D0,NROW,TT,CCSWINGX,CCSWINGY,DX,DXp,DXpp,DY,DYp
+     &,DYpp)
+      CALL EVALSPLINE(0.0D0,NROW,TT,CCHATX,CCHATY,EX,EXp,EXpp,EY,EYp,EYp
+     &p)
 
 C** Convert CoM velocity to U1,U2
       U1 = ((MA+MB+MC+MD+ME)*U1+(L5*MC+L6*MD+L6*ME)*SIN(Q5)*U5+(L3*MB+L4
@@ -152,7 +165,7 @@ C**   Initialize time, print counter, variables array for integrator
       VAR(10) = U5
 
 C** Initialise values for integration
-      CALL UPDATE(T,IDX)
+      CALL UPDATE(T)
 
 C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
       CALL KUTTA(EQNS1, 10, VAR, T, INTEGSTP, ABSERR, RELERR, 0, *5920)
@@ -172,8 +185,7 @@ C** Integrate
 
 
 C** Update values after integration
-      IDX = IDX + 1
-      CALL UPDATE(T,IDX)
+      CALL UPDATE(T)
 
       IPRINT = IPRINT - 1
       GOTO 5900
@@ -267,19 +279,18 @@ C**   Inform user of input and output filename(s)
 
 
 C***********************************************************************
-      SUBROUTINE UPDATE(T,IDX)
-C Wrapper to calculate joint torques and mass positions and derivatives 
+      SUBROUTINE UPDATE(T)
+C Wrapper to calculate joint torques for each timestep 
 C Input/Output all through COMMON blocks
 C
 C***********************************************************************
       IMPLICIT DOUBLE PRECISION(A -Z)
 
-      INTEGER          NACTP,IDX
+      INTEGER          NACTP
       PARAMETER        (NACTP=7)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP)
-      DIMENSION        HAT(500,6),SWING(500,6)
       COMMON/VARIBLES/ Q1,Q2,Q3,Q4,Q5,U1,U2,U3,U4,U5
       COMMON/SPECFIED/ DX,DY,EX,EY,DXp,DYp,EXp,EYp,DXpp,DYpp,EXpp,EYpp
       COMMON/ALGBRAIC/ AANG,AANGVEL,AETOR,AFTOR,ATOR,H,HANG,HANGVEL,HETO
@@ -295,7 +306,6 @@ C***********************************************************************
       COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
-      COMMON/MASSDATA/ HAT,SWING
 
       HANG = 4.71238898038469D0 - Q5
       KANG = 3.141592653589793D0 + Q4 - Q5
@@ -321,26 +331,15 @@ C***********************************************************************
       KTOR = KTORE - KTORF
       ATOR = ATORF - ATORE 
 
-      DX   = SWING(IDX,1)
-      DY   = SWING(IDX,2)
-      DXp  = SWING(IDX,3)
-      DYp  = SWING(IDX,4)
-      DXpp = SWING(IDX,5)
-      DYpp = SWING(IDX,6)
-      EX   = HAT(IDX,1)
-      EY   = HAT(IDX,2)
-      EXp  = HAT(IDX,3)
-      EYp  = HAT(IDX,4)
-      EXpp = HAT(IDX,5)
-      EYpp = HAT(IDX,6)
-
       END SUBROUTINE UPDATE
 
 C**********************************************************************
       SUBROUTINE       EQNS1(T, VAR, VARp, BOUNDARY)
       IMPLICIT         DOUBLE PRECISION (A - Z)
-      INTEGER          BOUNDARY
+      INTEGER          BOUNDARY,NROW
       DIMENSION        VAR(*), VARp(*)
+      DIMENSION        TT(500),CCHATX(6,500),CCHATY(6,500),CCSWINGX(6,50
+     &0),CCSWINGY(6,500)
       COMMON/CONSTNTS/ G,IA,IB,IC,K1,K2,K3,K4,L1,L2,L3,L4,L5,L6,MA,MB,MC
      &,MD,ME
       COMMON/SPECFIED/ DX,DY,EX,EY,DXp,DYp,EXp,EYp,DXpp,DYpp,EXpp,EYpp
@@ -355,6 +354,7 @@ C**********************************************************************
      &ODY,POEX,POEY,POP1X,POP1Y,POP2X,POP2Y,POP3X,POP3Y,POP4X,POP4Y,VOCM
      &X,VOCMY
       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,COEF(5,5),RHS(5)
+      COMMON/SPLNCOEF/ TT,CCHATX,CCHATY,CCSWINGX,CCSWINGY,NROW
 
 C**   Update variables after integration step
       Q1 = VAR(1)
@@ -374,6 +374,11 @@ C**   Update variables after integration step
       Q4p = U4
       Q5p = U5
 
+C** Mass positions
+      CALL EVALSPLINE(T,NROW,TT,CCSWINGX,CCSWINGY,DX,DXp,DXpp,DY,DYp
+     &,DYpp)
+      CALL EVALSPLINE(T,NROW,TT,CCHATX,CCHATY,EX,EXp,EXpp,EY,EYp,EYp
+     &p)
 
 C** Calculate forces
         IF (Q2 .LT. 0.0D0) THEN

@@ -1,5 +1,11 @@
 # Log
 
+## 12/10/2020
+
+- Calculate quintic smoothing spline coefficients for mass positions (*_coef.csv)
+- Change update.bat files to copy coefficients not raw data
+- Change base model to read in spline coefficients and evaluate in EQNS1
+
 ## 04/10/2020
 
 - Energy and momentum conservation checks

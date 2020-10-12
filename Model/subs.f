@@ -10,6 +10,7 @@ C   - TORQUE9:     calculates torque given an activation, angle and
 C                  angular velocity. No SEC
 C   - KUTTA:       numerical integrator using variable step size
 C   - SOLVE:       solves a system of equations
+C   - EVALSPLINE:  evaluates a quintic spline at a specified time point
 C
 C   Tom Rottier 2020
 C***********************************************************************
@@ -113,7 +114,7 @@ C Non-intial time
             TQ = K*SECANG
             TA = EXP((-(CCANG - TQP(8))**2) / (2.0D0*TQP(9)**2))
             IF(TA .LT. 0.001D0) TA = 0.001D0
-C If activation 0, set torques and CCANG/ANGVEL to 0 (stops fluctuations)
+C If activation 0, set torques and SECANG/ANGVEL to 0 (stops fluctuations)
             IF (ACT .GE. 0.01D0) THEN
               TV = TQ/(T0*ACT*TA)
             ELSE
@@ -778,3 +779,117 @@ C***************** Beginning of back substitution **********************
   620  FORMAT(/1X,'A PIVOT ELEMENT ENCOUNTERED IN THE DECOMPOSITION',
      & ' OF COEF IS ZERO',/15X,'COEFFICIENT MATRIX IS SINGULAR')
         END SUBROUTINE
+
+c**************************************************************************
+c
+c     subroutine: evalspline
+c
+c     evaluates splines at time t
+c
+c     calculates: position
+c                 velocity 
+c                 acceleration
+c
+c**************************************************************************
+c
+c
+      subroutine evalspline(t,nf,kk,ccswlegx,ccswlegy,swlegxp,swlegxv,
+     &                      swlegxa,swlegyp,swlegyv,swlegya)
+
+      IMPLICIT         DOUBLE PRECISION (A - Z)
+      DIMENSION        swlegx(3),swlegy(3)
+c     
+      integer nf
+c
+      call VALQ3(swlegx,t,ccswlegx,nf,kk)
+      call VALQ3(swlegy,t,ccswlegy,nf,kk)
+c
+      swlegxp = swlegx(1)
+      swlegxv = swlegx(2)
+      swlegxa = swlegx(3)
+c
+      swlegyp = swlegy(1)
+      swlegyv = swlegy(2)
+      swlegya = swlegy(3)
+c
+      return
+      end
+c
+***************************************************************
+c
+      Subroutine VALQ3(SPY,T,CCF,NU,k)
+
+      parameter (n = 1000)
+c
+      double precision CCF(6,n),k(n),T,SPY(3),QSPLIN,QDSPLN
+c
+      integer NU
+
+      SPY(1)=QSPLIN(NU,k,CCF,T)
+      SPY(2)=QDSPLN(NU,k,CCF,T,1)
+      SPY(3)=QDSPLN(NU,k,CCF,T,2)
+
+      return
+      end
+c
+c********************************************************************
+c
+      DOUBLE PRECISION FUNCTION QSPLIN (N,X,COEF,T)
+      IMPLICIT DOUBLE PRECISION(A-H,P-Z)
+C
+C       FUNCTION TO EVALUATE THE SPLINE AT THE POINT T.
+C
+      DIMENSION COEF(6,N),X(N)
+      DO1I=1,N
+      IF(T.LT.X(I)) GOTO2
+    1 CONTINUE
+      I=N+1
+    2 I=I-1
+      IF(I.EQ.0) GOTO3
+      TT=T-X(I)
+      QSPLIN=COEF(6,I)
+      DO4J=1,5
+    4 QSPLIN=QSPLIN*TT+COEF(6-J,I)
+      RETURN
+    3 QSPLIN=(COEF(3,1)*(T-X(1))+COEF(2,1))*(T-X(1))+COEF(1,1)
+      RETURN
+      END
+c
+C*******************************************************************
+c
+      DOUBLE PRECISION FUNCTION QDSPLN (N,X,COEF,T,K)
+      IMPLICIT DOUBLE PRECISION(A-H,P-Z)
+      DIMENSION COEF(6,N),X(N),FACT(15)
+      DATA FACT/5.,4.,3.,2.,1.,20.,12.,6.,2.,60.,24.,6.,120.,24.,120./
+C
+C       FUNCTION TO EVALUATE DERIVATIVES OF QUINTIC SPLINE.
+C
+      DO1I=1,N
+      IF(T.LT.X(I)) GOTO2
+    1 CONTINUE
+      I=N+1
+    2 I=I-1
+      IF(I.EQ.0) GOTO3
+      TT=T-X(I)
+      IF(K.GT.0) GOTO5
+    9 QDSPLN=QSPLIN(N,X,COEF,T)
+      RETURN
+    5 IF(K.GE.6) GOTO8
+      KCOL=(K-1)*(12-K)/2+1
+      R=COEF(6,I)*FACT(KCOL)
+      IF(K.EQ.5) GOTO6
+      JJ=5-K
+      DO4J=1,JJ
+    4 R=R*TT+COEF(6-J,I)*FACT(KCOL+J)
+    6 QDSPLN=R
+      RETURN
+    3 TT=T-X(1)
+      IF(K.LE.0) GOTO9
+      IF(K.GE.3) GOTO8
+      QDSPLN=COEF(3,1)*2.0
+      IF(K.EQ.2) RETURN
+      QDSPLN=QDSPLN*TT+COEF(2,1)
+      RETURN
+    8 QDSPLN=0.0
+      RETURN
+      END

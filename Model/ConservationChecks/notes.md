@@ -6,4 +6,6 @@ To note:
 
 - Model conserves energy  only when mass functions set to 0 as inconsistencies in data. Even with no external forces CoM velocitiy changes slightly with mass functions. Setting mass functions as consistent functions (e.g. polynomials with algebraic derivatives), gives a constant CoM velocity - although not exact energy or momentum conservation, perhaps just due to numerical vs algebraic differentiation.
 
+- Using splines fit to position data and their algebraic derivatives, model still does not conserve energy or angular momentum. Same energy lost when no gravity, therefore all losses come from changes in kinetic energy. CoM velocity is conserved however.
+
 - Conservation only holds with spring forces if contact model is linear. Contact model changed to linear spring to show conservation holds when external forces applied.
