@@ -4,7 +4,7 @@ Replace this line with a message to appear on all output files.
 ----------------------------------------------------------+------------------
 Description          Quantity             Units           | Value
 ----------------------------------------------------------|------------------
-Constant:            G                    M/S^2           |  -9.81
+Constant:            G                    M/S^2           |  0.0
 Constant:            IA                   KG.M^2          |  0.0096
 Constant:            IB                   KG.M^2          |  0.0792
 Constant:            IC                   KG.M^2          |  0.2122
