@@ -19,18 +19,18 @@ footM = inertia(1,2); shankM = inertia(2,2); thighM = inertia(3,2);
 lwTrunkM = inertia(4,2); upTrunkM = inertia(5,2); headM = inertia(6,2);
 upArmM = inertia(7,2); lwArmM = inertia(8,2);
 legM = footM+shankM+thighM;
-upperM = lwTrunkM+upTrunkM+headM+2*upArmM+2*lwArmM;
+hatM = lwTrunkM+upTrunkM+headM+2*upArmM+2*lwArmM;
 
 %% CoM of trunk and arms
-upperCM = (cm.Data.Avg(:,:,contains(cm.Names, 'LwTrunk')).*lwTrunkM + ...
+hatCM = (cm.Data.Avg(:,:,contains(cm.Names, 'LwTrunk')).*lwTrunkM + ...
         cm.Data.Avg(:,:,contains(cm.Names, 'UpTrunk')).*upTrunkM + ...
         cm.Data.Avg(:,:,contains(cm.Names, 'Head')).*headM + ...
         sum(cm.Data.Avg(:,:,contains(cm.Names, 'UpArm')), 3).*upArmM + ...
         sum(cm.Data.Avg(:,:,contains(cm.Names, 'LwArm')), 3).*lwArmM) ...
-        ./ (upperM);
+        ./ (hatM);
 
 % Relative to hip joint
-upperCM_HJC = upperCM - HJC;
+upperCM_HJC = hatCM - HJC;
 
 %% CoM of swing leg
 swingCM = (cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Foot'])).*footM + ...
@@ -49,7 +49,7 @@ stanceCM = (cm.Data.Avg(:,:,contains(cm.Names, [leg 'Foot'])).*footM + ...
 legCM_HJC = stanceCM - HJC;
 
 %% Check WBCM
-WBCM = (stanceCM.*legM + swingCM.*legM + upperCM.*upperM) / (2*legM+upperM);
+WBCM = (stanceCM.*legM + swingCM.*legM + hatCM.*hatM) / (2*legM+hatM);
 WBCM_HJC = WBCM - HJC;      % Relative to HJC
 
 % All segments CoM - slight difference maybe due to using joint centres in

@@ -181,7 +181,7 @@ C Loop through parameters and calculate activation
         AFUN = A0 + (A1-A0) * ((T-T0)/TR)**3 * (6*((T-T0)/TR)**2 - 15*((
      &            T-T0)/TR) + 10)
      
-        IF (T .LT. T0) THEN
+        IF (T .LE. T0) THEN
           A = A0
           RETURN
         ELSEIF ((T .GE. T0) .AND. (T .LE. T0 + TR)) THEN

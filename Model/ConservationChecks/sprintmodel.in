@@ -8,10 +8,10 @@ Constant:            G                    M/S^2           |  0.0
 Constant:            IA                   KG.M^2          |  0.0096
 Constant:            IB                   KG.M^2          |  0.0792
 Constant:            IC                   KG.M^2          |  0.2122
-Constant:            K1                   N/M             |  0.0                   
-Constant:            K2                   N/M/S^2         |  0.0                   
-Constant:            K3                   N/M             |  0.0                    
-Constant:            K4                   N/M/S^2         |  0.0    
+Constant:            K1                   N/M             |  0.0
+Constant:            K2                   N/M/S^2         |  0.0
+Constant:            K3                   N/M             |  0.0
+Constant:            K4                   N/M/S^2         |  0.0
 Constant:            L1                   M               |  0.142
 Constant:            L2                   M               |  0.224
 Constant:            L3                   M               |  0.261
@@ -29,15 +29,15 @@ Initial Value:       Q2                   M               |  0.0
 Initial Value:       Q3                   DEG             |  152.2
 Initial Value:       Q4                   DEG             |  94.0
 Initial Value:       Q5                   DEG             |  118.6
-Initial Value:       VOCMX                M/S             |  9.698
-Initial Value:       VOCMY                M/S             |  -0.758
+Initial Value:       U1                   M/S             |  9.698
+Initial Value:       U2                   M/S             |  -0.758
 Initial Value:       U3                   DEG/S           |  95.1
-Initial Value:       U4                   DEG/S           |  -611.8
+Initial Value:       U4                   DEG/S           |  -611.1
 Initial Value:       U5                   DEG/S           |  -440.3
 
-Initial Time:        TINITIAL             UNITS           |  0.0
-Final Time:          TFINAL               UNITS           |  0.111
-Integration Step:    INTEGSTP             UNITS           |  0.001
+Initial Time:        TINITIAL             S               |  0.0
+Final Time:          TFINAL               S               |  0.111
+Integration Step:    INTEGSTP             S               |  0.001
 Print-Integer:       PRINTINT             Positive Integer|  1
 Absolute Error:      ABSERR                               |  1.0E-08
 Relative Error:      RELERR                               |  1.0E-07
