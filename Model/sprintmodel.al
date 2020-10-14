@@ -53,8 +53,8 @@ P_P2_BO> = L3*B1>			    % From AJC to shank CM
 P_P2_P3> = L4*B1>			    % From AJC to KJC
 P_P3_CO> = L5*C1>			    % From KJC to thigh CM
 P_P3_P4> = L6*C1>			    % From KJC to HJC
-P_P4_D>  = DX*N1> + DY*N2>      % From HJC to swing leg point mass
-P_P4_E>  = EX*N1> + EY*N2>		% From HJC to HAT point mass
+P_P4_D>  = DX*C1> + DY*C2>      % From HJC to swing leg point mass
+P_P4_E>  = EX*C1> + EY*C2>		% From HJC to HAT point mass
 %
 % Position of points relative to origin
 P_O_AO> = P_O_P1> + P_P1_AO>

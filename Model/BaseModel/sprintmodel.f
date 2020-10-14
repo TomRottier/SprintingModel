@@ -373,7 +373,7 @@ C** Mass positions
       CALL EVALSPLINE(T,NROW,TT,CCSWINGX,CCSWINGY,DX,DXp,DXpp,DY,DYp,DYp
      &p)
       CALL EVALSPLINE(T,NROW,TT,CCHATX,CCHATY,EX,EXp,EXpp,EY,EYp,EYpp)
-
+     
 C** Calculate forces
         IF (Q2 .LT. 0.0D0) THEN
           RY = -K3*Q2 - K4*U2*ABS(Q2)
@@ -388,52 +388,72 @@ C** Set up inertia matrix (COEF) and force vector (RHS)
       COEF(1,2) = 0
       COEF(1,3) = (L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*SIN(Q3)
       COEF(1,4) = (L3*MB+L4*MC+L4*MD+L4*ME)*SIN(Q4)
-      COEF(1,5) = (L5*MC+L6*MD+L6*ME)*SIN(Q5)
+      COEF(1,5) = L5*MC*SIN(Q5) + MD*(DY*COS(Q5)+(L6+DX)*SIN(Q5)) + ME*(
+     &EY*COS(Q5)+(L6+EX)*SIN(Q5))
       COEF(2,1) = 0
       COEF(2,2) = -MA - MB - MC - MD - ME
       COEF(2,3) = -(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*COS(Q3)
       COEF(2,4) = -(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q4)
-      COEF(2,5) = -(L5*MC+L6*MD+L6*ME)*COS(Q5)
+      COEF(2,5) = MD*(DY*SIN(Q5)-(L6+DX)*COS(Q5)) + ME*(EY*SIN(Q5)-(L6+E
+     &X)*COS(Q5)) - L5*MC*COS(Q5)
       COEF(3,1) = (L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*SIN(Q3)
       COEF(3,2) = -(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*COS(Q3)
       COEF(3,3) = -IA - MA*L1**2 - MB*L2**2 - MC*L2**2 - MD*L2**2 - ME*L
      &2**2
       COEF(3,4) = -L2*(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q3-Q4)
-      COEF(3,5) = -L2*(L5*MC+L6*MD+L6*ME)*COS(Q3-Q5)
+      COEF(3,5) = -L2*(L5*MC*COS(Q3-Q5)+MD*(DY*SIN(Q3-Q5)+(L6+DX)*COS(Q3
+     &-Q5))+ME*(EY*SIN(Q3-Q5)+(L6+EX)*COS(Q3-Q5)))
       COEF(4,1) = (L3*MB+L4*MC+L4*MD+L4*ME)*SIN(Q4)
       COEF(4,2) = -(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q4)
       COEF(4,3) = -L2*(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q3-Q4)
       COEF(4,4) = -IB - MB*L3**2 - MC*L4**2 - MD*L4**2 - ME*L4**2
-      COEF(4,5) = -L4*(L5*MC+L6*MD+L6*ME)*COS(Q4-Q5)
-      COEF(5,1) = (L5*MC+L6*MD+L6*ME)*SIN(Q5)
-      COEF(5,2) = -(L5*MC+L6*MD+L6*ME)*COS(Q5)
-      COEF(5,3) = -L2*(L5*MC+L6*MD+L6*ME)*COS(Q3-Q5)
-      COEF(5,4) = -L4*(L5*MC+L6*MD+L6*ME)*COS(Q4-Q5)
-      COEF(5,5) = -IC - MC*L5**2 - MD*L6**2 - ME*L6**2
-      RHS(1) = MD*(DXpp-L2*COS(Q3)*U3**2-L4*COS(Q4)*U4**2-L6*COS(Q5)*U5*
-     &*2) + ME*(EXpp-L2*COS(Q3)*U3**2-L4*COS(Q4)*U4**2-L6*COS(Q5)*U5**2)
-     & - RX - L1*MA*COS(Q3)*U3**2 - MB*(L2*COS(Q3)*U3**2+L3*COS(Q4)*U4**
-     &2) - MC*(L2*COS(Q3)*U3**2+L4*COS(Q4)*U4**2+L5*COS(Q5)*U5**2)
-      RHS(2) = MD*(DYpp-L2*SIN(Q3)*U3**2-L4*SIN(Q4)*U4**2-L6*SIN(Q5)*U5*
-     &*2) + ME*(EYpp-L2*SIN(Q3)*U3**2-L4*SIN(Q4)*U4**2-L6*SIN(Q5)*U5**2)
-     & - G*MA - G*MB - G*MC - G*MD - G*ME - RY - L1*MA*SIN(Q3)*U3**2 - M
-     &B*(L2*SIN(Q3)*U3**2+L3*SIN(Q4)*U4**2) - MC*(L2*SIN(Q3)*U3**2+L4*SI
-     &N(Q4)*U4**2+L5*SIN(Q5)*U5**2)
+      COEF(4,5) = -L4*(L5*MC*COS(Q4-Q5)+MD*(DY*SIN(Q4-Q5)+(L6+DX)*COS(Q4
+     &-Q5))+ME*(EY*SIN(Q4-Q5)+(L6+EX)*COS(Q4-Q5)))
+      COEF(5,1) = L5*MC*SIN(Q5) + MD*(DY*COS(Q5)+(L6+DX)*SIN(Q5)) + ME*(
+     &EY*COS(Q5)+(L6+EX)*SIN(Q5))
+      COEF(5,2) = MD*(DY*SIN(Q5)-(L6+DX)*COS(Q5)) + ME*(EY*SIN(Q5)-(L6+E
+     &X)*COS(Q5)) - L5*MC*COS(Q5)
+      COEF(5,3) = -L2*(L5*MC*COS(Q3-Q5)+MD*(DY*SIN(Q3-Q5)+(L6+DX)*COS(Q3
+     &-Q5))+ME*(EY*SIN(Q3-Q5)+(L6+EX)*COS(Q3-Q5)))
+      COEF(5,4) = -L4*(L5*MC*COS(Q4-Q5)+MD*(DY*SIN(Q4-Q5)+(L6+DX)*COS(Q4
+     &-Q5))+ME*(EY*SIN(Q4-Q5)+(L6+EX)*COS(Q4-Q5)))
+      COEF(5,5) = -IC - MC*L5**2 - MD*(DY**2+(L6+DX)**2) - ME*(EY**2+(L6
+     &+EX)**2)
+      RHS(1) = -RX - L1*MA*COS(Q3)*U3**2 - MB*(L2*COS(Q3)*U3**2+L3*COS(Q
+     &4)*U4**2) - MC*(L2*COS(Q3)*U3**2+L4*COS(Q4)*U4**2+L5*COS(Q5)*U5**2
+     &) - MD*(L2*COS(Q3)*U3**2+L4*COS(Q4)*U4**2+SIN(Q5)*(DYpp+DXp*U5+U5*
+     &(DXp-DY*U5))-COS(Q5)*(DXpp-DYp*U5-U5*(DYp+(L6+DX)*U5))) - ME*(L2*C
+     &OS(Q3)*U3**2+L4*COS(Q4)*U4**2+SIN(Q5)*(EYpp+EXp*U5+U5*(EXp-EY*U5))
+     &-COS(Q5)*(EXpp-EYp*U5-U5*(EYp+(L6+EX)*U5)))
+      RHS(2) = -G*MA - G*MB - G*MC - G*MD - G*ME - RY - L1*MA*SIN(Q3)*U3
+     &**2 - MB*(L2*SIN(Q3)*U3**2+L3*SIN(Q4)*U4**2) - MC*(L2*SIN(Q3)*U3**
+     &2+L4*SIN(Q4)*U4**2+L5*SIN(Q5)*U5**2) - MD*(L2*SIN(Q3)*U3**2+L4*SIN
+     &(Q4)*U4**2-COS(Q5)*(DYpp+DXp*U5+U5*(DXp-DY*U5))-SIN(Q5)*(DXpp-DYp*
+     &U5-U5*(DYp+(L6+DX)*U5))) - ME*(L2*SIN(Q3)*U3**2+L4*SIN(Q4)*U4**2-C
+     &OS(Q5)*(EYpp+EXp*U5+U5*(EXp-EY*U5))-SIN(Q5)*(EXpp-EYp*U5-U5*(EYp+(
+     &L6+EX)*U5)))
       RHS(3) = L2*(L3*MB*SIN(Q3-Q4)*U4**2+MC*(L4*SIN(Q3-Q4)*U4**2+L5*SIN
-     &(Q3-Q5)*U5**2)-MD*(DXpp*SIN(Q3)-DYpp*COS(Q3)-L4*SIN(Q3-Q4)*U4**2-L
-     &6*SIN(Q3-Q5)*U5**2)-ME*(EXpp*SIN(Q3)-EYpp*COS(Q3)-L4*SIN(Q3-Q4)*U4
-     &**2-L6*SIN(Q3-Q5)*U5**2)) - ATOR - G*L1*MA*COS(Q3) - G*L2*MB*COS(Q
-     &3) - G*L2*MC*COS(Q3) - G*L2*MD*COS(Q3) - G*L2*ME*COS(Q3)
-      RHS(4) = ATOR - KTOR - G*L3*MB*COS(Q4) - G*L4*MC*COS(Q4) - G*L4*MD
-     &*COS(Q4) - G*L4*ME*COS(Q4) - L2*L3*MB*SIN(Q3-Q4)*U3**2 - L4*MC*(L2
-     &*SIN(Q3-Q4)*U3**2-L5*SIN(Q4-Q5)*U5**2) - L4*MD*(DXpp*SIN(Q4)+L2*SI
-     &N(Q3-Q4)*U3**2-DYpp*COS(Q4)-L6*SIN(Q4-Q5)*U5**2) - L4*ME*(EXpp*SIN
-     &(Q4)+L2*SIN(Q3-Q4)*U3**2-EYpp*COS(Q4)-L6*SIN(Q4-Q5)*U5**2)
-      RHS(5) = KTOR + L6*MD*(DYpp*COS(Q5)-DXpp*SIN(Q5)-L2*SIN(Q3-Q5)*U3*
-     &*2-L4*SIN(Q4-Q5)*U4**2) + L6*ME*(EYpp*COS(Q5)-EXpp*SIN(Q5)-L2*SIN(
-     &Q3-Q5)*U3**2-L4*SIN(Q4-Q5)*U4**2) - HTOR - G*L5*MC*COS(Q5) - G*L6*
-     &MD*COS(Q5) - G*L6*ME*COS(Q5) - L5*MC*(L2*SIN(Q3-Q5)*U3**2+L4*SIN(Q
-     &4-Q5)*U4**2)
+     &(Q3-Q5)*U5**2)+MD*(L4*SIN(Q3-Q4)*U4**2+COS(Q3-Q5)*(DYpp+DXp*U5+U5*
+     &(DXp-DY*U5))-SIN(Q3-Q5)*(DXpp-DYp*U5-U5*(DYp+(L6+DX)*U5)))+ME*(L4*
+     &SIN(Q3-Q4)*U4**2+COS(Q3-Q5)*(EYpp+EXp*U5+U5*(EXp-EY*U5))-SIN(Q3-Q5
+     &)*(EXpp-EYp*U5-U5*(EYp+(L6+EX)*U5)))) - ATOR - G*L1*MA*COS(Q3) - G
+     &*L2*MB*COS(Q3) - G*L2*MC*COS(Q3) - G*L2*MD*COS(Q3) - G*L2*ME*COS(Q
+     &3)
+      RHS(4) = ATOR + L4*MD*(COS(Q4-Q5)*(DYpp+DXp*U5+U5*(DXp-DY*U5))-L2*
+     &SIN(Q3-Q4)*U3**2-SIN(Q4-Q5)*(DXpp-DYp*U5-U5*(DYp+(L6+DX)*U5))) + L
+     &4*ME*(COS(Q4-Q5)*(EYpp+EXp*U5+U5*(EXp-EY*U5))-L2*SIN(Q3-Q4)*U3**2-
+     &SIN(Q4-Q5)*(EXpp-EYp*U5-U5*(EYp+(L6+EX)*U5))) - KTOR - G*L3*MB*COS
+     &(Q4) - G*L4*MC*COS(Q4) - G*L4*MD*COS(Q4) - G*L4*ME*COS(Q4) - L2*L3
+     &*MB*SIN(Q3-Q4)*U3**2 - L4*MC*(L2*SIN(Q3-Q4)*U3**2-L5*SIN(Q4-Q5)*U5
+     &**2)
+      RHS(5) = KTOR + G*MD*(DY*SIN(Q5)-(L6+DX)*COS(Q5)) + G*ME*(EY*SIN(Q
+     &5)-(L6+EX)*COS(Q5)) + MD*(L2*DY*COS(Q3-Q5)*U3**2+L4*DY*COS(Q4-Q5)*
+     &U4**2+(L6+DX)*(DYpp+DXp*U5+U5*(DXp-DY*U5))-L2*(L6+DX)*SIN(Q3-Q5)*U
+     &3**2-L4*(L6+DX)*SIN(Q4-Q5)*U4**2-DY*(DXpp-DYp*U5-U5*(DYp+(L6+DX)*U
+     &5))) + ME*(L2*EY*COS(Q3-Q5)*U3**2+L4*EY*COS(Q4-Q5)*U4**2+(L6+EX)*(
+     &EYpp+EXp*U5+U5*(EXp-EY*U5))-L2*(L6+EX)*SIN(Q3-Q5)*U3**2-L4*(L6+EX)
+     &*SIN(Q4-Q5)*U4**2-EY*(EXpp-EYp*U5-U5*(EYp+(L6+EX)*U5))) - HTOR - G
+     &*L5*MC*COS(Q5) - L5*MC*(L2*SIN(Q3-Q5)*U3**2+L4*SIN(Q4-Q5)*U4**2)
       CALL SOLVE(5,COEF,RHS,VARp)
 
 C**   Update variables after uncoupling equations
@@ -490,122 +510,111 @@ C**   Evaluate output quantities
      &+2*L5*SIN(Q5)*U1*U5-U1**2-U2**2-L2**2*U3**2-L4**2*U4**2-L5**2*U5**
      &2-2*L2*COS(Q3)*U2*U3-2*L4*COS(Q4)*U2*U4-2*L5*COS(Q5)*U2*U5-2*L2*L4
      &*COS(Q3-Q4)*U3*U4-2*L2*L5*COS(Q3-Q5)*U3*U5-2*L4*L5*COS(Q4-Q5)*U4*U
-     &5) - 0.5D0*MD*(2*L2*SIN(Q3)*U3*(DXp+U1)+2*L4*SIN(Q4)*U4*(DXp+U1)+2
-     &*L6*SIN(Q5)*U5*(DXp+U1)-(DXp+U1)**2-(DYp+U2)**2-L2**2*U3**2-L4**2*
-     &U4**2-L6**2*U5**2-2*L2*COS(Q3)*U3*(DYp+U2)-2*L4*COS(Q4)*U4*(DYp+U2
-     &)-2*L6*COS(Q5)*U5*(DYp+U2)-2*L2*L4*COS(Q3-Q4)*U3*U4-2*L2*L6*COS(Q3
-     &-Q5)*U3*U5-2*L4*L6*COS(Q4-Q5)*U4*U5) - 0.5D0*ME*(2*L2*SIN(Q3)*U3*(
-     &EXp+U1)+2*L4*SIN(Q4)*U4*(EXp+U1)+2*L6*SIN(Q5)*U5*(EXp+U1)-(EXp+U1)
-     &**2-(EYp+U2)**2-L2**2*U3**2-L4**2*U4**2-L6**2*U5**2-2*L2*COS(Q3)*U
-     &3*(EYp+U2)-2*L4*COS(Q4)*U4*(EYp+U2)-2*L6*COS(Q5)*U5*(EYp+U2)-2*L2*
-     &L4*COS(Q3-Q4)*U3*U4-2*L2*L6*COS(Q3-Q5)*U3*U5-2*L4*L6*COS(Q4-Q5)*U4
-     &*U5)
-      POCMY = (MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2)+(L5*MC+L6*MD+L6*M
-     &E)*SIN(Q5)+(L3*MB+L4*MC+L4*MD+L4*ME)*SIN(Q4)+(L1*MA+L2*MB+L2*MC+L2
-     &*MD+L2*ME)*SIN(Q3))/(MA+MB+MC+MD+ME)
+     &5) - 0.5D0*MD*(2*L2*SIN(Q3)*U1*U3+2*L4*SIN(Q4)*U1*U4+2*SIN(Q5)*U1*
+     &(DYp+(L6+DX)*U5)+2*L2*SIN(Q3-Q5)*U3*(DXp-DY*U5)+2*L4*SIN(Q4-Q5)*U4
+     &*(DXp-DY*U5)-U1**2-U2**2-L2**2*U3**2-L4**2*U4**2-2*L2*COS(Q3)*U2*U
+     &3-2*L4*COS(Q4)*U2*U4-(DXp-DY*U5)**2-(DYp+(L6+DX)*U5)**2-2*SIN(Q5)*
+     &U2*(DXp-DY*U5)-2*COS(Q5)*U1*(DXp-DY*U5)-2*L2*L4*COS(Q3-Q4)*U3*U4-2
+     &*COS(Q5)*U2*(DYp+(L6+DX)*U5)-2*L2*COS(Q3-Q5)*U3*(DYp+(L6+DX)*U5)-2
+     &*L4*COS(Q4-Q5)*U4*(DYp+(L6+DX)*U5)) - 0.5D0*ME*(2*L2*SIN(Q3)*U1*U3
+     &+2*L4*SIN(Q4)*U1*U4+2*SIN(Q5)*U1*(EYp+(L6+EX)*U5)+2*L2*SIN(Q3-Q5)*
+     &U3*(EXp-EY*U5)+2*L4*SIN(Q4-Q5)*U4*(EXp-EY*U5)-U1**2-U2**2-L2**2*U3
+     &**2-L4**2*U4**2-2*L2*COS(Q3)*U2*U3-2*L4*COS(Q4)*U2*U4-(EXp-EY*U5)*
+     &*2-(EYp+(L6+EX)*U5)**2-2*SIN(Q5)*U2*(EXp-EY*U5)-2*COS(Q5)*U1*(EXp-
+     &EY*U5)-2*L2*L4*COS(Q3-Q4)*U3*U4-2*COS(Q5)*U2*(EYp+(L6+EX)*U5)-2*L2
+     &*COS(Q3-Q5)*U3*(EYp+(L6+EX)*U5)-2*L4*COS(Q4-Q5)*U4*(EYp+(L6+EX)*U5
+     &))
+      POCMY = Q2 + ((MD*DY+ME*EY)*COS(Q5)+(L3*MB+L4*MC+L4*MD+L4*ME)*SIN(
+     &Q4)+(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*SIN(Q3)+(L5*MC+MD*(L6+DX)+ME*(
+     &L6+EX))*SIN(Q5))/(MA+MB+MC+MD+ME)
       PECM = 0.5D0*K1*Q1**2 + 0.5D0*K3*Q2**2 - G*(MA+MB+MC+MD+ME)*POCMY
       TE = KECM + PECM
-      HZ = MB*((L3-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4)*U
-     &2+(L5*MC+L6*MD+L6*ME)*(SIN(Q5)*U1-COS(Q5)*U2)/(MA+MB+MC+MD+ME)+(L2
-     &-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3)*U2+(Q1-
-     &(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME))*U2-(L3
-     &-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*SIN(Q4)*U1-(L2-(L1*MA
-     &+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*SIN(Q3)*U1-(Q2-(MA*Q2+
-     &MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))*U1) + MC*((L5
-     &-(L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME))*COS(Q5)*U2+(L4-(L3*MB+L4*MC
-     &+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4)*U2+(L2-(L1*MA+L2*MB+L2*MC+
-     &L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3)*U2+(Q1-(MA*Q1+MB*Q1+MC*Q1+M
-     &D*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME))*U2-(L5-(L5*MC+L6*MD+L6*ME)
-     &/(MA+MB+MC+MD+ME))*SIN(Q5)*U1-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB
-     &+MC+MD+ME))*SIN(Q4)*U1-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+
-     &MC+MD+ME))*SIN(Q3)*U1-(Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2)
-     &)/(MA+MB+MC+MD+ME))*U1) + MD*((L6-(L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD
-     &+ME))*COS(Q5)*(DYp+U2)+(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+
-     &ME))*COS(Q4)*(DYp+U2)+(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+M
-     &C+MD+ME))*COS(Q3)*(DYp+U2)+(DX+Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME
-     &*(EX+Q1))/(MA+MB+MC+MD+ME))*(DYp+U2)-(L6-(L5*MC+L6*MD+L6*ME)/(MA+M
-     &B+MC+MD+ME))*SIN(Q5)*(DXp+U1)-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB
-     &+MC+MD+ME))*SIN(Q4)*(DXp+U1)-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(
-     &MA+MB+MC+MD+ME))*SIN(Q3)*(DXp+U1)-(DY+Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY
-     &+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))*(DXp+U1)) + ME*((L6-(L5*MC+L6*M
-     &D+L6*ME)/(MA+MB+MC+MD+ME))*COS(Q5)*(EYp+U2)+(L4-(L3*MB+L4*MC+L4*MD
-     &+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4)*(EYp+U2)+(L2-(L1*MA+L2*MB+L2*MC+
-     &L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3)*(EYp+U2)+(EX+Q1-(MA*Q1+MB*Q
-     &1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME))*(EYp+U2)-(L6-(L5*
-     &MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME))*SIN(Q5)*(EXp+U1)-(L4-(L3*MB+L4*M
-     &C+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*SIN(Q4)*(EXp+U1)-(L2-(L1*MA+L2*MB
-     &+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*SIN(Q3)*(EXp+U1)-(EY+Q2-(MA*
-     &Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))*(EXp+U1)) 
-     &+ (IC-L5*MC*((L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME)-L5-(L4-(L3*MB+L4
-     &*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)-(L2-(L1*MA+L2*MB+L2*
-     &MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q5)-SIN(Q5)*(Q2-(MA*Q2+MB
-     &*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))-COS(Q5)*(Q1-(MA
-     &*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME)))-L6*MD*((
-     &L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME)-L6-(L4-(L3*MB+L4*MC+L4*MD+L4*M
-     &E)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME
-     &)/(MA+MB+MC+MD+ME))*COS(Q3-Q5)-SIN(Q5)*(DY+Q2-(MA*Q2+MB*Q2+MC*Q2+M
-     &D*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))-COS(Q5)*(DX+Q1-(MA*Q1+MB*Q
-     &1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME)))-L6*ME*((L5*MC+L6
-     &*MD+L6*ME)/(MA+MB+MC+MD+ME)-L6-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+M
-     &B+MC+MD+ME))*COS(Q4-Q5)-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB
-     &+MC+MD+ME))*COS(Q3-Q5)-SIN(Q5)*(EY+Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2
-     &)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))-COS(Q5)*(EX+Q1-(MA*Q1+MB*Q1+MC*Q1+
-     &MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME))))*U5 + (IB-L3*MB*((L3*MB+
-     &L4*MC+L4*MD+L4*ME+(L5*MC+L6*MD+L6*ME)*COS(Q4-Q5))/(MA+MB+MC+MD+ME)
-     &-L3-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q
-     &4)-SIN(Q4)*(Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC
-     &+MD+ME))-COS(Q4)*(Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA
-     &+MB+MC+MD+ME)))-L4*MC*((L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME)-
-     &L4-(L5-(L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)-(L2-(L1*MA
-     &+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-SIN(Q4)*(Q2
-     &-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))-COS(Q
-     &4)*(Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME))
-     &)-L4*MD*((L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME)-L4-(L6-(L5*MC+
-     &L6*MD+L6*ME)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)-(L2-(L1*MA+L2*MB+L2*MC+L
-     &2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-SIN(Q4)*(DY+Q2-(MA*Q2+MB*
-     &Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))-COS(Q4)*(DX+Q1-(
-     &MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME)))-L4*ME*
-     &((L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME)-L4-(L6-(L5*MC+L6*MD+L6
-     &*ME)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*
-     &ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-SIN(Q4)*(EY+Q2-(MA*Q2+MB*Q2+MC*Q2
-     &+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))-COS(Q4)*(EX+Q1-(MA*Q1+MB
-     &*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME))))*U4 + (IA+L1*M
-     &A*(L1+SIN(Q3)*(Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB
-     &+MC+MD+ME))+COS(Q3)*(Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/
-     &(MA+MB+MC+MD+ME))-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME+(L5*MC+L6*MD+L6*M
-     &E)*COS(Q3-Q5)+(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q3-Q4))/(MA+MB+MC+MD+M
-     &E))+L2*MB*(L2+(L3-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(
-     &Q3-Q4)+SIN(Q3)*(Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+M
-     &B+MC+MD+ME))+COS(Q3)*(Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))
-     &/(MA+MB+MC+MD+ME))-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME+(L5*MC+L6*MD+L6*
-     &ME)*COS(Q3-Q5))/(MA+MB+MC+MD+ME))-L2*MC*((L1*MA+L2*MB+L2*MC+L2*MD+
-     &L2*ME)/(MA+MB+MC+MD+ME)-L2-(L5-(L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME
-     &))*COS(Q3-Q5)-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(
-     &Q3-Q4)-SIN(Q3)*(Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+M
-     &B+MC+MD+ME))-COS(Q3)*(Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))
-     &/(MA+MB+MC+MD+ME)))-L2*MD*((L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+
-     &MC+MD+ME)-L2-(L6-(L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q5)-
-     &(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-SIN(Q3)
-     &*(DY+Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME)
-     &)-COS(Q3)*(DX+Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+
-     &MC+MD+ME)))-L2*ME*((L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME
-     &)-L2-(L6-(L5*MC+L6*MD+L6*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q5)-(L4-(L3*
-     &MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-SIN(Q3)*(EY+Q2-
-     &(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+MC+MD+ME))-COS(Q3
-     &)*(EX+Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+MC+MD+ME
-     &))))*U3 - MA*((L1-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME)
-     &)*SIN(Q3)*U1+(Q2-(MA*Q2+MB*Q2+MC*Q2+MD*(DY+Q2)+ME*(EY+Q2))/(MA+MB+
-     &MC+MD+ME))*U1-(L1-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME)
-     &)*COS(Q3)*U2-(Q1-(MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1))/(MA+MB+
-     &MC+MD+ME))*U2-((L5*MC+L6*MD+L6*ME)*SIN(Q5)*U1+(L3*MB+L4*MC+L4*MD+L
-     &4*ME)*SIN(Q4)*U1-(L5*MC+L6*MD+L6*ME)*COS(Q5)*U2-(L3*MB+L4*MC+L4*MD
-     &+L4*ME)*COS(Q4)*U2)/(MA+MB+MC+MD+ME))
-      PX = MA*U1 + MB*U1 + MC*U1 + MD*(DXp+U1) + ME*(EXp+U1) - (L5*MC+L6
-     &*MD+L6*ME)*SIN(Q5)*U5 - (L3*MB+L4*MC+L4*MD+L4*ME)*SIN(Q4)*U4 - (L1
-     &*MA+L2*MB+L2*MC+L2*MD+L2*ME)*SIN(Q3)*U3
-      PY = MA*U2 + MB*U2 + MC*U2 + MD*(DYp+U2) + ME*(EYp+U2) + (L5*MC+L6
-     &*MD+L6*ME)*COS(Q5)*U5 + (L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q4)*U4 + (L1
-     &*MA+L2*MB+L2*MC+L2*MD+L2*ME)*COS(Q3)*U3
+      HZ = IC*U5 + (IB+L3*MB*(L3+(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA
+     &+MB+MC+MD+ME))*COS(Q3-Q4)-(L3*MB+L4*MC+L4*MD+L4*ME+(MD*DY+ME*EY)*S
+     &IN(Q4-Q5)+(L5*MC+MD*(L6+DX)+ME*(L6+EX))*COS(Q4-Q5))/(MA+MB+MC+MD+M
+     &E))-L4*MC*((L3*MB+L4*MC+L4*MD+L4*ME+(MD*DY+ME*EY)*SIN(Q4-Q5))/(MA+
+     &MB+MC+MD+ME)-L4-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+M
+     &E))*COS(Q3-Q4)-(L5-(L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME))
+     &*COS(Q4-Q5))-L4*MD*((L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME)-L4-
+     &(DY-(MD*DY+ME*EY)/(MA+MB+MC+MD+ME))*SIN(Q4-Q5)-(L2-(L1*MA+L2*MB+L2
+     &*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-(L6+DX-(L5*MC+MD*(L6
+     &+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME))*COS(Q4-Q5))-L4*ME*((L3*MB+L4*MC
+     &+L4*MD+L4*ME)/(MA+MB+MC+MD+ME)-L4-(EY-(MD*DY+ME*EY)/(MA+MB+MC+MD+M
+     &E))*SIN(Q4-Q5)-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME
+     &))*COS(Q3-Q4)-(L6+EX-(L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME
+     &))*COS(Q4-Q5)))*U4 + (IA+L1*MA*(L1-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME+
+     &(MD*DY+ME*EY)*SIN(Q3-Q5)+(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q3-Q4)+(L5*
+     &MC+MD*(L6+DX)+ME*(L6+EX))*COS(Q3-Q5))/(MA+MB+MC+MD+ME))+L2*MB*(L2+
+     &(L3-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-(L1*MA+
+     &L2*MB+L2*MC+L2*MD+L2*ME+(MD*DY+ME*EY)*SIN(Q3-Q5)+(L5*MC+MD*(L6+DX)
+     &+ME*(L6+EX))*COS(Q3-Q5))/(MA+MB+MC+MD+ME))+L2*MC*(L2+(L4-(L3*MB+L4
+     &*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)+(L5-(L5*MC+MD*(L6+DX
+     &)+ME*(L6+EX))/(MA+MB+MC+MD+ME))*COS(Q3-Q5)-(L1*MA+L2*MB+L2*MC+L2*M
+     &D+L2*ME+(MD*DY+ME*EY)*SIN(Q3-Q5))/(MA+MB+MC+MD+ME))-L2*MD*((L1*MA+
+     &L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME)-L2-(DY-(MD*DY+ME*EY)/(MA
+     &+MB+MC+MD+ME))*SIN(Q3-Q5)-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+
+     &MD+ME))*COS(Q3-Q4)-(L6+DX-(L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+
+     &MD+ME))*COS(Q3-Q5))-L2*ME*((L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+
+     &MC+MD+ME)-L2-(EY-(MD*DY+ME*EY)/(MA+MB+MC+MD+ME))*SIN(Q3-Q5)-(L4-(L
+     &3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q4)-(L6+EX-(L5*MC
+     &+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME))*COS(Q3-Q5)))*U3 - L5*MC*
+     &((L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME)-L5-(L4-(L3*MB+L4*M
+     &C+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)-(L2-(L1*MA+L2*MB+L2*MC
+     &+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q5))*U5 - MA*((L1-(L1*MA+L2
+     &*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*SIN(Q3)*U1-(L1-(L1*MA+L2*
+     &MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3)*U2-((MD*DY+ME*EY)*
+     &SIN(Q5)*U2+(MD*DY+ME*EY)*COS(Q5)*U1+(L3*MB+L4*MC+L4*MD+L4*ME)*SIN(
+     &Q4)*U1+(L5*MC+MD*(L6+DX)+ME*(L6+EX))*SIN(Q5)*U1-(L3*MB+L4*MC+L4*MD
+     &+L4*ME)*COS(Q4)*U2-(L5*MC+MD*(L6+DX)+ME*(L6+EX))*COS(Q5)*U2)/(MA+M
+     &B+MC+MD+ME)) - MB*((L3-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))
+     &*SIN(Q4)*U1+(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*
+     &SIN(Q3)*U1-(L3-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4)
+     &*U2-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3)*
+     &U2-((MD*DY+ME*EY)*SIN(Q5)*U2+(MD*DY+ME*EY)*COS(Q5)*U1+(L5*MC+MD*(L
+     &6+DX)+ME*(L6+EX))*SIN(Q5)*U1-(L5*MC+MD*(L6+DX)+ME*(L6+EX))*COS(Q5)
+     &*U2)/(MA+MB+MC+MD+ME)) - MC*((L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+
+     &MC+MD+ME))*SIN(Q4)*U1+(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+M
+     &C+MD+ME))*SIN(Q3)*U1+(L5-(L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+M
+     &D+ME))*SIN(Q5)*U1-(MD*DY+ME*EY)*(SIN(Q5)*U2+COS(Q5)*U1)/(MA+MB+MC+
+     &MD+ME)-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4)*U2-
+     &(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3)*U2-(
+     &L5-(L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME))*COS(Q5)*U2) - M
+     &D*((DY-(MD*DY+ME*EY)/(MA+MB+MC+MD+ME))*(DXp-DY*U5)+(L4-(L3*MB+L4*M
+     &C+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*SIN(Q4-Q5)*(DXp-DY*U5)+(L2-(L1*MA
+     &+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*SIN(Q3-Q5)*(DXp-DY*U5)
+     &-(L6+DX-(L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME))*(DYp+(L6+D
+     &X)*U5)-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)*
+     &(DYp+(L6+DX)*U5)-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+
+     &ME))*COS(Q3-Q5)*(DYp+(L6+DX)*U5)) - ME*((EY-(MD*DY+ME*EY)/(MA+MB+M
+     &C+MD+ME))*(EXp-EY*U5)+(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+M
+     &E))*SIN(Q4-Q5)*(EXp-EY*U5)+(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA
+     &+MB+MC+MD+ME))*SIN(Q3-Q5)*(EXp-EY*U5)-(L6+EX-(L5*MC+MD*(L6+DX)+ME*
+     &(L6+EX))/(MA+MB+MC+MD+ME))*(EYp+(L6+EX)*U5)-(L4-(L3*MB+L4*MC+L4*MD
+     &+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4-Q5)*(EYp+(L6+EX)*U5)-(L2-(L1*MA+L
+     &2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3-Q5)*(EYp+(L6+EX)*
+     &U5)) - MD*((DY-(MD*DY+ME*EY)/(MA+MB+MC+MD+ME))*SIN(Q5)*U2+(DY-(MD*
+     &DY+ME*EY)/(MA+MB+MC+MD+ME))*COS(Q5)*U1+(L4-(L3*MB+L4*MC+L4*MD+L4*M
+     &E)/(MA+MB+MC+MD+ME))*SIN(Q4)*U1+(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME
+     &)/(MA+MB+MC+MD+ME))*SIN(Q3)*U1+(L6+DX-(L5*MC+MD*(L6+DX)+ME*(L6+EX)
+     &)/(MA+MB+MC+MD+ME))*SIN(Q5)*U1-(L4-(L3*MB+L4*MC+L4*MD+L4*ME)/(MA+M
+     &B+MC+MD+ME))*COS(Q4)*U2-(L2-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)/(MA+MB
+     &+MC+MD+ME))*COS(Q3)*U2-(L6+DX-(L5*MC+MD*(L6+DX)+ME*(L6+EX))/(MA+MB
+     &+MC+MD+ME))*COS(Q5)*U2) - ME*((EY-(MD*DY+ME*EY)/(MA+MB+MC+MD+ME))*
+     &SIN(Q5)*U2+(EY-(MD*DY+ME*EY)/(MA+MB+MC+MD+ME))*COS(Q5)*U1+(L4-(L3*
+     &MB+L4*MC+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*SIN(Q4)*U1+(L2-(L1*MA+L2*M
+     &B+L2*MC+L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*SIN(Q3)*U1+(L6+EX-(L5*MC+MD
+     &*(L6+DX)+ME*(L6+EX))/(MA+MB+MC+MD+ME))*SIN(Q5)*U1-(L4-(L3*MB+L4*MC
+     &+L4*MD+L4*ME)/(MA+MB+MC+MD+ME))*COS(Q4)*U2-(L2-(L1*MA+L2*MB+L2*MC+
+     &L2*MD+L2*ME)/(MA+MB+MC+MD+ME))*COS(Q3)*U2-(L6+EX-(L5*MC+MD*(L6+DX)
+     &+ME*(L6+EX))/(MA+MB+MC+MD+ME))*COS(Q5)*U2)
+      PX = (MA+MB+MC+MD+ME)*U1 + COS(Q5)*(MD*(DXp-DY*U5)+ME*(EXp-EY*U5))
+     & - (L3*MB+L4*MC+L4*MD+L4*ME)*SIN(Q4)*U4 - (L1*MA+L2*MB+L2*MC+L2*MD
+     &+L2*ME)*SIN(Q3)*U3 - SIN(Q5)*(L5*MC*U5+MD*(DYp+(L6+DX)*U5)+ME*(EYp
+     &+(L6+EX)*U5))
+      PY = (MA+MB+MC+MD+ME)*U2 + (L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q4)*U4 + 
+     &(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*COS(Q3)*U3 + SIN(Q5)*(MD*(DXp-DY*U
+     &5)+ME*(EXp-EY*U5)) + COS(Q5)*(L5*MC*U5+MD*(DYp+(L6+DX)*U5)+ME*(EYp
+     &+(L6+EX)*U5))
       HANG = 4.71238898038469D0 - Q5
       KANG = 3.141592653589793D0 + Q4 - Q5
       AANG = 3.141592653589793D0 + Q4 - Q3
@@ -620,19 +629,22 @@ C**   Evaluate output quantities
       POP3Y = Q2 + L2*SIN(Q3) + L4*SIN(Q4)
       POP4X = Q1 + L2*COS(Q3) + L4*COS(Q4) + L6*COS(Q5)
       POP4Y = Q2 + L2*SIN(Q3) + L4*SIN(Q4) + L6*SIN(Q5)
-      PODX = DX + Q1 + L2*COS(Q3) + L4*COS(Q4) + L6*COS(Q5)
-      PODY = DY + Q2 + L2*SIN(Q3) + L4*SIN(Q4) + L6*SIN(Q5)
-      POEX = EX + Q1 + L2*COS(Q3) + L4*COS(Q4) + L6*COS(Q5)
-      POEY = EY + Q2 + L2*SIN(Q3) + L4*SIN(Q4) + L6*SIN(Q5)
-      POCMX = (MA*Q1+MB*Q1+MC*Q1+MD*(DX+Q1)+ME*(EX+Q1)+(L5*MC+L6*MD+L6*M
-     &E)*COS(Q5)+(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q4)+(L1*MA+L2*MB+L2*MC+L2
-     &*MD+L2*ME)*COS(Q3))/(MA+MB+MC+MD+ME)
-      VOCMX = (MA*U1+MB*U1+MC*U1+MD*(DXp+U1)+ME*(EXp+U1)-(L5*MC+L6*MD+L6
-     &*ME)*SIN(Q5)*U5-(L3*MB+L4*MC+L4*MD+L4*ME)*SIN(Q4)*U4-(L1*MA+L2*MB+
-     &L2*MC+L2*MD+L2*ME)*SIN(Q3)*U3)/(MA+MB+MC+MD+ME)
-      VOCMY = (MA*U2+MB*U2+MC*U2+MD*(DYp+U2)+ME*(EYp+U2)+(L5*MC+L6*MD+L6
-     &*ME)*COS(Q5)*U5+(L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q4)*U4+(L1*MA+L2*MB+
-     &L2*MC+L2*MD+L2*ME)*COS(Q3)*U3)/(MA+MB+MC+MD+ME)
+      PODX = Q1 + L2*COS(Q3) + L4*COS(Q4) + (L6+DX)*COS(Q5) - DY*SIN(Q5)
+      PODY = Q2 + L2*SIN(Q3) + L4*SIN(Q4) + DY*COS(Q5) + (L6+DX)*SIN(Q5)
+      POEX = Q1 + L2*COS(Q3) + L4*COS(Q4) + (L6+EX)*COS(Q5) - EY*SIN(Q5)
+      POEY = Q2 + L2*SIN(Q3) + L4*SIN(Q4) + EY*COS(Q5) + (L6+EX)*SIN(Q5)
+      POCMX = Q1 - ((MD*DY+ME*EY)*SIN(Q5)-(L3*MB+L4*MC+L4*MD+L4*ME)*COS(
+     &Q4)-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*COS(Q3)-(L5*MC+MD*(L6+DX)+ME*(
+     &L6+EX))*COS(Q5))/(MA+MB+MC+MD+ME)
+      VOCMX = U1 + (COS(Q5)*(MD*DXp+ME*EXp-(MD*DY+ME*EY)*U5)-(L3*MB+L4*M
+     &C+L4*MD+L4*ME)*SIN(Q4)*U4-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME)*SIN(Q3)*
+     &U3-SIN(Q5)*(MD*DYp+ME*EYp+(L5*MC+MD*(L6+DX)+ME*(L6+EX))*U5))/(MA+M
+     &B+MC+MD+ME)
+      VOCMY = U2 + ((L3*MB+L4*MC+L4*MD+L4*ME)*COS(Q4)*U4+(L1*MA+L2*MB+L2
+     &*MC+L2*MD+L2*ME)*COS(Q3)*U3+SIN(Q5)*(MD*DXp+ME*EXp-(MD*DY+ME*EY)*U
+     &5)+COS(Q5)*(MD*DYp+ME*EYp+(L5*MC+MD*(L6+DX)+ME*(L6+EX))*U5))/(MA+M
+     &B+MC+MD+ME)
+
 
 C** Update activations for write
       CALL ACTIVATION(T,HEACTP,HEACT,2)

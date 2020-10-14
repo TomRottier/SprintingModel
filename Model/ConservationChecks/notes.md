@@ -1,11 +1,13 @@
 # Energy and momentum conservation
 
-Torque generator activations and damping coefficents for sprintgs set to zero, therefore no energy input into the model and no losses through damping. Tests whether equations of motion are correct and model conserves energy. Further, setting spring stiffnesses to zero means no external forces and therefore no external torques, showing angular momentum (about the CoM) is also conserved.
+When torque generator activations, mass functions set to zero and spring damping set to zero, no energy is gained or lost.
 
-To note:
+When spring stiffnesses set to zero, there are no external forces or torques applied to the model, so linear and angular momentum are constant.
 
-- Model conserves energy  only when mass functions set to 0 as inconsistencies in data. Even with no external forces CoM velocitiy changes slightly with mass functions. Setting mass functions as consistent functions (e.g. polynomials with algebraic derivatives), gives a constant CoM velocity - although not exact energy or momentum conservation, perhaps just due to numerical vs algebraic differentiation.
+## Conserves energy:
 
-- Using splines fit to position data and their algebraic derivatives, model still does not conserve energy or angular momentum. Same energy lost when no gravity, therefore all losses come from changes in kinetic energy. CoM velocity is conserved however.
+![image info](./energy.png)
 
-- Conservation only holds with spring forces if contact model is linear. Contact model changed to linear spring to show conservation holds when external forces applied.
+## Conserves angular and linear momentum:
+
+![image info](./momentum.png)

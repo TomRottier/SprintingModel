@@ -1,5 +1,9 @@
 # Log
 
+## 13/10/2020
+
+- Add techniqueCM.m which compares the changes in CoM height with different techqniues
+
 ## 12/10/2020
 
 - Calculate quintic smoothing spline coefficients for mass positions (*_coef.csv)
