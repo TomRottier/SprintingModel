@@ -4,8 +4,6 @@ C                  activation and joint kinematics
 C   - ACITVATION:  activation for MUSCLEMODEL, currently 2 ramps
 C   - INITCCANG:   estimates intial CC angle for MUSCLEMODEL
 C   - TQVEL:       toruqe-angular velocity relationship for MUSCLEMODEL
-C   - INITCOND:    converts model inputs to generalised coordinates 
-C                  (will need to change for each model)
 C   - TORQUE9:     calculates torque given an activation, angle and 
 C                  angular velocity. No SEC
 C   - KUTTA:       numerical integrator using variable step size

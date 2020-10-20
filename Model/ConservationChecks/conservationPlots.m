@@ -1,7 +1,10 @@
 clear; close all; clc
-
-file1 = importdata('6seg.5', ' ', 8);
-file2 = importdata('6seg.1', ' ', 8);
+% Show that model conserves energy (when no energy added) and angular
+% momentum (when no external forces).
+%
+%% Import data
+file1 = importdata('6segSprint.5', ' ', 8);
+file2 = importdata('6segSprint.1', ' ', 8);
 data = file1.data;
 time = data(:,1);
 
@@ -31,7 +34,7 @@ legend('x','y','location','bestoutside')
 data = file2.data; n = length(data);
 set(figure(3),'WindowStyle','docked'); cla; hold on
 xlim([-1 1.5]); ylim([-0.1 2.4]);
-for i = 1:5:n
+for i = 1:1:n
     cla
     line(data(i,2:2:12), data(i,3:2:13))
     line(data(i,[8 14]), data(i,[9 15]))
