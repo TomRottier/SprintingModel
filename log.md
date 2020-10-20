@@ -1,5 +1,30 @@
 # Log
 
+## 20/10/2020
+
+- Add torque measure numbers for angle-driven joints
+- HAT mass function now using magnitude of distance from hip to specify along HAT axis 1
+- Tidy up repository
+
+## 19/10/2020
+
+- Change angle-driven joint definitions to have joint angles as input
+- Angular momentum conservation checks for new model
+
+## 18/10/2020
+
+- Get joint angles from technique video
+- Spline coefficients for joint angles  
+
+## 17/10/2020
+
+- New six segment model with angle-driven swing leg and HAT segment
+
+## 14/10/2020
+
+- Change model so that mass functions specified in thigh reference frame
+- Complete energy and momentum conservation checks
+
 ## 13/10/2020
 
 - Add techniqueCM.m which compares the changes in CoM height with different techqniues

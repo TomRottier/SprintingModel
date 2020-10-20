@@ -200,32 +200,36 @@ if output
     n = size(dout.Average.Force.Data.Avg, 1);
     
     % Column names
+    legs = ["L" "R"];
+    leg = char(legs(contains(legs,dout.Average.Information.Leg)));
+    leg2 = char(legs(~contains(legs,dout.Average.Information.Leg)));
+    idx = contains(dout.Average.Angles.Names,...
+            {'HATAngles', [leg 'HipAngle' ], [leg 'KneeAngle'] , ...
+            [leg 'AnkleAngle'], [leg2 'HipAngle'], [leg2 'KneeAngle']});  
+
     colwidth = 13;
     precision = 5;
-    colnames = ["Time" "RX" "RY" "Thigh angle" "Shank angle" "Foot angle"];
+    colnames = [{'Time'}; {'RX'}; {'RY'}; dout.Average.Angles.Names(idx)];
     nametype = ['%-' num2str(colwidth) 's'];
     datatype = ['%' num2str(colwidth) '.' num2str(precision) 'E'];
-    namefmt = [repmat([nametype ' '], 1, size(colnames,2)-1) nametype '\n'];
-    datafmt = [repmat([datatype ' '], 1, size(colnames,2)-1) datatype '\n'];
+    namefmt = [repmat([nametype ' '], 1, length(colnames)-1) nametype '\n'];
+    datafmt = [repmat([datatype ' '], 1, length(colnames)-1) datatype '\n'];
     
     % Matching data
     fid = fopen('matchingData.txt', 'w');
     fprintf(fid, '%4d', n);                 % Data size
     fprintf(fid, '%4d', 2);                        % Header rows
     fprintf(fid, '%4d\n', colwidth+1);               % Column width
-    fprintf(fid, namefmt, pad(colnames, colwidth, 'both'));
-    leg = dout.Average.Information.Leg;
-    idx = contains(dout.Average.Angles.Names,...
-            {[leg 'ThighAngle'], [leg 'ShankAngle' ], [leg 'FootAngle']});  
+    fprintf(fid, namefmt, pad(string(colnames), colwidth, 'both')');
     dataout = [dout.Average.Time.Absolute...
         dout.Average.Force.Data.Avg(:,[2 3]) ...
-        reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n 3])]';
+        reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n length(colnames)-3])]';
     fprintf(fid, datafmt, ...
             string([dout.Average.Time.Absolute...
                     dout.Average.Force.Data.Avg(:,[2 3]) ...
-                    reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n 3])]'));
+                    reshape(dout.Average.Angles.Data.Avg(:,1,idx), ...
+                    [n length(colnames)-3])]'));
     fclose(fid);
-
 end
 
 clearvars -except dout

@@ -178,6 +178,7 @@ C Loop through parameters and calculate activation
         TR = P(J+3)
         A1 = P(J+4)
 
+      IF (TR .LT. 0.01) TR = 0.01
         AFUN = A0 + (A1-A0) * ((T-T0)/TR)**3 * (6*((T-T0)/TR)**2 - 15*((
      &            T-T0)/TR) + 10)
      
@@ -446,70 +447,6 @@ C Torque-angle (normalised) relationship in Forrester et al. (2011)
 C Multiply for torque
        TQ   = ACT * A * TQW * TQTH
        
-      END SUBROUTINE
-
-C***********************************************************************
-      SUBROUTINE INITCOND(CM)      
-C Subroutines used to convert model inputs into generalised coordinates.
-C Input file (.in) contains CM position and velocities and joint angles
-C and velocities.
-C  Tom Rottier 2020
-C
-C Inputs:
-C   - CM: LOGICAL. If true, CM position specified in input file and Q1,
-C         Q2 calculated. If false, Q1, Q2 specified in input file 
-C         (usually zero) and CM calculated.
-C   - Done through COMMON blocks
-C Outputs:
-C   - Done through COMMON blocks
-C
-C***********************************************************************
-!       IMPLICIT DOUBLE PRECISION (A-Z)
-!       LOGICAL CM
-!       COMMON/CONSTNTS/ G,IA,IB,IC,K1,K2,K3,K4,L1,L2,L3,L4,L5,L6,MA,MB,MC
-!      &,MD
-!       COMMON/VARIBLES/ Q1,Q2,Q3,Q4,Q5,U1,U2,U3,U4,U5,Q1I,Q2I,Q3I,Q4I,Q5I
-!      &,U1I,U2I,U3I,U4I,U5I
-!       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,COEF(5,5),RHS(5)
-          
-!       Q3 = Q3*DEGtoRAD
-!       Q4 = Q4*DEGtoRAD
-!       Q5 = Q5*DEGtoRAD
-!       U3 = U3*DEGtoRAD
-!       U4 = U4*DEGtoRAD
-!       U5 = U5*DEGtoRAD
-
-!       IF (CM) THEN            
-!         POCMX   = Q1
-!         POCMY   = Q2
-!         Q1 = POCMX - ((L5*MC+L6*MD)*COS(Q5)+(L3*MB+L4*MC+L4*MD)*COS(Q4)+
-!      &(L1*MA+L2*MB+L2*MC+L2*MD)*COS(Q3))/(MA+MB+MC+MD)
-!         Q2 = POCMY - ((L5*MC+L6*MD)*SIN(Q5)+(L3*MB+L4*MC+L4*MD)*SIN(Q4)+
-!      &(L1*MA+L2*MB+L2*MC+L2*MD)*SIN(Q3))/(MA+MB+MC+MD)        
-!       ENDIF
-        
-!       VOCMX   = U1
-!       VOCMY   = U2
-!       HANG    = Q5
-!       KANG    = Q4
-!       AANG    = Q3
-!       HANGVEL = U5
-!       KANGVEL = U4
-!       AANGVEL = U3
-      
-!       Q5 = 1.5D0*PI - HANG
-!       Q4 = KANG + Q5 - PI
-!       Q3 = PI + Q4 - AANG
-      
-!       U5 = -HANGVEL
-!       U4 = KANGVEL + U5
-!       U3 = U4 - AANGVEL
-!       U1 = VOCMX + ((L5*MC+L6*MD)*SIN(Q5)*U5+(L3*MB+L4*MC+L4*MD)*SIN(Q4)
-!      &*U4+(L1*MA+L2*MB+L2*MC+L2*MD)*SIN(Q3)*U3)/(MA+MB+MC+MD)
-!       U2 = VOCMY - ((L5*MC+L6*MD)*COS(Q5)*U5+(L3*MB+L4*MC+L4*MD)*COS(Q4)
-!      &*U4+(L1*MA+L2*MB+L2*MC+L2*MD)*COS(Q3)*U3)/(MA+MB+MC+MD)
-     
-      RETURN
       END SUBROUTINE
       
 C*****************************************************************************
@@ -814,7 +751,23 @@ c
 c
       return
       end
-c
+c***********************************************************************
+      SUBROUTINE EVALSPLINE2(T,NF,KK,CC,THETA,OMEGA,ALPHA)
+      IMPLICIT         DOUBLE PRECISION (A - Z)
+      DIMENSION        X(3)
+C     
+      INTEGER NF
+C
+      CALL VALQ3(X,T,CC,NF,KK)
+C
+      THETA = X(1)
+      OMEGA = X(2)
+      ALPHA = X(3)
+C
+C
+      RETURN
+      END
+
 ***************************************************************
 c
       Subroutine VALQ3(SPY,T,CCF,NU,k)

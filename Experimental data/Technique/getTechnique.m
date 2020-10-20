@@ -48,20 +48,22 @@ points = cat(3, sprinter.data, teamsport.data);
 cutoff = 15;
 
 % Reorder to 2D array then filter
+sz = size(points); sz2 = [sz(1) sz(2)*sz(3)];
 points_f = reshape(...
-              tr_filterDP(reshape(points, [456 16]), 1000, cutoff, 'low', 2),...
-              [456 8 2]);
+              tr_filterDP(reshape(points, sz2), 1000, cutoff, 'low', 2),...
+              sz);
 
-set(figure(2),'WindowStyle','docked')
+set(figure(2),'WindowStyle','docked'); cla
 hold on
-plot(points(:,1,1))
-plot(points_f(:,1,1))
+plot(points(:,10,1))
+plot(points_f(:,10,1))
 title('Filtered data')
 legend('raw', 'filtered')
 
 %% Calculate segment angles
 Q = nan(size(points_f, 1), 3, 2);
 
+% Foot, shank, thigh
 for i = 1:3
     n = 9-2*i;        % Index sequence
     
@@ -90,7 +92,7 @@ end
 %     drawnow
 % end
 
-    %% Calculate CoM
+%% Calculate CoM
 % Segment: mass, length, CMprox, CMdist
 % Foot:    1.385, 0.224, 0.142, 0.082
 % Shank:   5.271, 0.453, 0.261, 0.192          
@@ -109,6 +111,16 @@ cm(:,1,:) = (ma*(l1-l2).*cosd(Q(:,1,:))-(l4*ma-mb*(l3-l4)).* ...
 cm(:,2,:) = (ma*(l1-l2).*sind(Q(:,1,:))-(l4*ma-mb*(l3-l4)).* ...
             sind(Q(:,2,:))-(l6*ma+l6*mb-mc*(l5-l6)).* ...
             sind(Q(:,3,:)))/(ma+mb+mc);
+        
+%% Joint angles
+% Trunk angle 
+p1 = points_f(:,1:2,:); p2 = points_f(:,9:10,:);   
+d = p2 - p1;        % dx,dy
+trunk = atan2d(d(:,2,:), d(:,1,:)); 
+
+hipang = 180 - Q(:,3,:) + trunk;
+kneang = 180 - Q(:,3,:) + Q(:,2,:);
+
 
 %% Reorder data
 % Takeoff and touchdown frames for both legs estimated from video
@@ -122,6 +134,10 @@ cm(:,2,:) = (ma*(l1-l2).*sind(Q(:,1,:))-(l4*ma-mb*(l3-l4)).* ...
 % takes longer)
 swingCM(1) = {cm(181:end,:,1)};
 swingCM(2) = {cm(175:end,:,2)};
+hip(1) = {hipang(181:end,1,1)};
+hip(2) = {hipang(175:end,1,2)};
+knee(1) = {kneang(181:end,1,1)};
+knee(2) = {kneang(175:end,1,2)};
 
 % Ipsilateral thigh angle during stance (assumed to be same for both legs)
 % q3(1) = {[Q(416:end,3,1); Q(1:58,3,1)]};
@@ -145,6 +161,15 @@ swingCM(2,:) = cellfun(@(x) tr_diff(x, 0.001), swingCM(1,:), ...
 swingCM(3,:) = cellfun(@(x) tr_diff(x, 0.001), swingCM(2,:), ...
                         'UniformOutput', false);
 
+hip(2,:) = cellfun(@(x) tr_diff(x, 0.001), hip(1,:), ...
+                        'UniformOutput', false);
+hip(3,:) = cellfun(@(x) tr_diff(x, 0.001), hip(2,:), ...
+                        'UniformOutput', false);
+knee(2,:) = cellfun(@(x) tr_diff(x, 0.001), knee(1,:), ...
+                        'UniformOutput', false);
+knee(3,:) = cellfun(@(x) tr_diff(x, 0.001), knee(2,:), ...
+                        'UniformOutput', false);
+
 % Plot 
 set(figure(5),'WindowStyle','docked')
 set(figure(5), 'DefaultLineMarkerSize', 1.5)
@@ -161,6 +186,22 @@ for i = 1:3
     title([titles{i} ' y'])
 end
 subplot(3,2,2); legend('sprinter', 'teamsport');
+
+set(figure(6),'WindowStyle','docked'); cla
+set(figure(6), 'DefaultLineMarkerSize', 1.5)
+ynames = {'angle','angular velocity','angular acceleration'};
+for i = 1:3
+    subplot(3,2,2*i-1); hold on; cla
+    plot(hip{i,1}(1:105,1), 's')
+    plot(hip{i,2}(1:112,1), 's')
+    ylabel(ynames{i})
+    
+    subplot(3,2,2*i); hold on; cla
+    plot(knee{i,1}(1:105,1), 's')
+    plot(knee{i,2}(1:112,1), 's')
+end
+subplot(3,2,1); title('hip')
+subplot(3,2,2); title('knee')
 
 %% Export data
 if output
@@ -184,6 +225,9 @@ if output
                 string(reshape(cat(3,swingCM{:,1}), ...
                         [size(swingCM{1,1}, 1) 6])'));
     fclose(fid);
+    % Joint angles
+    n = length(hip{1,1}); time = (0:0.001:(n-1)*0.001)';
+    writematrix([n 2 nan; time hip{1,1} knee{1,1}], 'sprinter.csv');
     
     % Teamsports's technique
     fid = fopen('teamsport.txt', 'w');
@@ -195,7 +239,8 @@ if output
                 string(reshape(cat(3,swingCM{:,2}), ...
                         [size(swingCM{1,2}, 1) 6])'));
     fclose(fid);
-
-
+    % Joint angles
+    n = length(hip{1,2}); time = (0:0.001:(n-1)*0.001)';
+    writematrix([n 2 nan; time hip{1,2} knee{1,2}], 'teamsport.csv');
 end
 

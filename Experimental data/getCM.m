@@ -12,7 +12,7 @@ function CMout = getCM(data, draw)
 %--------------------------------------------------------------------------
 % Inertia data taken from McErlain-Naylor (2017) 
 % Actual body mass 88.6 kg (when measured) 91.1 kg (when running)
-% [segment length, segment mass, CM location from prox end, MoI about CM]
+% [segment length, segment mass, CM location from dist end, MoI about CM]
 % RFoot = [0.139 1.147 0.076 0.0059];   % Rear foot
 % FFoot = [0.085 0.477 0.035 0.0003];   % Fore foot
 % Foot  = [0.224 1.385 0.142 0.0096];   % Combined foot
@@ -20,10 +20,10 @@ function CMout = getCM(data, draw)
 % Thigh = [0.447 12.54 0.258 0.2122];   % Thigh
 % UpArm = [0.323 3.162 0.185 0.0588];   % Upper arm
 % LwArm = [0.469 1.855 0.301 0.0568];   % Lower arm
-% LTrnk = [0.418 24.43 0.323 0.5218];   % HJC to Xyphoid/T10
-% UTrnk = [0.182 10.86 0.085 0.0701];   % Xyphoid/T10 to C7/sternum
-% Head  = [0.269 5.611 0.136 0.0344];   % Head + neck
-% HT    = [0.869 40.90 0.427 1.4890];   % Combined head and trunk
+% LTrnk = [0.418 24.43 0.323 0.5218];   % HJC to Xyphoid/T10 - CM from prox
+% UTrnk = [0.182 10.86 0.085 0.0701];   % Xyphoid/T10 to C7/sternum - prox
+% Head  = [0.269 5.611 0.136 0.0344];   % Head + neck - prox
+% HT    = [0.869 40.90 0.427 1.4890];   % Combined head and trunk - prox
 %
 %--------------------------------------------------------------------------
 % clear; close all; clc;
