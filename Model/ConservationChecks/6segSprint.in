@@ -4,7 +4,7 @@ Replace this line with a message to appear on all output files.
 ----------------------------------------------------------+------------------
 Description          Quantity             Units           | Value
 ----------------------------------------------------------|------------------
-Constant:            G                    M/S^2           | -9.81
+Constant:            G                    M/S^2           |  0.0
 Constant:            IA                   KG.M^2          |  0.0096
 Constant:            IB                   KG.M^2          |  0.0792
 Constant:            IC                   KG.M^2          |  0.2122
@@ -31,16 +31,16 @@ Constant:            MF                   KG              |  50.935
 
 Initial Value:       Q1                   M               |  0.0
 Initial Value:       Q2                   M               |  0.0
-Initial Value:       HAT ANGLE            DEG             |  70.0
-Initial Value:       ANKLE ANGLE          DEG             |  100.0
-Initial Value:       KNEE ANGLE           DEG             |  160.0
-Initial Value:       HIP ANGLE            DEG             |  140.0
-Initial Value:       VOCMX                M/S             |  0.0
-Initial Value:       VOCMY                M/S             |  0.0
-Initial Value:       HAT ANGVEL           DEG/S           |  0.0
-Initial Value:       ANKLE ANGVEL         DEG/S           |  0.0
-Initial Value:       KNEE ANGVEL          DEG/S           |  0.0
-Initial Value:       HIP ANGVEL           DEG/S           |  0.0
+Initial Value:       HAT ANGLE            DEG             |  82.313
+Initial Value:       ANKLE ANGLE          DEG             |  120.38
+Initial Value:       KNEE ANGLE           DEG             |  155.13
+Initial Value:       HIP ANGLE            DEG             |  147.05
+Initial Value:       VOCMX                M/S             |  9.6975
+Initial Value:       VOCMY                M/S             | -0.7577
+Initial Value:       HAT ANGVEL           DEG/S           | -22.069
+Initial Value:       ANKLE ANGVEL         DEG/S           | -736.30
+Initial Value:       KNEE ANGVEL          DEG/S           | -184.65
+Initial Value:       HIP ANGVEL           DEG/S           |  406.74
 
 Initial Time:        TINITIAL             S               |  0.0
 Final Time:          TFINAL               S               |  0.2
