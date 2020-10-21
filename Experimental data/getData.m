@@ -139,8 +139,6 @@ n = 6;                            % Number of strides - takes middle n
 idx = 1:2:length(contacts);       
 idx = idx(n-(n/2)+1:n+n/2);       % Indicies of strides used
 
-
-
 % Average stride parameters
 sa.Parameters.StrideTime = mean(si.Parameters.StrideTime(idx));
 sa.Parameters.ContactTime   = mean(si.Parameters.ContactTime(idx));
@@ -205,7 +203,7 @@ if output
     leg2 = char(legs(~contains(legs,dout.Average.Information.Leg)));
     idx = contains(dout.Average.Angles.Names,...
             {'HATAngles', [leg 'HipAngle' ], [leg 'KneeAngle'] , ...
-            [leg 'AnkleAngle'], [leg2 'HipAngle'], [leg2 'KneeAngle']});  
+            [leg 'AnkleAngle']});  
 
     colwidth = 13;
     precision = 5;
@@ -218,8 +216,7 @@ if output
     % Matching data
     fid = fopen('matchingData.txt', 'w');
     fprintf(fid, '%4d', n);                 % Data size
-    fprintf(fid, '%4d', 2);                        % Header rows
-    fprintf(fid, '%4d\n', colwidth+1);               % Column width
+    fprintf(fid, '%4d\n', length(colnames));               % n columns
     fprintf(fid, namefmt, pad(string(colnames), colwidth, 'both')');
     dataout = [dout.Average.Time.Absolute...
         dout.Average.Force.Data.Avg(:,[2 3]) ...

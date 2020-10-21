@@ -1,5 +1,10 @@
 # Log
 
+## 21/10/2020
+
+- Redo energy and momentum checks
+- Model evaluation script
+
 ## 20/10/2020
 
 - Add torque measure numbers for angle-driven joints

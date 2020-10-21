@@ -113,9 +113,6 @@ C** Read spline coefficients for angles and HAT CoM location
       CLOSE(UNIT=33)
 
 C**   Convert to generalised coordinates
-      PI       = 4*ATAN(1.0D0)
-      DEGtoRAD = PI/180.0D0
-      RADtoDEG = 180.0D0/PI
       CALL INITCOND()
 
 C**   Evaluate constants
@@ -1012,6 +1009,11 @@ C***********************************************************************
       COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
 
+C** Global variables
+      PI       = 4*ATAN(1.0D0)
+      DEGtoRAD = PI/180.0D0
+      RADtoDEG = 180.0D0/PI
+
 C** Local variables
       AANG    = Q4
       KANG    = Q5
@@ -1046,7 +1048,7 @@ C** Convert CoM velocity to generalised speeds
       EA   = EA  *DEGtoRAD 
       EAp  = EAp *DEGtoRAD 
       EApp = EApp*DEGtoRAD 
-      CALL EVALSPLINE2(T,NROW,TT,CCHAT,FS,FSp,FSpp)
+      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHAT,FS,FSp,FSpp)
 
       U1 = VOCMX - (MF*FSp*COS(Q3)-MF*FS*SIN(Q3)*U3-(L5*MC+L6*MD+L6*ME+L
      &6*MF)*SIN(Q3-Q6)*(U3-U6)-(L6*ME-MD*(L5-L6))*SIN(DA-Q3)*(DAp-U3-U7)
