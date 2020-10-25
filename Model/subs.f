@@ -95,7 +95,7 @@ C Joint angular velocity opposite to CC angular velocity
         SECANGVEL = 0.0D0
 C Set TV to < 0 to get it as output         
         TV = -1.0D0
-        CALL TQVEL(TQWP,CCANGVEL,TV)
+        CALL TQVEL(TQWP,CCANGVEL,TV,.TRUE.)
         CALL INITCCANG(T0,ACT,TV,THETA,K,TQWP(1),TQP(8),TQP(9),CCANG,SEC
      &                 ANG)
         TQ = MAX(0.0D0, MIN(TQMAX, K*SECANG)) 
@@ -129,7 +129,8 @@ C If activation 0, set torques and SECANG/ANGVEL to 0 (stops fluctuations)
               IF (TV .LE. 0.0D0) THEN
                 CCANGVEL2 = TQWP(3)
               ELSE
-                CALL TQVEL(TQWP,CCANGVEL2,TV)
+                CALL TQVEL(TQWP,CCANGVEL2,TV,.FALSE.)
+                IF (CCANGVEL2 .LT. -TQWP(3)) CCANGVEL2 = -TQWP(3)
               ENDIF
             ENDIF
 
@@ -156,7 +157,8 @@ C   - P: actiavation function parameters (3*N + 1):
 C                    A0 - inital activation level
 C                    T0 - ramp time on (since start/previous ramp)
 C                    TR - ramp time for ramp
-C                    A1 - final activation level (will be A0 for next ramp)
+C                    A1 - final activation level (will be A0 for next
+C                         ramp)
 C   - N: number of ramps
 C
 C Outputs:
@@ -309,7 +311,7 @@ C Reset sign
       END SUBROUTINE
 
 C***********************************************************************
-      SUBROUTINE TQVEL(P,CCANGVEL,TQV)
+      SUBROUTINE TQVEL(P,CCANGVEL,TQV,FINDTQ)
 C Calculates either the torque-angular velocity value based on CC
 C angular velocity or finds the CC angular velocity if torque-angular  
 C velocity entered.
@@ -323,15 +325,16 @@ C   - P: 7 paramaters for torque generator.
 C
 C Inputs/Outputs:
 C   - CCANGVEL: CC angular velocity
-C   - TQV:      torque   
+C   - TQV:      normalised torque-velocity value
+C   - FINDTQ:   TRUE if calculating TQV from CCANGVEL. FALSE if 
+C               calculating CCANGVEL from TQV
 C
 C***********************************************************************
       IMPLICIT DOUBLE PRECISION (A-Z)
       DIMENSION P(7)
       LOGICAL FINDTQ,DIFFACT
 
-C Assume finding CCANGVEL and with differential activation      
-      FINDTQ  = .FALSE.
+C Assume differential activation      
       DIFFACT = .TRUE.
       
 C Assign parameters      
@@ -344,10 +347,7 @@ C Assign parameters
       W1   = P(6)
       WR   = P(7)
       AMAX = 1.0D0
-      
-C Check whether calculating CCANGVEL or TQV
-      IF (TQV .LT. 0.00D0) FINDTQ = .TRUE.
-      
+            
 C Check if no differential activation      
       IF (AMIN .GT. 0.99D0) DIFFACT = .FALSE.
       
