@@ -100,7 +100,7 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       RT = 0.75
       ISEED1 = 3
       ISEED2 = 4
-      NS = 12
+      NS = 24
       NT = 5
       MAXEVL = 100000000
       IPRINT = 1
@@ -136,7 +136,7 @@ C** Set upper and lower bounds on parameters
       UB(N)   = 1000000.0D0
 
 C***  Set input values of the input/output parameters.
-      T = 50.0
+      T = 5.0
 
       DO 20, I = 1, N
          VM(I) = UB(I) - LB(I)
@@ -144,15 +144,26 @@ C***  Set input values of the input/output parameters.
          X(I) = LB(I) + VM(I)*0.5D0
 20    CONTINUE
 
+      ! X(1:7)   = HEACTP
+      ! X(8:14)  = KEACTP
+      ! X(15:21) = AEACTP
+      ! X(22:28) = HFACTP
+      ! X(29:35) = KFACTP
+      ! X(36:42) = AFACTP
+      ! X(43) = K1
+      ! X(44) = K2
+      ! X(45) = K3
+      ! X(46) = K4
+
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
      &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
      &        FSTAR,XP,NACP,WORK)
       
-    !   DO I = 1, 10
-    !   CALL FCN(N,X,COST)
-    !   PRINT*, COST
-    !   ENDDO
+      ! DO I = 1, 10
+      ! CALL FCN(N,X,COST)
+      ! PRINT*, COST
+      ! ENDDO
 
       STOP
 7000  FORMAT(//,99A1,///)
@@ -165,7 +176,7 @@ C**** Call SPAN
 7200  FORMAT(//, 6(///, 10(8X, F7.2, /)))
 7210  WRITE(*,*) 'Error reading torque parameters'
       STOP
-7300  FORMAT(//, 6(///, 7(6X, F11.6, /)))
+7300  FORMAT(//, 6(///, 7(6X, G30.10, /)))
 7310  WRITE(*,*) 'Error reading activation parameters'
 7410  WRITE(*,*) 'Error while reading matching data'
       STOP
@@ -208,7 +219,8 @@ C***********************************************************************
      &ANGVEL,HFSECANG,HFSECANGVEL,KEACT,KECCANG,KECCANGVEL,KESECANG,KESE
      &CANGVEL,KFACT,KFCCANG,KFCCANGVEL,KFSECANG,KFSECANGVEL,DAp,EAp,FSp,
      &DApp,EApp,FSpp,POCMX,POCMY,POP1X,POP1Y,POP2X,POP2Y,POP3X,POP3Y,POP
-     &4X,POP4Y,POP5X,POP5Y,POP6X,POP6Y,POP7X,POP7Y,VOCMX,VOCMY
+     &4X,POP4Y,POP5X,POP5Y,POP6X,POP6Y,POP7X,POP7Y,POPFX,POPFY,VOCMX,VOC
+     &MY
       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,COEF(6,6),RHS(6)
       COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP
@@ -306,38 +318,46 @@ C**   Check exit conditions
         KNEEJ  = KNEES  / IDX
         ANKLEJ = ANKLES / IDX
 
-      CMYTO = Q2 - (ME*(L3-L4)*SIN(DA-EA-Q3)+(L6*ME-MD*(L5-L6))*SIN(DA-Q
-     &3)-MF*FS*SIN(Q3)-(L5*MC+L6*MD+L6*ME+L6*MF)*SIN(Q3-Q6)-(L3*MB+L4*MC
-     &+L4*MD+L4*ME+L4*MF)*SIN(Q3-Q5-Q6)-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME+L
-     &2*MF)*SIN(Q3-Q4-Q5-Q6))/(MA+MB+MC+MD+ME+MF)
-      VCMXF = U1 + (MF*FSp*COS(Q3)-MF*FS*SIN(Q3)*U3-(L5*MC+L6*MD+L6*ME+L
-     &6*MF)*SIN(Q3-Q6)*(U3-U6)-(L6*ME-MD*(L5-L6))*SIN(DA-Q3)*(DAp-U3-U7)
-     &-ME*(L3-L4)*SIN(DA-EA-Q3)*(DAp-EAp-U3-U7-U8)-(L3*MB+L4*MC+L4*MD+L4
-     &*ME+L4*MF)*SIN(Q3-Q5-Q6)*(U3-U5-U6)-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME
-     &+L2*MF)*SIN(Q3-Q4-Q5-Q6)*(U3-U4-U5-U6))/(MA+MB+MC+MD+ME+MF)
-      VCMYF = U2 - ((L6*ME-MD*(L5-L6))*COS(DA-Q3)*(DAp-U3-U7)+ME*(L3-L4)
-     &*COS(DA-EA-Q3)*(DAp-EAp-U3-U7-U8)-MF*FSp*SIN(Q3)-MF*FS*COS(Q3)*U3-
-     &(L5*MC+L6*MD+L6*ME+L6*MF)*COS(Q3-Q6)*(U3-U6)-(L3*MB+L4*MC+L4*MD+L4
-     &*ME+L4*MF)*COS(Q3-Q5-Q6)*(U3-U5-U6)-(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME
-     &+L2*MF)*COS(Q3-Q4-Q5-Q6)*(U3-U4-U5-U6))/(MA+MB+MC+MD+ME+MF)
-      DS = CMYTD - CMYTO
+        CMYTO = Q2 - (ME*(L3-L4)*SIN(DA-EA-Q3)+(L6*ME-MD*(L5-L6))*SIN(DA
+     &  -Q3)-MF*FS*SIN(Q3)-(L5*MC+L6*MD+L6*ME+L6*MF)*SIN(Q3-Q6)-(L3*MB+L
+     &  4*MC+L4*MD+L4*ME+L4*MF)*SIN(Q3-Q5-Q6)-(L1*MA+L2*MB+L2*MC+L2*MD+L
+     &  2*ME+L2*MF)*SIN(Q3-Q4-Q5-Q6))/(MA+MB+MC+MD+ME+MF)
+        VCMXF = U1 + (MF*FSp*COS(Q3)-MF*FS*SIN(Q3)*U3-(L5*MC+L6*MD+L6*ME
+     &  +L6*MF)*SIN(Q3-Q6)*(U3-U6)-(L6*ME-MD*(L5-L6))*SIN(DA-Q3)*(DAp-U3
+     &  -U7)-ME*(L3-L4)*SIN(DA-EA-Q3)*(DAp-EAp-U3-U7-U8)-(L3*MB+L4*MC+L4
+     &  *MD+L4*ME+L4*MF)*SIN(Q3-Q5-Q6)*(U3-U5-U6)-(L1*MA+L2*MB+L2*MC+L2*
+     &  MD+L2*ME+L2*MF)*SIN(Q3-Q4-Q5-Q6)*(U3-U4-U5-U6))/(MA+MB+MC+MD+ME+
+     &  MF)
+        VCMYF = U2 - ((L6*ME-MD*(L5-L6))*COS(DA-Q3)*(DAp-U3-U7)+ME*(L3-L
+     &  4)*COS(DA-EA-Q3)*(DAp-EAp-U3-U7-U8)-MF*FSp*SIN(Q3)-MF*FS*COS(Q3)
+     &  *U3-(L5*MC+L6*MD+L6*ME+L6*MF)*COS(Q3-Q6)*(U3-U6)-(L3*MB+L4*MC+L4
+     &  *MD+L4*ME+L4*MF)*COS(Q3-Q5-Q6)*(U3-U5-U6)-(L1*MA+L2*MB+L2*MC+L2*
+     &  MD+L2*ME+L2*MF)*COS(Q3-Q4-Q5-Q6)*(U3-U4-U5-U6))/(MA+MB+MC+MD+ME+
+     &  MF)
+        DS = CMYTD - CMYTO
 
 C** Check if quadratic has solution
-      DISCRIM = VCMYF**2 - (4.0D0)*(-4.905D0)*(-DS)
-      IF (DISCRIM .LT. 0.0D0) THEN
-        COST = 10000.0D0
+C** If VCMYF negative then a negative aerial is mathematically possible
+        IF (VCMYF .LT. 0.0D0) THEN
+          COST = 15000.0D0
+          RETURN
+        ENDIF
+        DISCRIM = VCMYF**2 - (4.0D0)*(G/2.0D0)*(-DS)
+        IF (DISCRIM .LT. 0.0D0) THEN
+          COST = 10000.0D0
+          RETURN
+        ELSE
+          TA = (-VCMYF-SQRT(DISCRIM)) / G
+        ENDIF
+  
+        TSW = T + 2.0D0*TA
+        TAJ = ABS(TA - AERIALTIME)
+        TSWJ = ABS(TSW - SWINGTIME)
+        VCMJ = ABS(VCMXF-VCMXI)
+  
+        COST = HATJ+HIPJ+KNEEJ+ANKLEJ+100*TSWJ+100*VCMJ
+        IF (T .LT. 0.09D0) COST = 3000.0D0
         RETURN
-      ELSE
-        TA = (-VCMYF-SQRT(DISCRIM)) / (-9.81D0)
-      ENDIF
-
-      TSW = T + 2.0D0*TA
-      TAJ = ABS(TA - AERIALTIME)
-      TSWJ = ABS(TSW - SWINGTIME)
-      VCMJ = ABS(VCMXF-VCMXI)
-
-      COST = HATJ+HIPJ+KNEEJ+ANKLEJ+TSWJ+VCMJ
-      RETURN
       ENDIF
 
 C** Integrate      
@@ -379,7 +399,8 @@ C**********************************************************************
      &ANGVEL,HFSECANG,HFSECANGVEL,KEACT,KECCANG,KECCANGVEL,KESECANG,KESE
      &CANGVEL,KFACT,KFCCANG,KFCCANGVEL,KFSECANG,KFSECANGVEL,DAp,EAp,FSp,
      &DApp,EApp,FSpp,POCMX,POCMY,POP1X,POP1Y,POP2X,POP2Y,POP3X,POP3Y,POP
-     &4X,POP4Y,POP5X,POP5Y,POP6X,POP6Y,POP7X,POP7Y,VOCMX,VOCMY
+     &4X,POP4Y,POP5X,POP5Y,POP6X,POP6Y,POP7X,POP7Y,POPFX,POPFY,VOCMX,VOC
+     &MY
       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,COEF(6,6),RHS(6)
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
 
@@ -849,7 +870,8 @@ C***********************************************************************
      &ANGVEL,HFSECANG,HFSECANGVEL,KEACT,KECCANG,KECCANGVEL,KESECANG,KESE
      &CANGVEL,KFACT,KFCCANG,KFCCANGVEL,KFSECANG,KFSECANGVEL,DAp,EAp,FSp,
      &DApp,EApp,FSpp,POCMX,POCMY,POP1X,POP1Y,POP2X,POP2Y,POP3X,POP3Y,POP
-     &4X,POP4Y,POP5X,POP5Y,POP6X,POP6Y,POP7X,POP7Y,VOCMX,VOCMY
+     &4X,POP4Y,POP5X,POP5Y,POP6X,POP6Y,POP7X,POP7Y,POPFX,POPFY,VOCMX,VOC
+     &MY
       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,COEF(6,6),RHS(6)
       COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP
