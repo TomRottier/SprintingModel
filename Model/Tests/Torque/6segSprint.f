@@ -300,7 +300,7 @@ C** Calculate forces
         ENDIF     
 
 C** Specified variables
-      ! CALL EVALSPLINE2(T,NROW,TT,CCHAT,FS,FSp,FSpp)
+      CALL EVALSPLINE2(T,NROW,TT,CCHAT,FS,FSp,FSpp)
       ! CALL EVALSPLINE2(T,NROW,TT,CCHIP,DA,DAp,DApp)
       ! CALL EVALSPLINE2(T,NROW,TT,CCKNEE,EA,EAp,EApp)
       ! DA   = DA  *DEGtoRAD 
@@ -309,6 +309,12 @@ C** Specified variables
       ! EA   = EA  *DEGtoRAD 
       ! EAp  = EAp *DEGtoRAD 
       ! EApp = EApp*DEGtoRAD 
+      DApp = 100
+      DAp  = 100*T
+      DA   = 50*T**2 + PI
+      EApp = 0.0
+      EAp  = 0.0
+      EA   = pi
 
 C** Solve for accelearations
       COEF(1,1) = -MA - MB - MC - MD - ME - MF
@@ -969,7 +975,7 @@ C**   Write output to screen and to output file(s)
       WRITE(22,6020) T,Q1,Q2,(Q3*RADtoDEG),(Q4*RADtoDEG),(Q5*RADtoDEG),(
      &Q6*RADtoDEG),U1,U2,(U3*RADtoDEG),(U4*RADtoDEG),(U5*RADtoDEG),(U6*D
      &EGtoRAD)
-      WRITE(23,6020) T,RX,RY,HTOR,KTOR,ATOR,-SHTOR,-SKTOR
+      WRITE(23,6020) T,RX,RY,-HTOR,KTOR,-ATOR,-SHTOR,SKTOR
       WRITE(24,6020) T,(HANG*RADtoDEG),(KANG*RADtoDEG),(AANG*RADtoDEG),(
      &SHANG*RADtoDEG),(SKANG*RADtoDEG),(HANGVEL*RADtoDEG),(KANGVEL*RADto
      &DEG),(AANGVEL*RADtoDEG),(SHANGVEL*RADtoDEG),(SKANGVEL*RADtoDEG)
@@ -1038,14 +1044,12 @@ C** Convert CoM velocity to generalised speeds
       U5 = U5*DEGtoRAD
       U6 = U6*DEGtoRAD
       
-      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHIP,DA,DAp,DApp)
-      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCKNEE,EA,EAp,EApp)
-      DA   = DA  *DEGtoRAD 
-      DAp  = DAp *DEGtoRAD 
-      DApp = DApp*DEGtoRAD 
-      EA   = EA  *DEGtoRAD 
-      EAp  = EAp *DEGtoRAD 
-      EApp = EApp*DEGtoRAD 
+      DApp = 100
+      DAp  = 100*T
+      DA   = 50*T**2 + PI
+      EApp = 0.0
+      EAp  = 0.0
+      EA   = pi
       CALL EVALSPLINE2(T,NROW,TT,CCHAT,FS,FSp,FSpp)
 
       U1 = VOCMX - (MF*FSp*COS(Q3)-MF*FS*SIN(Q3)*U3-(L5*MC+L6*MD+L6*ME+L

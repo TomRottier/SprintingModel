@@ -11,10 +11,10 @@ Constant:            IC                   KG.M^2          |  0.2122
 Constant:            ID                   KG.M^2          |  0.2122
 Constant:            IE                   KG.M^2          |  0.0792
 Constant:            IF                   KG.M^2          |  1.489
-Constant:            K1                   N/M             |  632.9309130        
-Constant:            K2                   N/M/S^2         |  526.4287575     
-Constant:            K3                   N/M             |  141285.8241    
-Constant:            K4                   N/M/S^2         |  10349.65682  
+Constant:            K1                   N/M             |  947.2900216     
+Constant:            K2                   N/M/S^2         |  902.3713448    
+Constant:            K3                   N/M             |  196849.9457      
+Constant:            K4                   N/M/S^2         |  2144.788932    
 Constant:            L1                   M               |  0.142
 Constant:            L2                   M               |  0.224
 Constant:            L3                   M               |  0.261

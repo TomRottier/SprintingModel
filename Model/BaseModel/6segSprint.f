@@ -242,7 +242,7 @@ C**   Inform user of input and output filename(s)
 7200  FORMAT(//, 6(///, 10(8X, F7.2, /)))
 7210  WRITE(*,*) 'Error reading torque parameters'
       STOP
-7300  FORMAT(//, 6(///, 7(6X, G30.10, /)))
+7300  FORMAT(//, 6(///, 7(5X, G30.10, /)))
 7310  WRITE(*,*) 'Error reading activation parameters'
       STOP
       END PROGRAM MAIN
@@ -976,7 +976,7 @@ C**   Write output to screen and to output file(s)
       WRITE(22,6020) T,Q1,Q2,(Q3*RADtoDEG),(Q4*RADtoDEG),(Q5*RADtoDEG),(
      &Q6*RADtoDEG),U1,U2,(U3*RADtoDEG),(U4*RADtoDEG),(U5*RADtoDEG),(U6*D
      &EGtoRAD)
-      WRITE(23,6020) T,RX,RY,-HTOR,KTOR,-ATOR,-SHTOR,-SKTOR
+      WRITE(23,6020) T,RX,RY,-HTOR,KTOR,-ATOR,-SHTOR,SKTOR
       WRITE(24,6020) T,(Q3*RADtoDEG),(HANG*RADtoDEG),(KANG*RADtoDEG),(AA
      &NG*RADtoDEG),(SHANG*RADtoDEG),(SKANG*RADtoDEG),(U3*RADtoDEG),(HANG
      &VEL*RADtoDEG),(KANGVEL*RADtoDEG),(AANGVEL*RADtoDEG),(SHANGVEL*RADt

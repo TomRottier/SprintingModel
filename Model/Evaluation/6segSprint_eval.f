@@ -117,13 +117,13 @@ C** Set upper and lower bounds on parameters
       ENDDO
 
       DO I = 1, N, 7
-        UB(I)    = 1.6D0
+        UB(I)    = 1.1D0
         UB(I+1)  = 0.1D0
         UB(I+2)  = 0.3D0
-        UB(I+3)  = 1.6D0
+        UB(I+3)  = 1.1D0
         UB(I+4)  = 0.1D0
         UB(I+5)  = 0.3D0
-        UB(I+6)  = 1.6D0
+        UB(I+6)  = 1.1D0
       ENDDO
 
       LB(N-3) = 0.1D0
@@ -144,26 +144,28 @@ C***  Set input values of the input/output parameters.
          X(I) = LB(I) + VM(I)*0.5D0
 20    CONTINUE
 
-      ! X(1:7)   = HEACTP
-      ! X(8:14)  = KEACTP
-      ! X(15:21) = AEACTP
-      ! X(22:28) = HFACTP
-      ! X(29:35) = KFACTP
-      ! X(36:42) = AFACTP
-      ! X(43) = K1
-      ! X(44) = K2
-      ! X(45) = K3
-      ! X(46) = K4
+      X(1:7)   = HEACTP
+      X(8:14)  = KEACTP
+      X(15:21) = AEACTP
+      X(22:28) = HFACTP
+      X(29:35) = KFACTP
+      X(36:42) = AFACTP
+      X(43) = K1
+      X(44) = K2
+      X(45) = K3
+      X(46) = K4
+      print*, x
+      stop
 
 C**** Call SPAN
-      CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
-     &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
-     &        FSTAR,XP,NACP,WORK)
+!       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
+!      &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
+!      &        FSTAR,XP,NACP,WORK)
       
-      ! DO I = 1, 10
-      ! CALL FCN(N,X,COST)
-      ! PRINT*, COST
-      ! ENDDO
+      DO I = 1, 10
+      CALL FCN(N,X,COST)
+      PRINT*, COST
+      ENDDO
 
       STOP
 7000  FORMAT(//,99A1,///)
@@ -176,7 +178,7 @@ C**** Call SPAN
 7200  FORMAT(//, 6(///, 10(8X, F7.2, /)))
 7210  WRITE(*,*) 'Error reading torque parameters'
       STOP
-7300  FORMAT(//, 6(///, 7(6X, G30.10, /)))
+7300  FORMAT(//, 6(///, 7(5X, G30.10, /)))
 7310  WRITE(*,*) 'Error reading activation parameters'
 7410  WRITE(*,*) 'Error while reading matching data'
       STOP
@@ -355,7 +357,7 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         TSWJ = ABS(TSW - SWINGTIME)
         VCMJ = ABS(VCMXF-VCMXI)
   
-        COST = HATJ+HIPJ+KNEEJ+ANKLEJ+100*TSWJ+100*VCMJ
+        COST = HATJ+HIPJ+KNEEJ+ANKLEJ+1000.0D0*TSWJ+100.0D0*VCMJ
         IF (T .LT. 0.09D0) COST = 3000.0D0
         RETURN
       ENDIF

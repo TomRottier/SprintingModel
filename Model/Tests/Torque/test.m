@@ -8,10 +8,10 @@ data3 = file3.data;
 %%
 set(figure(1),'WindowStyle','docked'); axis equal
 n = length(data1);
-for i = 1:1:n
+for i = 1:2:n
     
     subplot(2,1,1); hold on; cla
-    xlim([-1 1.5]); ylim([-0.1 2.4]);
+    axis equal; xlim([-1 1.5]); ylim([-0.1 2.4]); 
     cla
     line(data1(i,2:2:12), data1(i,3:2:13))
     line(data1(i,[8 14]), data1(i,[9 15]))
@@ -20,8 +20,8 @@ for i = 1:1:n
     pause(0.01)
     
     subplot(2,1,2); hold on; cla
-    plot(data3(:, 5))
-    plot(i, data3(i,5), 'o')
+    plot(data3(:, 7))
+    plot(i, data3(i,7), 'o')
     drawnow
 
 end
