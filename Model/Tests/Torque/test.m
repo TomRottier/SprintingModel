@@ -20,8 +20,8 @@ for i = 1:2:n
     pause(0.01)
     
     subplot(2,1,2); hold on; cla
-    plot(data3(:, 7))
-    plot(i, data3(i,7), 'o')
+    plot(data3(:, 4))
+    plot(i, data3(i,4), 'o')
     drawnow
 
 end

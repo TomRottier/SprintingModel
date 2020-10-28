@@ -42,6 +42,7 @@ M = 89.3;
 CMout = struct('Names', [], 'Data', [], 'Inertia', []);
 
 % Remove combined HJC and SJC
+HJC = points(:,:,strcmp(mnames,'HJC'));
 points(:,:, strcmp(mnames,'HJC')|strcmp(mnames,'SJC')) = [];
 mnames(strcmp(mnames,'HJC')|strcmp(mnames,'SJC')) = [];
 
@@ -66,6 +67,11 @@ proxKey = containers.Map(segments, proxJC);
 distKey = containers.Map(segments, distJC);
 inertiaKey = containers.Map(segments, inertia);
        
+% Output
+CMout.Names = {'WBCM', 'WBCMv', 'RFoot', 'LFoot', 'RShank', 'LShank', ...
+               'RThigh', 'LThigh', 'LwTrunk', 'UpTrunk', 'Head', ...
+               'RUpArm', 'LUpArm', 'RLwArm', 'LLwArm'};
+
 CMout.Inertia.Segments = segments;
 CMout.Inertia.Information = {'Segment length', 'Segment mass', ...
     'CoM location proximal', 'MoI about CoM'}';
@@ -93,12 +99,53 @@ for i = 1:length(segments)
     WBCM = WBCM + segCM.*(I(2)/M);              
 end
 
+%% Swing, stance and HAT CoM
+segs = {'RFoot', 'LFoot', 'RShank', 'LShank', 'RThigh', 'LThigh', ...
+    'LwTrunk', 'UpTrunk', 'Head', 'RUpArm', 'LUpArm', 'RLwArm', 'LLwArm'};
+inertia = cell2mat(inertia);
+footM = inertia(1,2); shankM = inertia(2,2); thighM = inertia(3,2);
+lwTrunkM = inertia(4,2); upTrunkM = inertia(5,2); headM = inertia(6,2);
+upArmM = inertia(7,2); lwArmM = inertia(8,2);
+legM = footM+shankM+thighM;
+hatM = lwTrunkM+upTrunkM+headM+2*upArmM+2*lwArmM;
+          
+hatCM = (CM(:,:,contains(segs, 'LwTrunk')).*lwTrunkM + ...
+        CM(:,:,contains(segs, 'UpTrunk')).*upTrunkM + ...
+        CM(:,:,contains(segs, 'Head')).*headM + ...
+        sum(CM(:,:,contains(segs, 'UpArm')), 3).*upArmM + ...
+        sum(CM(:,:,contains(segs, 'LwArm')), 3).*lwArmM) ...
+        ./ (hatM);
+    
+RCM = (CM(:,:,contains(segs, 'RFoot')).*footM + ...
+    CM(:,:,contains(segs, 'RShank')).*shankM + ...
+    CM(:,:,contains(segs, 'RThigh')).*thighM) ./ legM;
+
+LCM = (CM(:,:,contains(segs, 'LFoot')).*footM + ...
+    CM(:,:,contains(segs, 'LShank')).*shankM + ...
+    CM(:,:,contains(segs, 'LThigh')).*thighM) ./ legM;
+
+% Relative to HJC
+hatCM_HJC = hatCM - HJC;
+stanceCM_HJC = RCM - HJC;
+swingCM_HJC = LCM - HJC;
+
+% Add names
+CMout.Names = [CMout.Names  {'HAT', 'RLeg', 'LLeg', 'HAT_hip',...
+    'RLeg_hip', 'LLeg_hip'}];
+    
 %% Output
-CMout.Names = {'WBCM', 'WBCMv', 'RFoot', 'LFoot', 'RShank', 'LShank', ...
-               'RThigh', 'LThigh', 'LwTrunk', 'UpTrunk', 'Head', ...
-               'RUpArm', 'LUpArm', 'RLwArm', 'LLwArm'};
+% Relative to stance foot toe
+% origin = points(:,:,contains(mnames,'Toe'));
+% [~,tempidx] = min([origin(1,3,1) origin(1,3,2)]);
+% origin = origin(:,:,tempidx);
+% for i = 1:size(CM, 3)
+%     CM(:,:,i) = CM(:,:,i) - origin;
+% end
+% WBCM = WBCM - origin;
+
 WBCMv = tr_diff(WBCM, 1/hz);
-CMout.Data = cat(3, WBCM, WBCMv, CM);
+CMout.Data = cat(3, WBCM, WBCMv, CM, hatCM, RCM, LCM, hatCM_HJC,...
+                stanceCM_HJC, swingCM_HJC);
 
 %% Plot to check
 if draw == 1

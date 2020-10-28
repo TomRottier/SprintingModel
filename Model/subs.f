@@ -93,13 +93,14 @@ C Joint angular velocity opposite to CC angular velocity
       IF (ABS(T) .LT. DT) THEN
         CCANGVEL = -OMEGA
         SECANGVEL = 0.0D0
-C Set TV to < 0 to get it as output         
+C Calculate initial CC angle and torque      
         TV = -1.0D0
         CALL TQVEL(TQWP,CCANGVEL,TV,.TRUE.)
         CALL INITCCANG(T0,ACT,TV,THETA,K,TQWP(1),TQP(8),TQP(9),CCANG,SEC
      &                 ANG)
         TQ = MAX(0.0D0, MIN(TQMAX, K*SECANG)) 
         CCANGVEL = -CCANGVEL
+        CCANGVEL2 = CCANGVEL
 
 C Non-intial time        
       ELSEIF (T .GT. 0.0D0) THEN
@@ -111,7 +112,7 @@ C Non-intial time
             ENDIF
             TQ = K*SECANG
             TA = EXP((-(CCANG - TQP(8))**2) / (2.0D0*TQP(9)**2))
-            IF(TA .LT. 0.001D0) TA = 0.001D0
+            IF (TA .LT. 0.001D0) TA = 0.001D0
 C If activation 0, set torques and SECANG/ANGVEL to 0 (stops fluctuations)
             IF (ACT .GE. 0.01D0) THEN
               TV = TQ/(T0*ACT*TA)
@@ -125,7 +126,7 @@ C If activation 0, set torques and SECANG/ANGVEL to 0 (stops fluctuations)
             ENDIF
             IF (TV .GE. TQWP(1)) THEN
               CCANGVEL2 = -TQWP(3)
-            ELSEIF (TV .LT. TQWP(1)) THEN
+            ELSE
               IF (TV .LE. 0.0D0) THEN
                 CCANGVEL2 = TQWP(3)
               ELSE

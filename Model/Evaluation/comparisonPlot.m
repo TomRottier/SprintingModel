@@ -1,11 +1,19 @@
-load data.mat
+clear; close all; clc
+%% Load data
+% Experimental data
+load 'C:\Users\tomro\SprintingModel\Experimental data\data.mat'
 points = dout.Average.Markers.Data.Avg;
 mnames = dout.Average.Markers.Names;
 mnames = strrep(mnames, '_', '');       % Remove all '_' from marker names
 leg = dout.Average.Information.Leg;
 
-% Points
-origin = [0 0 0];points(:,:,contains(mnames, [leg 'Toe']));
+% Simulation
+pname = 'C:\Users\tomro\SprintingModel\Model\Evaluation\';
+fname = '6segSprint.1';
+data = importdata([pname fname], ' ', 8); data = data.data;
+
+% Experimental data relative to toe
+origin = points(:,:,contains(mnames, [leg 'Toe']));
 rTOE = points(:,:,contains(mnames, 'RToe')) - origin; 
 lTOE = points(:,:,contains(mnames, 'LToe')) - origin;
 rAJC = points(:,:,contains(mnames, 'RAJC')) - origin; 
@@ -25,38 +33,55 @@ UTJC = points(:,:,contains(mnames, 'UTJC')) - origin;
 APEX = points(:,:,contains(mnames, 'APEX')) - origin;
 HJC = (rHJC + lHJC) ./ 2;
 
+
 % CoM
-WBCM = dout.Average.CoM.Data.Avg(:,:,1);
-hatCM = dout.Average.CoM.Data.Avg(:,:,16);
-RCM = dout.Average.CoM.Data.Avg(:,:,17);
-LCM = dout.Average.CoM.Data.Avg(:,:,18);
+WBCM = dout.Average.CoM.Data.Avg(:,:,1) - origin;
+hatCM = dout.Average.CoM.Data.Avg(:,:,16) - origin;
+RCM = dout.Average.CoM.Data.Avg(:,:,17) - origin;
+LCM = dout.Average.CoM.Data.Avg(:,:,18) - origin;
 % hatCM = hatCM.data(:,[1 2]) + HJC(:,[2 3]);
 % swingCM = swingCM.data(:,[1 2]) + HJC(:,[2 3]);
 
-set(figure(),'WindowStyle','docked'); cla
+% Simulation data relative to toe
+data(:,2:end) = data(:,2:end) - data(:,2);
+
+%% Plot
+n = length(data);
+set(figure(1),'WindowStyle','docked'); cla
+set(figure(1),'DefaultLineLineWidth', 1.5)
 xlim([-1 1]); ylim([0 2]); hold on
-for i = 1%:5:length(points)
+for i = 1:1:n
     cla
+    % Experimental
     % Right leg
     line([rTOE(i,2) rAJC(i,2) rKJC(i,2) rHJC(i,2)], ...
-         [rTOE(i,3) rAJC(i,3) rKJC(i,3) rHJC(i,3)])    
+         [rTOE(i,3) rAJC(i,3) rKJC(i,3) rHJC(i,3)], 'Color', 'r')    
     % Left leg
     line([lTOE(i,2) lAJC(i,2) lKJC(i,2) lHJC(i,2)], ...
-         [lTOE(i,3) lAJC(i,3) lKJC(i,3) lHJC(i,3)])
+         [lTOE(i,3) lAJC(i,3) lKJC(i,3) lHJC(i,3)], 'Color', 'r')
     % Trunk
     line([HJC(i,2) LTJC(i,2) UTJC(i,2) APEX(i,2)], ...
-         [HJC(i,3) LTJC(i,3) UTJC(i,3) APEX(i,3)])
+         [HJC(i,3) LTJC(i,3) UTJC(i,3) APEX(i,3)], 'Color', 'r')
     % Right arm
     line([rSJC(i,2) rEJC(i,2) rWJC(i,2)], ...
-         [rSJC(i,3) rEJC(i,3) rWJC(i,3)])
+         [rSJC(i,3) rEJC(i,3) rWJC(i,3)], 'Color', 'r')
     % Left arm
     line([lSJC(i,2) lEJC(i,2) lWJC(i,2)], ...
-         [lSJC(i,3) lEJC(i,3) lWJC(i,3)])
+         [lSJC(i,3) lEJC(i,3) lWJC(i,3)], 'Color', 'r')
     % Whole-body CoM
-    plot(WBCM(i,2), WBCM(i,3), 'ko', 'MarkerSize', 4) 
-    plot(hatCM(i,2), hatCM(i,3), 'kx')
-    plot(RCM(i,2), RCM(i,3), 'kx')
-    plot(LCM(i,2), LCM(i,3), 'kx')
+    plot(WBCM(i,2), WBCM(i,3), 'ro', 'MarkerSize', 4) 
+%     plot(hatCM(i,2), hatCM(i,3), 'kx')
+%     plot(RCM(i,2), RCM(i,3), 'kx')
+%     plot(LCM(i,2), LCM(i,3), 'kx')
+    
+    % Simulation
+%     set(figure(1),'DefaultFigureColor', 'k')
+    line(data(i,2:2:12), data(i,3:2:13), 'Color', 'k')    % Stance leg and HAT segments
+    line(data(i,[8 14]), data(i,[9 15]), 'Color', 'k')    % Swing leg
+%     plot(data(i,16), data(i,17), 'ko')      % HAT CoM
+    plot(data(i,end-3), data(i,end-2), 'ko', 'MarkerSize', 4)% CoM
+    
+    
     drawnow
+    pause(0.001)
 end
-

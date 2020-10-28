@@ -10,7 +10,30 @@ CMout = getCM(din, 0);
 % jc = contains(din.Markers.Names, names);
 % jc(contains(din.Markers.Names, '_')) = 0;
 
-% Set up output structure
+%% Alternate angle definitions
+% Trunk angle (angle of HAT CoM relative to HJC)
+HATang = atan2d(CMout.Data(:,3,contains(CMout.Names, 'HAT_hip')), ....
+                CMout.Data(:,2,contains(CMout.Names, 'HAT_hip')));
+HATang = [HATang zeros(size(HATang)) zeros(size(HATang))];
+din.ModelOutputs.Angles.Data = cat(3, din.ModelOutputs.Angles.Data, HATang);
+din.ModelOutputs.Angles.Names = [din.ModelOutputs.Angles.Names; {'HAT2Angles'}];  
+
+% Ankle angle (AJC to TOE for foot segment)
+p1 = din.Markers.Data(:,:,contains(din.Markers.Names, 'Toe'));
+p2 = din.Markers.Data(:,:,contains(din.Markers.Names, 'AJC'));
+p3 = din.Markers.Data(:,:,contains(din.Markers.Names, 'KJC'));
+d1 = p2-p1; d2 = p3-p2;
+footANG = atan2d(d1(:,3,:),d1(:,2,:)) + 90; 
+footANG(footANG < 0) = footANG(footANG < 0) + 360;
+shankANG = atan2d(d2(:,3,:),d2(:,2,:)) + 90; 
+shankANG(shankANG < 0) = shankANG(shankANG < 0) + 360;
+ankANG = 180 - footANG + shankANG;
+ankANG = [ankANG zeros(size(ankANG)) zeros(size(ankANG))];
+din.ModelOutputs.Angles.Data = cat(3, din.ModelOutputs.Angles.Data, ankANG);
+din.ModelOutputs.Angles.Names = [din.ModelOutputs.Angles.Names; {'RAnkle2Angles';'LAnkle2Angles'}];  
+
+clearvars HATang p1 p2 p3 d1 d2 footANG shankANG ankANG
+%% Set up output structure
 dout = struct('IndvStrides', [], 'Average', []);
 si = eval('dout.IndvStrides');       % Shortcut to individual strides
 sa = eval('dout.Average');           % Shortcut to average stride             
@@ -23,6 +46,7 @@ sa = eval('dout.Average');           % Shortcut to average stride
                                         
 [sa.CoM.Names, si.CoM.Names] = deal(CMout.Names);
 
+%% Process
 % Match sampling frequency of data
 hz = 1000;          % Desired frequency
 fhz = din.Parameters.ANALOG.RATE; mhz = din.Parameters.POINT.RATE;
@@ -34,6 +58,7 @@ moments = interp1(din.Markers.Time, din.ModelOutputs.Moments.Data, time, 'spline
 com = interp1(din.Markers.Time, CMout.Data, time, 'spline');
 markers = interp1(din.Markers.Time, din.Markers.Data, time, 'spline') ./ 1000; % m
 % jointcentres = interp1(din.Markers.Time, din.Markers.Data(:,:,jc), time, 'spline') ./ 1000; % m
+
 
 % Get TD,TO
 threshold = 80;
@@ -63,7 +88,7 @@ dout.Information.Filter.Type = 'Low pass butterworth';
 dout.Information.Filter.Passes = 2;
 
 % Tidy up
-clearvars fname p fhz mhz din names time CMout CMout_names jc i cutoff;
+clearvars fname p fhz mhz din names time CMout CMout_names jc i cutoff ;
 
 %% Seperate out contacts and time normalise
 % First contact leg
@@ -202,12 +227,13 @@ if output
     leg = char(legs(contains(legs,dout.Average.Information.Leg)));
     leg2 = char(legs(~contains(legs,dout.Average.Information.Leg)));
     idx = contains(dout.Average.Angles.Names,...
-            {'HATAngles', [leg 'HipAngle' ], [leg 'KneeAngle'] , ...
-            [leg 'AnkleAngle']});  
+            {'HAT2Angles', [leg 'HipAngle' ], [leg 'KneeAngle'] , ...
+            [leg 'Ankle2Angle']});  
 
     colwidth = 13;
     precision = 5;
-    colnames = [{'Time'}; {'RX'}; {'RY'}; dout.Average.Angles.Names(idx)];
+    colnames = [{'Time'}; {'RX'}; {'RY'}; dout.Average.Angles.Names(idx);...
+                {'WBCMY'}; {'WBCMVy'}];
     nametype = ['%-' num2str(colwidth) 's'];
     datatype = ['%' num2str(colwidth) '.' num2str(precision) 'E'];
     namefmt = [repmat([nametype ' '], 1, length(colnames)-1) nametype '\n'];
@@ -220,12 +246,9 @@ if output
     fprintf(fid, namefmt, pad(string(colnames), colwidth, 'both')');
     dataout = [dout.Average.Time.Absolute...
         dout.Average.Force.Data.Avg(:,[2 3]) ...
-        reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n length(colnames)-3])]';
-    fprintf(fid, datafmt, ...
-            string([dout.Average.Time.Absolute...
-                    dout.Average.Force.Data.Avg(:,[2 3]) ...
-                    reshape(dout.Average.Angles.Data.Avg(:,1,idx), ...
-                    [n length(colnames)-3])]'));
+        reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n 4])...
+        reshape(dout.Average.CoM.Data.Avg(:,3,[1 2]), [n 2])]';
+    fprintf(fid, datafmt, string(dataout));
     fclose(fid);
 end
 

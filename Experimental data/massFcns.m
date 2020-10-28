@@ -2,6 +2,7 @@ clear; close all; clc;
 %% Load data
 load data.mat           % Experimental data
 output = 1;             % Output data or not
+draw = 0;
 
 cm = dout.Average.CoM;  % Shortcut
 
@@ -30,7 +31,7 @@ hatCM = (cm.Data.Avg(:,:,contains(cm.Names, 'LwTrunk')).*lwTrunkM + ...
         ./ (hatM);
 
 % Relative to hip joint
-upperCM_HJC = hatCM - HJC;
+hatCM_HJC = hatCM - HJC;
 
 %% CoM of swing leg
 swingCM = (cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Foot'])).*footM + ...
@@ -46,7 +47,7 @@ stanceCM = (cm.Data.Avg(:,:,contains(cm.Names, [leg 'Foot'])).*footM + ...
     cm.Data.Avg(:,:,contains(cm.Names, [leg 'Thigh'])).*thighM) ./ legM;
 
 % Relative to combined HJC
-legCM_HJC = stanceCM - HJC;
+stanceCM_HJC = stanceCM - HJC;
 
 %% Check WBCM
 WBCM = (stanceCM.*legM + swingCM.*legM + hatCM.*hatM) / (2*legM+hatM);
@@ -57,46 +58,50 @@ WBCM_HJC = WBCM - HJC;      % Relative to HJC
 WBCM_true = cm.Data.Avg(:,:,strcmp(cm.Names, 'WBCM'));
 WBCM_true_HJC = WBCM_true - HJC;        % Relative to HJC
 
-set(figure(1),'WindowStyle','docked'); hold on; cla
-plot(WBCM(:,3))
-plot(WBCM_true(:,3))
-title(['RMSE: ' num2str(round(tr_rmse(WBCM(:,3),WBCM_true(:,3))*1000, 2)) ' mm'])
-legend('model','true', 'location', 'bestoutside')
+if draw
+    set(figure(1),'WindowStyle','docked'); hold on; cla
+    plot(WBCM(:,3))
+    plot(WBCM_true(:,3))
+    title(['RMSE: ' num2str(round(tr_rmse(WBCM(:,3),WBCM_true(:,3))*1000, 2)) ' mm'])
+    legend('model','true', 'location', 'bestoutside')
+end
 
 %% Derivatives 
 % HAT CoM
-upperCM_HJC(:,:,2) = tr_diff(upperCM_HJC(:,:,1), 1/dout.Information.Rate);
-upperCM_HJC(:,:,3) = tr_diff(upperCM_HJC(:,:,2), 1/dout.Information.Rate);
+hatCM_HJC(:,:,2) = tr_diff(hatCM_HJC(:,:,1), 1/dout.Information.Rate);
+hatCM_HJC(:,:,3) = tr_diff(hatCM_HJC(:,:,2), 1/dout.Information.Rate);
 
 % Swing CoM
 swingCM_HJC(:,:,2) = tr_diff(swingCM_HJC(:,:,1), 1/dout.Information.Rate);
 swingCM_HJC(:,:,3) = tr_diff(swingCM_HJC(:,:,2), 1/dout.Information.Rate);
 
 
-% Plot 
-set(figure(2),'WindowStyle','docked')
-set(figure(2), 'DefaultLineMarkerSize', 2)
-titles = {'position','velocity','acceleration'};
-for i = 1:3
-    subplot(3,2,2*i-1); hold on; cla
-    plot(upperCM_HJC(1:to,2,i), 's')
-    title([titles{i} ' x'])
-    
-    subplot(3,2,2*i); hold on; cla
-    plot(upperCM_HJC(1:to,3,i), 's')
-    title([titles{i} ' y'])
-end
+% Plot
+if draw
+    set(figure(2),'WindowStyle','docked')
+    set(figure(2), 'DefaultLineMarkerSize', 2)
+    titles = {'position','velocity','acceleration'};
+    for i = 1:3
+        subplot(3,2,2*i-1); hold on; cla
+        plot(hatCM_HJC(1:to,2,i), 's')
+        title([titles{i} ' x'])
 
-set(figure(3),'WindowStyle','docked')
-set(figure(3), 'DefaultLineMarkerSize', 2)
-for i = 1:3
-    subplot(3,2,2*i-1); hold on; cla
-    plot(swingCM_HJC(1:to,2,i), 's')
-    title([titles{i} ' x'])
-    
-    subplot(3,2,2*i); hold on; cla
-    plot(swingCM_HJC(1:to,3,i), 's')
-    title([titles{i} ' y'])
+        subplot(3,2,2*i); hold on; cla
+        plot(hatCM_HJC(1:to,3,i), 's')
+        title([titles{i} ' y'])
+    end
+
+    set(figure(3),'WindowStyle','docked')
+    set(figure(3), 'DefaultLineMarkerSize', 2)
+    for i = 1:3
+        subplot(3,2,2*i-1); hold on; cla
+        plot(swingCM_HJC(1:to,2,i), 's')
+        title([titles{i} ' x'])
+
+        subplot(3,2,2*i); hold on; cla
+        plot(swingCM_HJC(1:to,3,i), 's')
+        title([titles{i} ' y'])
+    end
 end
 
 %% Export data
@@ -113,13 +118,13 @@ if output
     
     % HAT CoM
     fid = fopen('HAT.txt', 'w');
-    fprintf(fid, '%4d', size(upperCM_HJC,1));    % Data size
+    fprintf(fid, '%4d', size(hatCM_HJC,1));    % Data size
     fprintf(fid, '%4d', 2);                        % Header rows
     fprintf(fid, '%4d\n', colwidth+1);               % Column width
     fprintf(fid, namefmt, pad(colnames, colwidth, 'left'));
     fprintf(fid, datafmt, ...
-                string(reshape(upperCM_HJC(:,[2 3],:),...
-                        [size(upperCM_HJC, 1) 6])'));
+                string(reshape(hatCM_HJC(:,[2 3],:),...
+                        [size(hatCM_HJC, 1) 6])'));
     fclose(fid);
     
     % Swing CoM

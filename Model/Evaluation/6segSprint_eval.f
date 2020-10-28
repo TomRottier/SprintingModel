@@ -17,7 +17,7 @@ C** Model variables
       INTEGER          I,J,NACTP,NROW,NCOL
       PARAMETER        (NACTP=7)
       CHARACTER        MESSAGE(99)
-      DIMENSION        Y(500,7)
+      DIMENSION        Y(500,9)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
@@ -57,6 +57,7 @@ C**   Read the initial value of each variable from input file
 C**   Read integration parameters from input file
       READ(20,7011,END=7100,ERR=7101) TINITIAL,TFINAL,INTEGSTP,PRINTINT,
      &ABSERR,RELERR
+      CLOSE(UNIT=20)
 
 C** Read torque parameters
       OPEN(UNIT=30, FILE='torque.in', STATUS='OLD')
@@ -69,7 +70,7 @@ C** Read activation parameters
       CLOSE(UNIT=31)
 
 C** Read spline coefficients for angles and HAT CoM location
-      OPEN(UNIT=32, FILE='angles_coef.csv', STATUS='OLD')
+      OPEN(UNIT=32, FILE='angles2_coef.csv', STATUS='OLD')
       READ(32,*) NROW
       READ(32,*) (TT(I), I=1, NROW)
       READ(32,*) ((CCHIP(J,I), J=1, 6), I=1, NROW)
@@ -82,11 +83,11 @@ C** Read spline coefficients for angles and HAT CoM location
       CLOSE(UNIT=33)
 
 C** Read matching data
-      OPEN(UNIT=33, FILE='matchingData.txt', STATUS='OLD')
-      READ(33,*) NROW, NCOL
-      READ(33,*)
-      READ(33,*, ERR=7410) ((Y(I,J), J=1, NCOL), I=1, NROW)
-      CLOSE(UNIT=33)
+      OPEN(UNIT=34, FILE='matchingData2.csv', STATUS='OLD')
+      READ(34,*) NROW, NCOL
+      READ(34,*)
+      READ(34,*, ERR=7410) ((Y(I,J), J=1, NCOL), I=1, NROW)
+      CLOSE(UNIT=34)
       AERIALTIME = 0.1321D0
       SWINGTIME  = 0.3763D0
 
@@ -106,17 +107,17 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       IPRINT = 1
 
 C** Set upper and lower bounds on parameters
-      DO I = 1, N, 7
+      DO I = 1, N-4, NACTP
         LB(I)    = 0.0D0
         LB(I+1)  = 0.0D0
-        LB(I+2)  = 0.1D0
+        LB(I+2)  = 0.07D0
         LB(I+3)  = 0.0D0
         LB(I+4)  = 0.0D0
-        LB(I+5)  = 0.1D0
+        LB(I+5)  = 0.07D0
         LB(I+6)  = 0.0D0
       ENDDO
 
-      DO I = 1, N, 7
+      DO I = 1, N-4, NACTP
         UB(I)    = 1.1D0
         UB(I+1)  = 0.1D0
         UB(I+2)  = 0.3D0
@@ -129,13 +130,13 @@ C** Set upper and lower bounds on parameters
       LB(N-3) = 0.1D0
       LB(N-2) = 0.1D0
       LB(N-1) = 1000.0D0
-      LB(N)   = 1000.0D0
+      LB(N)   = 10000.0D0
       UB(N-3) = 1000.0D0
       UB(N-2) = 1000.0D0
       UB(N-1) = 1000000.0D0
       UB(N)   = 1000000.0D0
 
-C***  Set input values of the input/output parameters.
+C***  Set input values of the input/output parameters
       T = 5.0
 
       DO 20, I = 1, N
@@ -154,18 +155,16 @@ C***  Set input values of the input/output parameters.
       X(44) = K2
       X(45) = K3
       X(46) = K4
-      print*, x
-      stop
 
 C**** Call SPAN
-!       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
-!      &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
-!      &        FSTAR,XP,NACP,WORK)
+      CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
+     &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
+     &        FSTAR,XP,NACP,WORK)
       
-      DO I = 1, 10
-      CALL FCN(N,X,COST)
-      PRINT*, COST
-      ENDDO
+      ! DO I = 1, 10
+      ! CALL FCN(N,X,COST)
+      ! PRINT*, COST
+      ! ENDDO
 
       STOP
 7000  FORMAT(//,99A1,///)
@@ -203,7 +202,7 @@ C***********************************************************************
       PARAMETER        (NACTP=7)
       EXTERNAL         EQNS1
       DIMENSION        VAR(12)
-      DIMENSION        X(N),Y(500,7)
+      DIMENSION        X(N),Y(500,9)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
@@ -319,7 +318,6 @@ C**   Check exit conditions
         HIPJ   = HIPS   / IDX
         KNEEJ  = KNEES  / IDX
         ANKLEJ = ANKLES / IDX
-
         CMYTO = Q2 - (ME*(L3-L4)*SIN(DA-EA-Q3)+(L6*ME-MD*(L5-L6))*SIN(DA
      &  -Q3)-MF*FS*SIN(Q3)-(L5*MC+L6*MD+L6*ME+L6*MF)*SIN(Q3-Q6)-(L3*MB+L
      &  4*MC+L4*MD+L4*ME+L4*MF)*SIN(Q3-Q5-Q6)-(L1*MA+L2*MB+L2*MC+L2*MD+L
@@ -357,8 +355,8 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         TSWJ = ABS(TSW - SWINGTIME)
         VCMJ = ABS(VCMXF-VCMXI)
   
-        COST = HATJ+HIPJ+KNEEJ+ANKLEJ+1000.0D0*TSWJ+100.0D0*VCMJ
-        IF (T .LT. 0.09D0) COST = 3000.0D0
+        COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+500.0D0*TSWJ+500.0D0*VCMJ
+        IF (T .LT. 0.095D0) COST = 3000.0D0
         RETURN
       ENDIF
 
@@ -369,11 +367,10 @@ C** Update torques after integration
       CALL UPDATE(T)
 
 C** Intermediate cost      
-      HATS   = HATS   + (Y(IDX,4) - Q3*RADtoDEG)**2
-      HIPS   = HIPS   + (Y(IDX,5) - HANG*RADtoDEG)**2
+      HATS   = HATS   + (Y(IDX,2) - Q3*RADtoDEG)**2
+      HIPS   = HIPS   + (Y(IDX,4) - HANG*RADtoDEG)**2
       KNEES  = KNEES  + (Y(IDX,6) - KANG*RADtoDEG)**2
-      ANKLES = ANKLES + (Y(IDX,7) - AANG*RADtoDEG)**2
-      
+      ANKLES = ANKLES + (Y(IDX,8) - AANG*RADtoDEG)**2
       IDX = IDX + 1
       GOTO 5900
 
@@ -676,9 +673,9 @@ C** Solve for accelearations
      &2*L6*SIN(Q4+Q5)*(U3-U4-U5-U6)**2-L6*(L5-L6)*SIN(DA-Q6)*(U3-U6)**2-
      &L4*(L5-L6)*SIN(DA-Q5-Q6)*(U3-U5-U6)**2-L2*(L5-L6)*SIN(DA-Q4-Q5-Q6)
      &*(U3-U4-U5-U6)**2)
-      RHS(4) = ATOR + G*L1*MA*COS(Q3-Q4-Q5-Q6) + G*L2*MB*COS(Q3-Q4-Q5-Q6
-     &) + G*L2*MC*COS(Q3-Q4-Q5-Q6) + G*L2*MD*COS(Q3-Q4-Q5-Q6) + G*L2*ME*
-     &COS(Q3-Q4-Q5-Q6) + G*L2*MF*COS(Q3-Q4-Q5-Q6) - L2*(MF*(2*FSp*COS(Q4
+      RHS(4) = G*L1*MA*COS(Q3-Q4-Q5-Q6) + G*L2*MB*COS(Q3-Q4-Q5-Q6) + G*L
+     &2*MC*COS(Q3-Q4-Q5-Q6) + G*L2*MD*COS(Q3-Q4-Q5-Q6) + G*L2*ME*COS(Q3-
+     &Q4-Q5-Q6) + G*L2*MF*COS(Q3-Q4-Q5-Q6) - ATOR - L2*(MF*(2*FSp*COS(Q4
      &+Q5+Q6)*U3+SIN(Q4+Q5+Q6)*(FSpp-FS*U3**2)-L6*SIN(Q4+Q5)*(U3-U6)**2-
      &L4*SIN(Q4)*(U3-U5-U6)**2)+MD*((L5-L6)*DApp*COS(DA-Q4-Q5-Q6)-L6*SIN
      &(Q4+Q5)*(U3-U6)**2-L4*SIN(Q4)*(U3-U5-U6)**2-(L5-L6)*SIN(DA-Q4-Q5-Q
@@ -708,29 +705,29 @@ C** Solve for accelearations
      &*L6*SIN(Q5)*(U3-U6)**2-L2*L6*SIN(Q4+Q5)*(U3-U6)**2-L2*L4*SIN(Q4)*(
      &U3-U5-U6)**2-L4*(L5-L6)*SIN(DA-Q5-Q6)*(DAp-U3)**2-L2*(L5-L6)*SIN(D
      &A-Q4-Q5-Q6)*(DAp-U3)**2)
-      RHS(6) = HTOR + G*L1*MA*COS(Q3-Q4-Q5-Q6) + G*MB*(L3*COS(Q3-Q5-Q6)+
-     &L2*COS(Q3-Q4-Q5-Q6)) + G*MC*(L5*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS
-     &(Q3-Q4-Q5-Q6)) + G*MD*(L6*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS(Q3-Q4
-     &-Q5-Q6)) + G*ME*(L6*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS(Q3-Q4-Q5-Q6
-     &)) + G*MF*(L6*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS(Q3-Q4-Q5-Q6)) + L
-     &2*L3*MB*SIN(Q4)*((U3-U5-U6)**2-(U3-U4-U5-U6)**2) + MC*(L4*L5*SIN(Q
-     &5)*(U3-U6)**2+L2*L5*SIN(Q4+Q5)*(U3-U6)**2+L2*L4*SIN(Q4)*(U3-U5-U6)
-     &**2-L4*L5*SIN(Q5)*(U3-U5-U6)**2-L2*L4*SIN(Q4)*(U3-U4-U5-U6)**2-L2*
-     &L5*SIN(Q4+Q5)*(U3-U4-U5-U6)**2) + MF*(L4*L6*SIN(Q5)*(U3-U6)**2+L2*
-     &L6*SIN(Q4+Q5)*(U3-U6)**2+L2*L4*SIN(Q4)*(U3-U5-U6)**2-2*L6*FSp*COS(
-     &Q6)*U3-2*L4*FSp*COS(Q5+Q6)*U3-2*L2*FSp*COS(Q4+Q5+Q6)*U3-L6*SIN(Q6)
-     &*(FSpp-FS*U3**2)-L4*SIN(Q5+Q6)*(FSpp-FS*U3**2)-L2*SIN(Q4+Q5+Q6)*(F
-     &Spp-FS*U3**2)-L4*L6*SIN(Q5)*(U3-U5-U6)**2-L2*L4*SIN(Q4)*(U3-U4-U5-
-     &U6)**2-L2*L6*SIN(Q4+Q5)*(U3-U4-U5-U6)**2) + ME*(L6**2*DApp*COS(DA-
-     &Q6)+L4*L6*DApp*COS(DA-Q5-Q6)+L2*L6*DApp*COS(DA-Q4-Q5-Q6)+L6*(L3-L4
-     &)*(DApp-EApp)*COS(DA-EA-Q6)+L4*(L3-L4)*(DApp-EApp)*COS(DA-EA-Q5-Q6
-     &)+L2*(L3-L4)*(DApp-EApp)*COS(DA-EA-Q4-Q5-Q6)+L4*L6*SIN(Q5)*(U3-U6)
-     &**2+L2*L6*SIN(Q4+Q5)*(U3-U6)**2+L2*L4*SIN(Q4)*(U3-U5-U6)**2-L4*L6*
-     &SIN(Q5)*(U3-U5-U6)**2-L6**2*SIN(DA-Q6)*(DAp-U3)**2-L2*L4*SIN(Q4)*(
-     &U3-U4-U5-U6)**2-L4*L6*SIN(DA-Q5-Q6)*(DAp-U3)**2-L2*L6*SIN(Q4+Q5)*(
-     &U3-U4-U5-U6)**2-L2*L6*SIN(DA-Q4-Q5-Q6)*(DAp-U3)**2-L6*(L3-L4)*SIN(
-     &DA-EA-Q6)*(DAp-EAp-U3)**2-L4*(L3-L4)*SIN(DA-EA-Q5-Q6)*(DAp-EAp-U3)
-     &**2-L2*(L3-L4)*SIN(DA-EA-Q4-Q5-Q6)*(DAp-EAp-U3)**2) - MD*(L6*(L5-L
+      RHS(6) = G*L1*MA*COS(Q3-Q4-Q5-Q6) + G*MB*(L3*COS(Q3-Q5-Q6)+L2*COS(
+     &Q3-Q4-Q5-Q6)) + G*MC*(L5*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS(Q3-Q4-
+     &Q5-Q6)) + G*MD*(L6*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS(Q3-Q4-Q5-Q6)
+     &) + G*ME*(L6*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS(Q3-Q4-Q5-Q6)) + G*
+     &MF*(L6*COS(Q3-Q6)+L4*COS(Q3-Q5-Q6)+L2*COS(Q3-Q4-Q5-Q6)) + L2*L3*MB
+     &*SIN(Q4)*((U3-U5-U6)**2-(U3-U4-U5-U6)**2) + MC*(L4*L5*SIN(Q5)*(U3-
+     &U6)**2+L2*L5*SIN(Q4+Q5)*(U3-U6)**2+L2*L4*SIN(Q4)*(U3-U5-U6)**2-L4*
+     &L5*SIN(Q5)*(U3-U5-U6)**2-L2*L4*SIN(Q4)*(U3-U4-U5-U6)**2-L2*L5*SIN(
+     &Q4+Q5)*(U3-U4-U5-U6)**2) + MF*(L4*L6*SIN(Q5)*(U3-U6)**2+L2*L6*SIN(
+     &Q4+Q5)*(U3-U6)**2+L2*L4*SIN(Q4)*(U3-U5-U6)**2-2*L6*FSp*COS(Q6)*U3-
+     &2*L4*FSp*COS(Q5+Q6)*U3-2*L2*FSp*COS(Q4+Q5+Q6)*U3-L6*SIN(Q6)*(FSpp-
+     &FS*U3**2)-L4*SIN(Q5+Q6)*(FSpp-FS*U3**2)-L2*SIN(Q4+Q5+Q6)*(FSpp-FS*
+     &U3**2)-L4*L6*SIN(Q5)*(U3-U5-U6)**2-L2*L4*SIN(Q4)*(U3-U4-U5-U6)**2-
+     &L2*L6*SIN(Q4+Q5)*(U3-U4-U5-U6)**2) + ME*(L6**2*DApp*COS(DA-Q6)+L4*
+     &L6*DApp*COS(DA-Q5-Q6)+L2*L6*DApp*COS(DA-Q4-Q5-Q6)+L6*(L3-L4)*(DApp
+     &-EApp)*COS(DA-EA-Q6)+L4*(L3-L4)*(DApp-EApp)*COS(DA-EA-Q5-Q6)+L2*(L
+     &3-L4)*(DApp-EApp)*COS(DA-EA-Q4-Q5-Q6)+L4*L6*SIN(Q5)*(U3-U6)**2+L2*
+     &L6*SIN(Q4+Q5)*(U3-U6)**2+L2*L4*SIN(Q4)*(U3-U5-U6)**2-L4*L6*SIN(Q5)
+     &*(U3-U5-U6)**2-L6**2*SIN(DA-Q6)*(DAp-U3)**2-L2*L4*SIN(Q4)*(U3-U4-U
+     &5-U6)**2-L4*L6*SIN(DA-Q5-Q6)*(DAp-U3)**2-L2*L6*SIN(Q4+Q5)*(U3-U4-U
+     &5-U6)**2-L2*L6*SIN(DA-Q4-Q5-Q6)*(DAp-U3)**2-L6*(L3-L4)*SIN(DA-EA-Q
+     &6)*(DAp-EAp-U3)**2-L4*(L3-L4)*SIN(DA-EA-Q5-Q6)*(DAp-EAp-U3)**2-L2*
+     &(L3-L4)*SIN(DA-EA-Q4-Q5-Q6)*(DAp-EAp-U3)**2) - HTOR - MD*(L6*(L5-L
      &6)*DApp*COS(DA-Q6)+L4*(L5-L6)*DApp*COS(DA-Q5-Q6)+L2*(L5-L6)*DApp*C
      &OS(DA-Q4-Q5-Q6)+L4*L6*SIN(Q5)*(U3-U5-U6)**2+L2*L4*SIN(Q4)*(U3-U4-U
      &5-U6)**2+L2*L6*SIN(Q4+Q5)*(U3-U4-U5-U6)**2-L4*L6*SIN(Q5)*(U3-U6)**
@@ -814,6 +811,7 @@ C** Convert CoM velocity to generalised speeds
       U5 = U5I*DEGtoRAD
       U6 = U6I*DEGtoRAD
       
+      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHAT,FS,FSp,FSpp)
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHIP,DA,DAp,DApp)
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCKNEE,EA,EAp,EApp)
       DA   = DA  *DEGtoRAD 
@@ -822,7 +820,6 @@ C** Convert CoM velocity to generalised speeds
       EA   = EA  *DEGtoRAD 
       EAp  = EAp *DEGtoRAD 
       EApp = EApp*DEGtoRAD 
-      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHAT,FS,FSp,FSpp)
 
       U1I = VOCMX -(MF*FSp*COS(Q3)-MF*FS*SIN(Q3)*U3-(L5*MC+L6*MD+L6*ME+L
      &6*MF)*SIN(Q3-Q6)*(U3-U6)-(L6*ME-MD*(L5-L6))*SIN(DA-Q3)*(DAp-U3-U7)
@@ -899,8 +896,8 @@ C***********************************************************************
       CALL MUSCLEMODEL(T,AFTQP(1:9),AFACTP,AFTQP(10),AANG,AANGVEL,AFTOR,
      &AFSECANG,AFSECANGVEL,AFCCANG,AFCCANGVEL,INTEGSTP,2)
 
-      HTOR = HFTOR - HETOR
+      HTOR = HETOR - HFTOR
       KTOR = KETOR - KFTOR
-      ATOR = AFTOR - AETOR 
+      ATOR = AETOR - AFTOR 
 
       END SUBROUTINE UPDATE
