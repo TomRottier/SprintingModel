@@ -1,5 +1,10 @@
 # Log
 
+## 28/10/2020
+
+- Change angle definitions to match model better
+- Match segment lengths from experimental data
+
 ## 21/10/2020
 
 - Redo energy and momentum checks
