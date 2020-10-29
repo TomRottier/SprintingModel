@@ -6,13 +6,17 @@ draw = 0;
 
 cm = dout.Average.CoM;  % Shortcut
 
-% Combined HJC
-HJC = dout.Average.Markers.Data.Avg(:,:,strcmp(dout.Average.Markers.Names, 'HJC'));
-
+        
 to = find(dout.Average.Force.Data.Avg(:,3) < 80, 1);  % Takeoff
 legs = ['L', 'R'];
 leg = dout.Average.Information.Leg;         % Stance leg
 swleg = legs(~(legs == leg));               % Swing leg
+
+%  HJC
+HJC = dout.Average.Markers.Data.Avg(:,:,...
+      strcmp(dout.Average.Markers.Names, [leg 'HJC']));
+% stanceHJC = dout.Average.Markers.Data.Avg(:,:,...
+%             strcmp(dout.Average.Markers.Names, [leg 'HJC']));
 
 % Inertia data
 inertia = cell2mat(dout.Information.Inertia.Data);

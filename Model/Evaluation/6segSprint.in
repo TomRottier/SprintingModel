@@ -11,10 +11,10 @@ Constant:            IC                   KG.M^2          |  0.2122
 Constant:            ID                   KG.M^2          |  0.2122
 Constant:            IE                   KG.M^2          |  0.0792
 Constant:            IF                   KG.M^2          |  1.489
-Constant:            K1                   N/M             |  0.4882408690     
-Constant:            K2                   N/M/S^2         |  994.2533323      
-Constant:            K3                   N/M             |  97873.73257      
-Constant:            K4                   N/M/S^2         |  14266.24705    
+Constant:            K1                   N/M             |  4.488306440    
+Constant:            K2                   N/M/S^2         |  999.9713253     
+Constant:            K3                   N/M             |  42324.23565  
+Constant:            K4                   N/M/S^2         |  10000.00244 
 Constant:            L1                   M               |  0.142
 Constant:            L2                   M               |  0.218
 Constant:            L3                   M               |  0.261
@@ -31,16 +31,16 @@ Constant:            MF                   KG              |  50.935
 
 Initial Value:       Q1                   M               |  0.0
 Initial Value:       Q2                   M               |  0.0
-Initial Value:       HAT ANGLE            DEG             |  82.758
+Initial Value:       HAT ANGLE            DEG             |  80.84
 Initial Value:       ANKLE ANGLE          DEG             |  108.37
 Initial Value:       KNEE ANGLE           DEG             |  157.07
-Initial Value:       HIP ANGLE            DEG             |  145.42
+Initial Value:       HIP ANGLE            DEG             |  143.50
 Initial Value:       VOCMX                M/S             |  9.6975
 Initial Value:       VOCMY                M/S             | -0.7577
-Initial Value:       HAT ANGVEL           DEG/S           | -24.41
+Initial Value:       HAT ANGVEL           DEG/S           | -25.02
 Initial Value:       ANKLE ANGVEL         DEG/S           | -330.94
 Initial Value:       KNEE ANGVEL          DEG/S           | -160.13
-Initial Value:       HIP ANGVEL           DEG/S           |  429.44
+Initial Value:       HIP ANGVEL           DEG/S           |  428.84
 
 Initial Time:        TINITIAL             S               |  0.0
 Final Time:          TFINAL               S               |  0.2

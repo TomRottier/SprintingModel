@@ -125,13 +125,12 @@ LCM = (CM(:,:,contains(segs, 'LFoot')).*footM + ...
     CM(:,:,contains(segs, 'LThigh')).*thighM) ./ legM;
 
 % Relative to HJC
-hatCM_HJC = hatCM - HJC;
-stanceCM_HJC = RCM - HJC;
-swingCM_HJC = LCM - HJC;
+% hatCM_HJC = hatCM - HJC;
+% stanceCM_HJC = RCM - HJC;
+% swingCM_HJC = LCM - HJC;
 
 % Add names
-CMout.Names = [CMout.Names  {'HAT', 'RLeg', 'LLeg', 'HAT_hip',...
-    'RLeg_hip', 'LLeg_hip'}];
+CMout.Names = [CMout.Names  {'HAT', 'RLeg', 'LLeg'}]; %, 'HAT_hip','RLeg_hip', 'LLeg_hip'}];
     
 %% Output
 % Relative to stance foot toe
@@ -144,8 +143,7 @@ CMout.Names = [CMout.Names  {'HAT', 'RLeg', 'LLeg', 'HAT_hip',...
 % WBCM = WBCM - origin;
 
 WBCMv = tr_diff(WBCM, 1/hz);
-CMout.Data = cat(3, WBCM, WBCMv, CM, hatCM, RCM, LCM, hatCM_HJC,...
-                stanceCM_HJC, swingCM_HJC);
+CMout.Data = cat(3, WBCM, WBCMv, CM, hatCM, RCM, LCM);%, hatCM_HJC,stanceCM_HJC, swingCM_HJC);
 
 %% Plot to check
 if draw == 1

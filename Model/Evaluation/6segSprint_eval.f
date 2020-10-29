@@ -70,7 +70,7 @@ C** Read activation parameters
       CLOSE(UNIT=31)
 
 C** Read spline coefficients for angles and HAT CoM location
-      OPEN(UNIT=32, FILE='angles2_coef.csv', STATUS='OLD')
+      OPEN(UNIT=32, FILE='angles_coef.csv', STATUS='OLD')
       READ(32,*) NROW
       READ(32,*) (TT(I), I=1, NROW)
       READ(32,*) ((CCHIP(J,I), J=1, 6), I=1, NROW)
@@ -89,7 +89,7 @@ C** Read matching data
       READ(34,*, ERR=7410) ((Y(I,J), J=1, NCOL), I=1, NROW)
       CLOSE(UNIT=34)
       AERIALTIME = 0.1321D0
-      SWINGTIME  = 0.3763D0
+      SWINGTIME  = 0.374D0
 
 C**   Convert to generalised coordinates
       CALL INITCOND()
@@ -97,10 +97,10 @@ C**   Convert to generalised coordinates
 C**   Set input parameters for SPAN
 C*    Recommended values: NT = 100, NS = even multiple of ncpu
       MAX = .FALSE.
-      EPS = 1.0D-04
+      EPS = 1.0D-03
       RT = 0.75
-      ISEED1 = 3
-      ISEED2 = 4
+      ISEED1 = 5
+      ISEED2 = 6
       NS = 24
       NT = 5
       MAXEVL = 100000000
@@ -110,10 +110,10 @@ C** Set upper and lower bounds on parameters
       DO I = 1, N-4, NACTP
         LB(I)    = 0.0D0
         LB(I+1)  = 0.0D0
-        LB(I+2)  = 0.07D0
+        LB(I+2)  = 0.1D0
         LB(I+3)  = 0.0D0
         LB(I+4)  = 0.0D0
-        LB(I+5)  = 0.07D0
+        LB(I+5)  = 0.1D0
         LB(I+6)  = 0.0D0
       ENDDO
 
@@ -145,16 +145,16 @@ C***  Set input values of the input/output parameters
          X(I) = LB(I) + VM(I)*0.5D0
 20    CONTINUE
 
-      X(1:7)   = HEACTP
-      X(8:14)  = KEACTP
-      X(15:21) = AEACTP
-      X(22:28) = HFACTP
-      X(29:35) = KFACTP
-      X(36:42) = AFACTP
-      X(43) = K1
-      X(44) = K2
-      X(45) = K3
-      X(46) = K4
+      ! X(1:7)   = HEACTP
+      ! X(8:14)  = KEACTP
+      ! X(15:21) = AEACTP
+      ! X(22:28) = HFACTP
+      ! X(29:35) = KFACTP
+      ! X(36:42) = AFACTP
+      ! X(43) = K1
+      ! X(44) = K2
+      ! X(45) = K3
+      ! X(46) = K4
 
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
@@ -367,10 +367,10 @@ C** Update torques after integration
       CALL UPDATE(T)
 
 C** Intermediate cost      
-      HATS   = HATS   + (Y(IDX,2) - Q3*RADtoDEG)**2
-      HIPS   = HIPS   + (Y(IDX,4) - HANG*RADtoDEG)**2
-      KNEES  = KNEES  + (Y(IDX,6) - KANG*RADtoDEG)**2
-      ANKLES = ANKLES + (Y(IDX,8) - AANG*RADtoDEG)**2
+      HATS   = HATS   + (Y(IDX,3) - Q3*RADtoDEG)**2
+      HIPS   = HIPS   + (Y(IDX,5) - HANG*RADtoDEG)**2
+      KNEES  = KNEES  + (Y(IDX,7) - KANG*RADtoDEG)**2
+      ANKLES = ANKLES + (Y(IDX,9) - AANG*RADtoDEG)**2
       IDX = IDX + 1
       GOTO 5900
 

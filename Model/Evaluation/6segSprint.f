@@ -101,7 +101,7 @@ C** Read activation parameters
       CLOSE(UNIT=31)
 
 C** Read spline coefficients for angles and HAT CoM location
-      OPEN(UNIT=32, FILE='angles2_coef.csv', STATUS='OLD')
+      OPEN(UNIT=32, FILE='angles_coef.csv', STATUS='OLD')
       READ(32,*) NROW
       READ(32,*) (TT(I), I=1, NROW)
       READ(32,*) ((CCHIP(J,I), J=1, 6), I=1, NROW)

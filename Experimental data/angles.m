@@ -29,20 +29,21 @@ HJC = (rHJC + lHJC) ./ 2;
 rd1 = rAJC - rTOE; ld1 = lAJC - lTOE;
 rd2 = rKJC - rAJC; ld2 = lKJC - lAJC;
 rd3 = HJC - rKJC;  ld3 = HJC - lKJC;    % Combined HJC
-d4 = hatCM - HJC;                       % HAT CoM
+rd4 = hatCM - rHJC; ld4 = hatCM - lHJC; % HAT CoM
 
 % Segment angles
 rFoot  = atan2d(rd1(:,3), rd1(:,2)); lFoot  = atan2d(ld1(:,3), ld1(:,2)); 
 rShank = atan2d(rd2(:,3), rd2(:,2)); lShank = atan2d(ld2(:,3), ld2(:,2)); 
 rThigh = atan2d(rd3(:,3), rd3(:,2)); lThigh = atan2d(ld3(:,3), ld3(:,2)); 
-HAT = atan2d(d4(:,3), d4(:,2));
-segs = cat(2, HAT,rThigh,lThigh,rShank,lShank,rFoot,lFoot);
+rHAT = atan2d(rd4(:,3), rd4(:,2)); lHAT = atan2d(ld4(:,3), ld4(:,2));
+
+segs = cat(2, rHAT,lHAT,rThigh,lThigh,rShank,lShank,rFoot,lFoot);
 segsvel = tr_diff(segs, 0.001);
 
 % Joint angles
 rAnkle = 180 - rFoot + rShank; lAnkle = 180 - lFoot + lShank;
 rKnee = 180 + rShank - rThigh; lKnee = 180 + lShank - lThigh;
-rHip = 180 - rThigh + HAT; lHip = 180 - lThigh + HAT;
+rHip = 180 - rThigh + rHAT; lHip = 180 - lThigh + lHAT;
 joints =  cat(2, rHip,lHip,rKnee,lKnee,rAnkle,lAnkle);
 
 for i = 1:size(joints, 2)
@@ -61,9 +62,9 @@ ShankL = mean([rShankL lShankL]);
 ThighL = mean([rThighL lThighL]);
 
 % Output
-n = size(points, 1); m = size(joints, 2) + 2;
+n = size(points, 1); m = size(joints, 2) + 3;
 time = dout.Average.Time.Absolute;
 out = [n m strings(1,m-2); 
-      ["Time","HAT","RHip","LHip","RKnee","LKnee","RAnkle","LAnkle"];
-      time HAT joints]; 
+      ["Time","rHAT","lHAT","RHip","LHip","RKnee","LKnee","RAnkle","LAnkle"];
+      time rHAT lHAT joints]; 
 writematrix(out, 'matchingData2.csv');

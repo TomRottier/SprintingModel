@@ -1,5 +1,9 @@
 # Log
 
+## 29/10/2020
+
+- Refine HAT angle and CoM location relative to stance hip
+
 ## 28/10/2020
 
 - Change angle definitions to match model better

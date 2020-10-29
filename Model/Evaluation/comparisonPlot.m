@@ -1,4 +1,4 @@
-clear; close all; clc
+% clear; close all; clc
 %% Load data
 % Experimental data
 load 'C:\Users\tomro\SprintingModel\Experimental data\data.mat'
@@ -13,7 +13,7 @@ fname = '6segSprint.1';
 data = importdata([pname fname], ' ', 8); data = data.data;
 
 % Experimental data relative to toe
-origin = points(:,:,contains(mnames, [leg 'Toe']));
+origin = points(1,:,contains(mnames, [leg 'Toe']));
 rTOE = points(:,:,contains(mnames, 'RToe')) - origin; 
 lTOE = points(:,:,contains(mnames, 'LToe')) - origin;
 rAJC = points(:,:,contains(mnames, 'RAJC')) - origin; 
@@ -49,8 +49,8 @@ data(:,2:end) = data(:,2:end) - data(:,2);
 n = length(data);
 set(figure(1),'WindowStyle','docked'); cla
 set(figure(1),'DefaultLineLineWidth', 1.5)
-xlim([-1 1]); ylim([0 2]); hold on
-for i = 1:1:n
+xlim([-.8 1.2]); ylim([0 2]); hold on
+for i = 1%:1:n
     cla
     % Experimental
     % Right leg
@@ -69,19 +69,21 @@ for i = 1:1:n
     line([lSJC(i,2) lEJC(i,2) lWJC(i,2)], ...
          [lSJC(i,3) lEJC(i,3) lWJC(i,3)], 'Color', 'r')
     % Whole-body CoM
+    plot(hatCM(i,2), hatCM(i,3), 'wx')
+    plot(RCM(i,2), RCM(i,3), 'rx')
+    plot(LCM(i,2), LCM(i,3), 'rx')
     plot(WBCM(i,2), WBCM(i,3), 'ro', 'MarkerSize', 4) 
-%     plot(hatCM(i,2), hatCM(i,3), 'kx')
-%     plot(RCM(i,2), RCM(i,3), 'kx')
-%     plot(LCM(i,2), LCM(i,3), 'kx')
     
     % Simulation
 %     set(figure(1),'DefaultFigureColor', 'k')
     line(data(i,2:2:12), data(i,3:2:13), 'Color', 'k')    % Stance leg and HAT segments
     line(data(i,[8 14]), data(i,[9 15]), 'Color', 'k')    % Swing leg
-%     plot(data(i,16), data(i,17), 'ko')      % HAT CoM
+    plot(data(i,end-9), data(i,end-8), 'wx')              % HAT CoM
+    plot(data(i,end-7), data(i,end-6), 'kx')              % Stance leg CoM
+    plot(data(i,end-5), data(i,end-4), 'kx')              % Swing leg CoM
     plot(data(i,end-3), data(i,end-2), 'ko', 'MarkerSize', 4)% CoM
     
     
     drawnow
-    pause(0.001)
+    pause(0.01)
 end
