@@ -4,6 +4,7 @@ load 'C:\Users\tomro\SprintingModel\Experimental data\data.mat';
 points = dout.Average.Markers.Data.Avg;
 mnames = dout.Average.Markers.Names;
 hatCM = dout.Average.CoM.Data.Avg(:,:,16);
+leg = dout.Average.Information.Leg;
 
 % Points
 rTOE = points(:,:,contains(mnames, 'R_Toe'));
@@ -40,10 +41,10 @@ rHAT = atan2d(rd4(:,3), rd4(:,2)); lHAT = atan2d(ld4(:,3), ld4(:,2));
 segs = cat(2, rHAT,lHAT,rThigh,lThigh,rShank,lShank,rFoot,lFoot);
 segsvel = tr_diff(segs, 0.001);
 
-% Joint angles
+% Joint angles - both hips defined relative to stance side (lHAT)
 rAnkle = 180 - rFoot + rShank; lAnkle = 180 - lFoot + lShank;
 rKnee = 180 + rShank - rThigh; lKnee = 180 + lShank - lThigh;
-rHip = 180 - rThigh + rHAT; lHip = 180 - lThigh + lHAT;
+rHip = 180 - rThigh + lHAT; lHip = 180 - lThigh + lHAT; 
 joints =  cat(2, rHip,lHip,rKnee,lKnee,rAnkle,lAnkle);
 
 for i = 1:size(joints, 2)
