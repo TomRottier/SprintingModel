@@ -3,28 +3,30 @@ clear; close all; clc
 load 'C:\Users\tomro\SprintingModel\Experimental data\data.mat';
 points = dout.Average.Markers.Data.Avg;
 mnames = dout.Average.Markers.Names;
-hatCM = dout.Average.CoM.Data.Avg(:,:,16);
 leg = dout.Average.Information.Leg;
 
 % Points
-rTOE = points(:,:,contains(mnames, 'R_Toe'));
-lTOE = points(:,:,contains(mnames, 'L_Toe'));
-rAJC = points(:,:,contains(mnames, 'RAJC'));
-lAJC = points(:,:,contains(mnames, 'LAJC'));
-rKJC = points(:,:,contains(mnames, 'RKJC'));
-lKJC = points(:,:,contains(mnames, 'LKJC'));
-rHJC = points(:,:,contains(mnames, 'RHJC'));
-lHJC = points(:,:,contains(mnames, 'LHJC'));
-rSJC = points(:,:,contains(mnames, 'RSJC'));
-lSJC = points(:,:,contains(mnames, 'LSJC'));
-rEJC = points(:,:,contains(mnames, 'REJC'));
-lEJC = points(:,:,contains(mnames, 'LEJC'));
-rWJC = points(:,:,contains(mnames, 'RWJC'));
-lWJC = points(:,:,contains(mnames, 'LWJC'));
-LTJC = points(:,:,contains(mnames, 'LTJC'));
-UTJC = points(:,:,contains(mnames, 'UTJC'));
-APEX = points(:,:,contains(mnames, 'APEX'));
+origin = points(:,:,contains(mnames, [leg '_Toe']));
+rTOE = points(:,:,contains(mnames, 'R_Toe')) - origin; 
+lTOE = points(:,:,contains(mnames, 'L_Toe')) - origin;
+rAJC = points(:,:,contains(mnames, 'RAJC')) - origin; 
+lAJC = points(:,:,contains(mnames, 'LAJC')) - origin;
+rKJC = points(:,:,contains(mnames, 'RKJC')) - origin; 
+lKJC = points(:,:,contains(mnames, 'LKJC')) - origin;
+rHJC = points(:,:,contains(mnames, 'RHJC')) - origin; 
+lHJC = points(:,:,contains(mnames, 'LHJC')) - origin;
+rSJC = points(:,:,contains(mnames, 'RSJC')) - origin; 
+lSJC = points(:,:,contains(mnames, 'LSJC')) - origin;
+rEJC = points(:,:,contains(mnames, 'REJC')) - origin; 
+lEJC = points(:,:,contains(mnames, 'LEJC')) - origin;
+rWJC = points(:,:,contains(mnames, 'RWJC')) - origin; 
+lWJC = points(:,:,contains(mnames, 'LWJC')) - origin;
+LTJC = points(:,:,contains(mnames, 'LTJC')) - origin;
+UTJC = points(:,:,contains(mnames, 'UTJC')) - origin;
+APEX = points(:,:,contains(mnames, 'APEX')) - origin;
 HJC = (rHJC + lHJC) ./ 2;
+
+hatCM = dout.Average.CoM.Data.Avg(:,:,16) - origin;
 
 % dx,dy
 rd1 = rAJC - rTOE; ld1 = lAJC - lTOE;
@@ -58,7 +60,8 @@ rShankL = mean(sqrt(sum(rd2.^2, 2))); lShankL = mean(sqrt(sum(ld2.^2, 2)));
 rThighL = mean(sqrt(sum(rd3.^2, 2))); lThighL = mean(sqrt(sum(ld3.^2, 2)));
 
 % Mean across sides
-FootL = mean([rFootL lFootL]);
+FootL = mean([rFootL lFootL]); 
+FootL_stance = mean([sqrt(sum(rd1(1:111).^2, 2)) sqrt(sum(ld1(1:111).^2, 2))]);
 ShankL = mean([rShankL lShankL]);
 ThighL = mean([rThighL lThighL]);
 

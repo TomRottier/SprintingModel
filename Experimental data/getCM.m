@@ -12,18 +12,21 @@ function CMout = getCM(data, draw)
 %--------------------------------------------------------------------------
 % Inertia data taken from McErlain-Naylor (2017) 
 % Actual body mass 88.6 kg (when measured) 91.1 kg (when running)
-% [segment length, segment mass, CM location from dist end, MoI about CM]
-% RFoot = [0.139 1.147 0.076 0.0059];   % Rear foot
+% length | mass | CM dist (prox end) | MoI about CoM
+% Everything distal to HJC
+% Combined foot ignores only accounts for length and total mass
+%
 % FFoot = [0.085 0.477 0.035 0.0003];   % Fore foot
-% Foot  = [0.224 1.385 0.142 0.0096];   % Combined foot
-% Shank = [0.453 5.271 0.261 0.0792];   % Shank
-% Thigh = [0.447 12.54 0.258 0.2122];   % Thigh
-% UpArm = [0.323 3.162 0.185 0.0588];   % Upper arm
-% LwArm = [0.469 1.855 0.301 0.0568];   % Lower arm
-% LTrnk = [0.418 24.43 0.323 0.5218];   % HJC to Xyphoid/T10 - CM from prox
-% UTrnk = [0.182 10.86 0.085 0.0701];   % Xyphoid/T10 to C7/sternum - prox
-% Head  = [0.269 5.611 0.136 0.0344];   % Head + neck - prox
-% HT    = [0.869 40.90 0.427 1.4890];   % Combined head and trunk - prox
+% RFoot = [0.139 1.147 0.063 0.0059];   % Rear foot
+% Foot  = [0.219 1.385 0.063 0.0059];   % Combined (avg length from data)
+% Shank = [0.453 5.271 0.192 0.0792];   % Shank
+% Thigh = [0.447 12.54 0.189 0.2122];   % Thigh
+% UpArm = [0.323 3.162 0.138 0.0588];   % Upper arm
+% LwArm = [0.469 1.855 0.168 0.0568];   % Lower arm
+% LTrnk = [0.418 24.43 0.323 0.5218];   % HJC to Xyphoid/T10
+% UTrnk = [0.182 10.86 0.085 0.0701];   % Xyphoid/T10 to C7/sternum
+% Head  = [0.269 5.611 0.136 0.0344];   % Head + neck
+% HT    = [0.869 40.90 0.427 1.4890];   % Combined head and trunk 
 %
 %--------------------------------------------------------------------------
 % clear; close all; clc;
@@ -54,15 +57,15 @@ proxJC = {'AJC', 'KJC', 'HJC', 'HJC', 'LTJC', 'UTJC', 'SJC', 'EJC'};
 distJC = {'Toe', 'AJC', 'KJC', 'LTJC', 'UTJC', 'APEX', 'EJC', 'WJC'};
     
 % Inertia 
-inertia = {[0.224 1.385 0.142 0.0096];  	% Foot segment
-           [0.453 5.271 0.261 0.0792];      % Shank segment
-           [0.447 12.54 0.258 0.2122];      % Thigh segment
+inertia = {[0.219 1.385 0.063 0.0059];  	% Foot segment
+           [0.453 5.271 0.192 0.0792];      % Shank segment
+           [0.447 12.54 0.189 0.2122];      % Thigh segment
            [0.418 24.43 0.323 0.5218];      % Lower trunk segment
            [0.182 10.86 0.085 0.0701];      % Upper trunk segment
            [0.269 5.611 0.136 0.0344];      % Head + neck segment
-           [0.323 3.162 0.185 0.0588];      % Upper arm segment
-           [0.469 1.855 0.301 0.0568]};     % Lower arm segment
-        
+           [0.323 3.162 0.138 0.0588];      % Upper arm segment
+           [0.469 1.855 0.168 0.0568]};     % Lower arm segment
+           
 proxKey = containers.Map(segments, proxJC);
 distKey = containers.Map(segments, distJC);
 inertiaKey = containers.Map(segments, inertia);
