@@ -37,43 +37,38 @@ function CMout = getCM(data, draw)
 %% Import data
 hz = data.Parameters.POINT.RATE;
 points = data.Markers.Data ./ 1000;     % In metres
-mnames = data.Markers.Names;
-mnames = strrep(mnames, '_', '');       % Remove all '_' from marker names
+mnames = data.Markers.Names(134:end);   % Only modelled markers
+% mnames = strrep(mnames, '_', '');       % Remove all '_' from marker names
 M = 89.3;
 
 % Output structure
 CMout = struct('Names', [], 'Data', [], 'Inertia', []);
 
-% Remove combined HJC and SJC
-HJC = points(:,:,strcmp(mnames,'HJC'));
-points(:,:, strcmp(mnames,'HJC')|strcmp(mnames,'SJC')) = [];
-mnames(strcmp(mnames,'HJC')|strcmp(mnames,'SJC')) = [];
-
-
 % Set up sgement objects
-segments = {'Foot', 'Shank', 'Thigh', 'LwTrunk', 'UpTrunk', 'Head',...
-            'UpArm', 'LwArm'};
-proxJC = {'AJC', 'KJC', 'HJC', 'HJC', 'LTJC', 'UTJC', 'SJC', 'EJC'};
-distJC = {'Toe', 'AJC', 'KJC', 'LTJC', 'UTJC', 'APEX', 'EJC', 'WJC'};
+segments = {'FFoot','RFoot', 'Shank', 'Thigh', 'LwTrunk', 'UpTrunk', ...
+            'Head', 'UpArm', 'LwArm'};
+proxJC = {'MTP', 'AJC', 'KJC', 'HJC', 'HJC', 'LTJC', 'UTJC', 'SJC', 'EJC'};
+distJC = {'TOE', 'MTP', 'AJC', 'KJC', 'LTJC', 'UTJC', 'APEX', 'EJC', 'WJC'};
     
 % Inertia 
-inertia = {[0.219 1.385 0.063 0.0059];  	% Foot segment
-           [0.453 5.271 0.192 0.0792];      % Shank segment
-           [0.447 12.54 0.189 0.2122];      % Thigh segment
-           [0.418 24.43 0.323 0.5218];      % Lower trunk segment
-           [0.182 10.86 0.085 0.0701];      % Upper trunk segment
-           [0.269 5.611 0.136 0.0344];      % Head + neck segment
-           [0.323 3.162 0.138 0.0588];      % Upper arm segment
-           [0.469 1.855 0.168 0.0568]};     % Lower arm segment
-           
+inertia = {[0.085 0.477 0.035 0.0003];   % Fore foot
+           [0.139 1.147 0.063 0.0059];   % Rear foot
+           [0.453 5.271 0.192 0.0792];   % Shank
+           [0.447 12.54 0.189 0.2122];   % Thigh
+           [0.418 24.43 0.323 0.5218];   % HJC to Xyphoid/T10
+           [0.182 10.86 0.085 0.0701];   % Xyphoid/T10 to C7/sternum
+           [0.269 5.611 0.136 0.0344];   % Head + neck
+           [0.323 3.162 0.138 0.0588];   % Upper arm
+           [0.469 1.855 0.168 0.0568]};  % Lower arm
+       
 proxKey = containers.Map(segments, proxJC);
 distKey = containers.Map(segments, distJC);
 inertiaKey = containers.Map(segments, inertia);
        
 % Output
-CMout.Names = {'WBCM', 'WBCMv', 'RFoot', 'LFoot', 'RShank', 'LShank', ...
-               'RThigh', 'LThigh', 'LwTrunk', 'UpTrunk', 'Head', ...
-               'RUpArm', 'LUpArm', 'RLwArm', 'LLwArm'};
+CMout.Names = {'WBCM', 'WBCMv', 'RFFoot', 'LFFoot','RRFoot', 'LRFoot', ...
+               'RShank', 'LShank', 'RThigh', 'LThigh', 'LwTrunk',  ...
+               'UpTrunk', 'Head', 'RUpArm', 'LUpArm', 'RLwArm', 'LLwArm'};
 
 CMout.Inertia.Segments = segments;
 CMout.Inertia.Information = {'Segment length', 'Segment mass', ...
@@ -86,14 +81,24 @@ WBCM = zeros(size(points, 1), 3);
 for i = 1:length(segments)
     % Load segment information
     segment = segments{i};
-    prox = contains(mnames, proxKey(segment));
-    dist = contains(mnames, distKey(segment));
+    prox = find(contains(mnames, proxKey(segment))) + 133;    % All markers
+    dist = find(contains(mnames, distKey(segment))) + 133;
     I = inertiaKey(segment); r = I(3)/I(1);
     
     % Calculate CoM from proximal JC
     segCM = points(:,:,prox) + (points(:,:,dist) - points(:,:,prox)) .* r;
+    
+    % Account for both 'sides' of lower trunk
     if strcmp(segment, 'LwTrunk')
         segCM = mean(segCM, 3); 
+    end
+    
+    % Rear foot CoM not along MTP to AJC line
+    if strcmp(segment, 'RFoot')
+        prox2 = find(contains(mnames, 'HEL')) + 133;    % Heel markers
+        temp1 = points(:,:,prox) + (points(:,:,dist) - points(:,:,prox)) .* r;
+        temp2 = points(:,:,prox2) + (points(:,:,dist) - points(:,:,prox2)) .* r;
+        segCM = (temp1 + temp2 ) ./ 2;
     end
     CM = cat(3, CM, segCM);
         
@@ -103,13 +108,14 @@ for i = 1:length(segments)
 end
 
 %% Swing, stance and HAT CoM
-segs = {'RFoot', 'LFoot', 'RShank', 'LShank', 'RThigh', 'LThigh', ...
-    'LwTrunk', 'UpTrunk', 'Head', 'RUpArm', 'LUpArm', 'RLwArm', 'LLwArm'};
+segs = {'RFFoot', 'LFFoot','RRFoot', 'LRFoot', 'RShank', 'LShank',  ...
+    'RThigh', 'LThigh','LwTrunk', 'UpTrunk', 'Head', 'RUpArm', 'LUpArm', ...
+    'RLwArm', 'LLwArm'};
 inertia = cell2mat(inertia);
-footM = inertia(1,2); shankM = inertia(2,2); thighM = inertia(3,2);
-lwTrunkM = inertia(4,2); upTrunkM = inertia(5,2); headM = inertia(6,2);
-upArmM = inertia(7,2); lwArmM = inertia(8,2);
-legM = footM+shankM+thighM;
+ffootM = inertia(1,2); rfootM = inertia(2,2); shankM = inertia(3,2); thighM = inertia(4,2);
+lwTrunkM = inertia(5,2); upTrunkM = inertia(6,2); headM = inertia(7,2);
+upArmM = inertia(8,2); lwArmM = inertia(9,2);
+legM = ffootM+rfootM+shankM+thighM;
 hatM = lwTrunkM+upTrunkM+headM+2*upArmM+2*lwArmM;
           
 hatCM = (CM(:,:,contains(segs, 'LwTrunk')).*lwTrunkM + ...
@@ -119,11 +125,13 @@ hatCM = (CM(:,:,contains(segs, 'LwTrunk')).*lwTrunkM + ...
         sum(CM(:,:,contains(segs, 'LwArm')), 3).*lwArmM) ...
         ./ (hatM);
     
-RCM = (CM(:,:,contains(segs, 'RFoot')).*footM + ...
+RCM = (CM(:,:,contains(segs, 'RFFoot')).*ffootM + ...
+    CM(:,:,contains(segs, 'RRFoot')).*rfootM + ...
     CM(:,:,contains(segs, 'RShank')).*shankM + ...
     CM(:,:,contains(segs, 'RThigh')).*thighM) ./ legM;
 
-LCM = (CM(:,:,contains(segs, 'LFoot')).*footM + ...
+LCM = (CM(:,:,contains(segs, 'LFFoot')).*ffootM + ...
+    CM(:,:,contains(segs, 'LRFoot')).*rfootM + ...
     CM(:,:,contains(segs, 'LShank')).*shankM + ...
     CM(:,:,contains(segs, 'LThigh')).*thighM) ./ legM;
 
@@ -150,7 +158,10 @@ CMout.Data = cat(3, WBCM, WBCMv, CM, hatCM, RCM, LCM);%, hatCM_HJC,stanceCM_HJC,
 
 %% Plot to check
 if draw == 1
-    rTOE = points(:,:,contains(mnames, 'RToe')); lTOE = points(:,:,contains(mnames, 'LToe'));
+    mnames = data.Markers.Names;
+    rTOE = points(:,:,contains(mnames, 'RTOE')); lTOE = points(:,:,contains(mnames, 'LTOE'));
+    rMTP = points(:,:,contains(mnames, 'RMTP')); lMTP = points(:,:,contains(mnames, 'LMTP'));
+    rHEL = points(:,:,contains(mnames, 'RHEL')); lHEL = points(:,:,contains(mnames, 'LHEL'));
     rAJC = points(:,:,contains(mnames, 'RAJC')); lAJC = points(:,:,contains(mnames, 'LAJC'));
     rKJC = points(:,:,contains(mnames, 'RKJC')); lKJC = points(:,:,contains(mnames, 'LKJC'));
     rHJC = points(:,:,contains(mnames, 'RHJC')); lHJC = points(:,:,contains(mnames, 'LHJC'));
@@ -163,34 +174,35 @@ if draw == 1
     HJC = (rHJC + lHJC) ./ 2;
 
     set(figure(1),'WindowStyle','docked'); cla
-    axis equal
+    axis equal; xlim([-0.5 2.0]); ylim([-0.1 2.4])
     hold on
-    for i = 1%:5:length(points)
+    for i = 1:3:length(points)
         cla
         % Right leg
-        line([rTOE(1,2) rAJC(1,2) rKJC(1,2) rHJC(1,2)], ...
-             [rTOE(1,3) rAJC(1,3) rKJC(1,3) rHJC(1,3)])    
+        line([rTOE(i,2) rMTP(i,2) rHEL(i,2) rAJC(i,2) rKJC(i,2) rHJC(i,2)], ...
+             [rTOE(i,3) rMTP(i,3) rHEL(i,3) rAJC(i,3) rKJC(i,3) rHJC(i,3)])
+        line([rMTP(i,2) rAJC(i,2)], [rMTP(i,3) rAJC(i,3)])
         % Left leg
-        line([lTOE(1,2) lAJC(1,2) lKJC(1,2) lHJC(1,2)], ...
-             [lTOE(1,3) lAJC(1,3) lKJC(1,3) lHJC(1,3)])
+        line([lTOE(i,2) lMTP(i,2) lHEL(i,2) lAJC(i,2) lKJC(i,2) lHJC(i,2)], ...
+             [lTOE(i,3) lMTP(i,3) lHEL(i,3) lAJC(i,3) lKJC(i,3) lHJC(i,3)])
+        line([lMTP(i,2) lAJC(i,2)], [lMTP(i,3) lAJC(i,3)])
         % Trunk
-        line([HJC(1,2) LTJC(1,2) UTJC(1,2) APEX(1,2)], ...
-             [HJC(1,3) LTJC(1,3) UTJC(1,3) APEX(1,3)])
+        line([HJC(i,2) LTJC(i,2) UTJC(i,2) APEX(i,2)], ...
+             [HJC(i,3) LTJC(i,3) UTJC(i,3) APEX(i,3)])
         % Right arm
-        line([rSJC(1,2) rEJC(1,2) rWJC(1,2)], ...
-             [rSJC(1,3) rEJC(1,3) rWJC(1,3)])
+        line([rSJC(i,2) rEJC(i,2) rWJC(i,2)], ...
+             [rSJC(i,3) rEJC(i,3) rWJC(i,3)])
         % Left arm
-        line([lSJC(1,2) lEJC(1,2) lWJC(1,2)], ...
-             [lSJC(1,3) lEJC(1,3) lWJC(1,3)])
+        line([lSJC(i,2) lEJC(i,2) lWJC(i,2)], ...
+             [lSJC(i,3) lEJC(i,3) lWJC(i,3)])
         % Whole-body CoM
         plot(WBCM(i,2), WBCM(i,3), 'ko') 
-        drawnow
-    end
+    
 
-    if i == 1
-        for i = 1:size(CM, 3)
-            plot(CM(1,2,i), CM(1,3,i), 'kx')
+        for j = 1:size(CM, 3)
+            plot(CM(i,2,j), CM(i,3,j), 'kx')
         end 
+    drawnow
     end
 end
 

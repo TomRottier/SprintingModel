@@ -5,34 +5,17 @@ p = [pwd '\Vicon\Vicon files\'];
 fname = 'run9_7_TM.c3d';
 din = readC3D([p fname]);
 CMout = getCM(din, 0);
-% Use only modelled markers (joint centres)
-% names = {'Toe', 'AJC', 'KJC', 'HJC', 'SJC', 'EJC', 'WJC', 'Head'};
-% jc = contains(din.Markers.Names, names);
-% jc(contains(din.Markers.Names, '_')) = 0;
 
 %% Alternate angle definitions
-% Trunk angle (angle of HAT CoM relative to HJC)
-HATang = atan2d(CMout.Data(:,3,contains(CMout.Names, 'HAT_hip')), ....
-                CMout.Data(:,2,contains(CMout.Names, 'HAT_hip')));
+% Trunk angle (angle of HAT CoM relative to stance HJC)
+lHJC = din.Markers.Data(:,:,contains(din.Markers.Names, 'LHJC')) ./ 1000;   % Stance leg
+HATang = atan2d(CMout.Data(:,3,contains(CMout.Names, 'HAT')) - lHJC(:,3), ....
+                CMout.Data(:,2,contains(CMout.Names, 'HAT')) - lHJC(:,2));
 HATang = [HATang zeros(size(HATang)) zeros(size(HATang))];
-din.ModelOutputs.Angles.Data = cat(3, din.ModelOutputs.Angles.Data, HATang);
-din.ModelOutputs.Angles.Names = [din.ModelOutputs.Angles.Names; {'HAT2Angles'}];  
+din.ModelOutputs.Angles.Data = cat(3, HATang, din.ModelOutputs.Angles.Data);
+din.ModelOutputs.Angles.Names = [{'HATAngles'}; din.ModelOutputs.Angles.Names ];  
 
-% Ankle angle (AJC to TOE for foot segment)
-p1 = din.Markers.Data(:,:,contains(din.Markers.Names, 'Toe'));
-p2 = din.Markers.Data(:,:,contains(din.Markers.Names, 'AJC'));
-p3 = din.Markers.Data(:,:,contains(din.Markers.Names, 'KJC'));
-d1 = p2-p1; d2 = p3-p2;
-footANG = atan2d(d1(:,3,:),d1(:,2,:)) + 90; 
-footANG(footANG < 0) = footANG(footANG < 0) + 360;
-shankANG = atan2d(d2(:,3,:),d2(:,2,:)) + 90; 
-shankANG(shankANG < 0) = shankANG(shankANG < 0) + 360;
-ankANG = 180 - footANG + shankANG;
-ankANG = [ankANG zeros(size(ankANG)) zeros(size(ankANG))];
-din.ModelOutputs.Angles.Data = cat(3, din.ModelOutputs.Angles.Data, ankANG);
-din.ModelOutputs.Angles.Names = [din.ModelOutputs.Angles.Names; {'RAnkle2Angles';'LAnkle2Angles'}];  
-
-clearvars HATang p1 p2 p3 d1 d2 footANG shankANG ankANG
+clearvars HATang 
 %% Set up output structure
 dout = struct('IndvStrides', [], 'Average', []);
 si = eval('dout.IndvStrides');       % Shortcut to individual strides
@@ -42,11 +25,10 @@ sa = eval('dout.Average');           % Shortcut to average stride
     strrep(din.ModelOutputs.Angles.Names,'Angles','AngularVelocity')]);
 [sa.Moments.Names, si.Moments.Names] = deal(din.ModelOutputs.Moments.Names);
 [sa.Markers.Names, si.Markers.Names] = deal(din.Markers.Names);
-% [sa.JointCentres.Names, si.JointCentres.Names] = deal(din.Markers.Names(jc));
                                         
 [sa.CoM.Names, si.CoM.Names] = deal(CMout.Names);
 
-%% Process
+%% Process data
 % Match sampling frequency of data
 hz = 1000;          % Desired frequency
 fhz = din.Parameters.ANALOG.RATE; mhz = din.Parameters.POINT.RATE;
@@ -57,7 +39,6 @@ angles = cat(3, angles, tr_diff(angles, 1/hz));     % Angular velocities
 moments = interp1(din.Markers.Time, din.ModelOutputs.Moments.Data, time, 'spline') ./ 1000;     % N.m
 com = interp1(din.Markers.Time, CMout.Data, time, 'spline');
 markers = interp1(din.Markers.Time, din.Markers.Data, time, 'spline') ./ 1000; % m
-% jointcentres = interp1(din.Markers.Time, din.Markers.Data(:,:,jc), time, 'spline') ./ 1000; % m
 
 
 % Get TD,TO
@@ -140,12 +121,7 @@ for i = 1:length(contacts)-2
     % Markers
     si.Markers.Data{i} = markers(contacts(i,1):contacts(i+2,1)-1,:,:);
     si.Markers.DataNorm{i} = interp1(ttemp, si.Markers.Data{i}, tnorm,  'spline');
-    
-    % Joint centres
-%     si.JointCentres.Data{i} = jointcentres(contacts(i,1):contacts(i+2,1)-1,:,:);
-%     si.JointCentres.DataNorm{i} = interp1(ttemp, si.JointCentres.Data{i},...
-%         tnorm,  'spline');
-    
+        
     % CoM
     si.CoM.Data{i} = com(contacts(i,1):contacts(i+2,1)-1,:,:);
     si.CoM.DataNorm{i} = interp1(ttemp, si.CoM.Data{i}, tnorm,  'spline');
@@ -219,37 +195,19 @@ if output
     clearvars output
     save data.mat           % Saves to .mat
     
-    % Save to .txt
+    % Save to .csv
     n = size(dout.Average.Force.Data.Avg, 1);
+    leg = dout.Average.Information.Leg;
     
-    % Column names
-    legs = ["L" "R"];
-    leg = char(legs(contains(legs,dout.Average.Information.Leg)));
-    leg2 = char(legs(~contains(legs,dout.Average.Information.Leg)));
     idx = contains(dout.Average.Angles.Names,...
-            {'HAT2Angles', [leg 'HipAngle' ], [leg 'KneeAngle'] , ...
-            [leg 'Ankle2Angle']});  
-
-    colwidth = 13;
-    precision = 5;
-    colnames = [{'Time'}; {'RX'}; {'RY'}; dout.Average.Angles.Names(idx);...
-                {'WBCMY'}; {'WBCMVy'}];
-    nametype = ['%-' num2str(colwidth) 's'];
-    datatype = ['%' num2str(colwidth) '.' num2str(precision) 'E'];
-    namefmt = [repmat([nametype ' '], 1, length(colnames)-1) nametype '\n'];
-    datafmt = [repmat([datatype ' '], 1, length(colnames)-1) datatype '\n'];
-    
-    % Matching data
-    fid = fopen('matchingData.txt', 'w');
-    fprintf(fid, '%4d', n);                 % Data size
-    fprintf(fid, '%4d\n', length(colnames));               % n columns
-    fprintf(fid, namefmt, pad(string(colnames), colwidth, 'both')');
-    dataout = [dout.Average.Time.Absolute...
-        dout.Average.Force.Data.Avg(:,[2 3]) ...
-        reshape(dout.Average.Angles.Data.Avg(:,1,idx), [n 4])...
-        reshape(dout.Average.CoM.Data.Avg(:,3,[1 2]), [n 2])]';
-    fprintf(fid, datafmt, string(dataout));
-    fclose(fid);
+        {'HATAngles', [leg 'HipAngles' ], [leg 'KneeAngles'] , ...
+        [leg 'AnkleAngles'] [leg 'MTPAngles']});  
+    colnames = [{'Time'}; dout.Average.Angles.Names(idx)];
+    out = [num2str(n) num2str(length(colnames)) strings(1,length(colnames)-2);
+        colnames'
+        dout.Average.Time.Absolute permute(dout.Average.Angles.Data.Avg(:,1,idx), [1 3 2])];
+    writematrix(out, 'matchingData.csv');
+        
 end
 
 clearvars -except dout

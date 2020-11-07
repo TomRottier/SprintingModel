@@ -1,5 +1,14 @@
 # Log
 
+## 07/11/2020
+
+- Update BodyBuilder model and experimental data .m scripts to get all angles
+
+## 30/10/2020 - 5/11/2020
+
+- Try out various different cost functions for evaluations
+
+
 ## 29/10/2020
 
 - Refine HAT angle and CoM location relative to stance hip

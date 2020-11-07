@@ -1,13 +1,16 @@
 load data.mat
 points = dout.Average.Markers.Data.Avg;
 mnames = dout.Average.Markers.Names;
-mnames = strrep(mnames, '_', '');       % Remove all '_' from marker names
 leg = dout.Average.Information.Leg;
 
 % Points
-origin = [0 0 0];points(:,:,contains(mnames, [leg 'Toe']));
-rTOE = points(:,:,contains(mnames, 'RToe')) - origin; 
-lTOE = points(:,:,contains(mnames, 'LToe')) - origin;
+origin = points(:,:,contains(mnames, [leg 'TOE']));
+rTOE = points(:,:,contains(mnames, 'RTOE')) - origin; 
+lTOE = points(:,:,contains(mnames, 'LTOE')) - origin;
+rMTP = points(:,:,contains(mnames, 'RMTP')) - origin;
+lMTP = points(:,:,contains(mnames, 'LMTP')) - origin;
+rHEL = points(:,:,contains(mnames, 'RHEL')) - origin;
+lHEL = points(:,:,contains(mnames, 'LHEL')) - origin;
 rAJC = points(:,:,contains(mnames, 'RAJC')) - origin; 
 lAJC = points(:,:,contains(mnames, 'LAJC')) - origin;
 rKJC = points(:,:,contains(mnames, 'RKJC')) - origin; 
@@ -26,23 +29,25 @@ APEX = points(:,:,contains(mnames, 'APEX')) - origin;
 HJC = (rHJC + lHJC) ./ 2;
 
 % CoM
-WBCM = dout.Average.CoM.Data.Avg(:,:,1);
-hatCM = dout.Average.CoM.Data.Avg(:,:,16);
-RCM = dout.Average.CoM.Data.Avg(:,:,17);
-LCM = dout.Average.CoM.Data.Avg(:,:,18);
+WBCM = dout.Average.CoM.Data.Avg(:,:,1)- origin;
+hatCM = dout.Average.CoM.Data.Avg(:,:,end-2) - origin;
+RCM = dout.Average.CoM.Data.Avg(:,:,end-1)- origin;
+LCM = dout.Average.CoM.Data.Avg(:,:,end)- origin;
 % hatCM = hatCM.data(:,[1 2]) + HJC(:,[2 3]);
 % swingCM = swingCM.data(:,[1 2]) + HJC(:,[2 3]);
 
 set(figure(),'WindowStyle','docked'); cla
-xlim([-1 1]); ylim([0 2]); hold on
+xlim([-1 1]); ylim([-.1 2]); hold on
 for i = 1%:5:length(points)
     cla
     % Right leg
-    line([rTOE(i,2) rAJC(i,2) rKJC(i,2) rHJC(i,2)], ...
-         [rTOE(i,3) rAJC(i,3) rKJC(i,3) rHJC(i,3)])    
+    line([rTOE(i,2) rMTP(i,2) rHEL(i,2) rAJC(i,2) rKJC(i,2) rHJC(i,2)], ...
+         [rTOE(i,3) rMTP(i,3) rHEL(i,3) rAJC(i,3) rKJC(i,3) rHJC(i,3)])
+    line([rMTP(i,2) rAJC(i,2)], [rMTP(i,3) rAJC(i,3)])
     % Left leg
-    line([lTOE(i,2) lAJC(i,2) lKJC(i,2) lHJC(i,2)], ...
-         [lTOE(i,3) lAJC(i,3) lKJC(i,3) lHJC(i,3)])
+    line([lTOE(i,2) lMTP(i,2) lHEL(i,2) lAJC(i,2) lKJC(i,2) lHJC(i,2)], ...
+         [lTOE(i,3) lMTP(i,3) lHEL(i,3) lAJC(i,3) lKJC(i,3) lHJC(i,3)])
+    line([lMTP(i,2) lAJC(i,2)], [lMTP(i,3) lAJC(i,3)])
     % Trunk
     line([HJC(i,2) LTJC(i,2) UTJC(i,2) APEX(i,2)], ...
          [HJC(i,3) LTJC(i,3) UTJC(i,3) APEX(i,3)])
