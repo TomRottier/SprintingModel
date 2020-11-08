@@ -15,7 +15,8 @@ HATang = [HATang zeros(size(HATang)) zeros(size(HATang))];
 din.ModelOutputs.Angles.Data = cat(3, HATang, din.ModelOutputs.Angles.Data);
 din.ModelOutputs.Angles.Names = [{'HATAngles'}; din.ModelOutputs.Angles.Names ];  
 
-clearvars HATang 
+clearvars HATang lHJC
+
 %% Set up output structure
 dout = struct('IndvStrides', [], 'Average', []);
 si = eval('dout.IndvStrides');       % Shortcut to individual strides
