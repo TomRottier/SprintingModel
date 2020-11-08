@@ -88,7 +88,7 @@ C** Read matching data
       READ(34,*)
       READ(34,*, ERR=7410) ((Y(I,J), J=1, NCOL), I=1, NROW)
       CLOSE(UNIT=34)
-      AERIALTIME = 0.1321D0
+      AERIALTIME = 0.132D0
       SWINGTIME  = 0.374D0
 
 C**   Convert to generalised coordinates
@@ -99,10 +99,10 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       MAX = .FALSE.
       EPS = 1.0D-03
       RT = 0.75
-      ISEED1 = 5
-      ISEED2 = 6
+      ISEED1 = 7
+      ISEED2 = 8
       NS = 24
-      NT = 5
+      NT = 20
       MAXEVL = 100000000
       IPRINT = 1
 
@@ -127,9 +127,9 @@ C** Set upper and lower bounds on parameters
         UB(I+6)  = 1.1D0
       ENDDO
 
-      LB(N-3) = 0.1D0
-      LB(N-2) = 0.1D0
-      LB(N-1) = 1000.0D0
+      LB(N-3) = 1.0D0
+      LB(N-2) = 1.0D0
+      LB(N-1) = 10000.0D0
       LB(N)   = 10000.0D0
       UB(N-3) = 1000.0D0
       UB(N-2) = 1000.0D0
@@ -145,16 +145,16 @@ C***  Set input values of the input/output parameters
          X(I) = LB(I) + VM(I)*0.5D0
 20    CONTINUE
 
-      ! X(1:7)   = HEACTP
-      ! X(8:14)  = KEACTP
-      ! X(15:21) = AEACTP
-      ! X(22:28) = HFACTP
-      ! X(29:35) = KFACTP
-      ! X(36:42) = AFACTP
-      ! X(43) = K1
-      ! X(44) = K2
-      ! X(45) = K3
-      ! X(46) = K4
+      X(1:7)   = HEACTP
+      X(8:14)  = KEACTP
+      X(15:21) = AEACTP
+      X(22:28) = HFACTP
+      X(29:35) = KFACTP
+      X(36:42) = AFACTP
+      X(43) = K1
+      X(44) = K2
+      X(45) = K3
+      X(46) = K4
 
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
@@ -355,7 +355,8 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         TSWJ = ABS(TSW - SWINGTIME)
         VCMJ = ABS(VCMXF-VCMXI)
   
-        COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+500.0D0*TSWJ+500.0D0*VCMJ
+        COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+1000.0D0*TAJ+100.0D0*VCMJ
+      !   COST = TAJ+VCMJ
         IF (T .LT. 0.095D0) COST = 3000.0D0
         RETURN
       ENDIF

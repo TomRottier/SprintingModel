@@ -2,10 +2,18 @@ clear; close all; clc
 %% Import data
 % Matching data
 load 'C:\Users\tomro\SprintingModel\Experimental data\data.mat'
-leg = dout.Average.Information.Leg; leg2 = ['LR']; leg2(strfind(leg2,leg))=[];
-hatCM = dout.Average.CoM.Data.Avg(:,:,contains(dout.Average.CoM.Names, 'HAT'));
-swingCM = dout.Average.CoM.Data.Avg(:,:,contains(dout.Average.CoM.Names,[]));
-stanceCM = dout.Average.CoM.Data.Avg(:,:,contains(dout.Average.CoM.Names,[leg 'Leg']));
+leg = dout.Average.Information.Leg; leg2 = ('LR'); leg2(strfind(leg2,leg))=[];
+hatCM = dout.Average.CoM.Data.Avg(:,:,contains(...
+    dout.Average.CoM.Names, 'HAT'));
+swingCM = dout.Average.CoM.Data.Avg(:,:,contains(...
+    dout.Average.CoM.Names,[leg2 'Leg']));
+stanceCM = dout.Average.CoM.Data.Avg(:,:,contains(...
+    dout.Average.CoM.Names,[leg 'Leg']));
+HJC = dout.Average.Markers.Data.Avg(:,:,contains(...
+    dout.Average.Markers.Names, [leg 'HJC']));
+TOE = dout.Average.Markers.Data.Avg(:,:,contains(...
+    dout.Average.Markers.Names, [leg '_Toe']));
+
 mfile = importdata('matchingData.txt', ' ', 2); mdata = mfile.data;
 mfile2 = importdata('matchingData2.csv', ',', 2); mdata2 = mfile2.data;
 
@@ -28,6 +36,7 @@ I = 1;
 vcmy = datas{1}(end,end); vcmx = datas{1}(end,end-1);
 cmytd = datas{1}(1,end-2); cmyto = datas{1}(end,end-2); ds = cmytd - cmyto;
 ta = (-vcmy - sqrt(vcmy^2 - 4*-4.905*-ds)) / -9.81;
+taj = abs(ta - 0.134);
 tsw = 2*ta + time(end);
 tswj = abs(tsw-0.374); vcmxj = abs(vcmx-9.6975);
 
@@ -38,7 +47,7 @@ kneej = sqrt(mean((datas{4}(:,4) - mdata2(:,7)).^2));
 anklej = sqrt(mean((datas{4}(:,5) - mdata2(:,9)).^2));
 
 % Cost
-J = 10*hatj^2+hipj^2+kneej^2+anklej^2+500*tswj+500*vcmxj
+J = 10*hatj^2+hipj^2+kneej^2+anklej^2+500*taj+100*vcmxj
 
 % Plot defaults
 set(groot, 'DefaultLineMarkerSize', 2)
@@ -111,7 +120,7 @@ wbcmvyj = tr_rmse(data(:,end), mdata(:,9));
 set(figure(),'WindowStyle','docked')
 subplot(1,2,1); hold on; cla
 plot(time, data(:,end-2), '-')
-plot(time, mdata(:,8), 's')
+plot(time, mdata(:,8) - TOE(1,3), 's')
 title(['wbcm y rmse: ', num2str(round(wbcmyj, 3))])
 
 subplot(1,2,2); hold on; cla
@@ -121,35 +130,35 @@ title(['wbcmv y rmse: ', num2str(round(wbcmvyj, 3))])
 
 % Segment CoM
 set(figure(),'WindowStyle','docked')
-subplot(1,3,1); hold on; cla
+subplot(2,3,1); hold on; cla
 plot(time, data(:,2), '-')
-plot(time, hatCM(1:n,3), 's')
+plot(time, hatCM(1:n,3) - TOE(1,3), 's')
 title('hat CoM')
 
-% subplot(2,3,4); hold on; cla
-% plot(time, data(:,2) - hjc_mdl, '-')
-% plot(time, hatCM_HJC(1:n,3), 's')
-% title('relative to hip')
+subplot(2,3,4); hold on; cla
+plot(time, data(:,2) - hjc_mdl, '-')
+plot(time, hatCM(1:n,3) - HJC(1:n,3), 's')
+title('relative to hip')
 
-subplot(1,3,2); hold on; cla
+subplot(2,3,2); hold on; cla
 plot(time, data(:,4), '-')
-plot(time, stanceCM(1:n,3), 's')
+plot(time, stanceCM(1:n,3)  - TOE(1,3), 's')
 title('stance CoM leg')
 
-% subplot(2,3,5); hold on; cla
-% plot(time, data(:,4), '-')
-% plot(time, stanceCM(1:n,3), 's')
-% title('stance CoM leg')
+subplot(2,3,5); hold on; cla
+plot(time, data(:,4) - hjc_mdl, '-')
+plot(time, stanceCM(1:n,3) - HJC(1:n,3), 's')
+title('relative to hip')
 
-subplot(1,3,3); hold on; cla
+subplot(2,3,3); hold on; cla
 plot(time, data(:,6), '-')
-plot(time, swingCM(1:n,3), 's')
+plot(time, swingCM(1:n,3)  - TOE(1,3), 's')
 title('swing leg CoM')
 
-% subplot(2,3,6); hold on; cla
-% plot(time, data(:,6) - hjc_mdl, '-')
-% plot(time, swingCM_HJC(1:n,3), 's')
-% title(' relative to hip')
+subplot(2,3,6); hold on; cla
+plot(time, data(:,6) - hjc_mdl, '-')
+plot(time, swingCM(1:n,3) - HJC(1:n,3), 's')
+title('relative to hip')
 
 %% Torque generators
 % Hip

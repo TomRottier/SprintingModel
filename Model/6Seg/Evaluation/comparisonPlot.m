@@ -13,7 +13,8 @@ fname = '6segSprint.1';
 data = importdata([pname fname], ' ', 8); data = data.data;
 
 % Experimental data relative to toe
-origin = points(1,:,contains(mnames, [leg 'Toe']));
+origin = [points(:,[1 2],contains(mnames,[leg 'Toe']))...
+          repelem(points(1,3,contains(mnames, [leg 'Toe'])), length(points), 1)];
 rTOE = points(:,:,contains(mnames, 'RToe')) - origin; 
 lTOE = points(:,:,contains(mnames, 'LToe')) - origin;
 rAJC = points(:,:,contains(mnames, 'RAJC')) - origin; 
@@ -43,14 +44,15 @@ LCM = dout.Average.CoM.Data.Avg(:,:,18) - origin;
 % swingCM = swingCM.data(:,[1 2]) + HJC(:,[2 3]);
 
 % Simulation data relative to toe
-data(:,2:end) = data(:,2:end) - data(:,2);
+data(:,2:2:end) = data(:,2:2:end) - data(1,2);
+data(:,3:2:end) = data(:,3:2:end) - data(1,3);
 
 %% Plot
 n = length(data);
 set(figure(1),'WindowStyle','docked'); cla
 set(figure(1),'DefaultLineLineWidth', 1.5)
 xlim([-.8 1.2]); ylim([0 2]); hold on
-for i = 1%:1:n
+for i = 1:1:n
     cla
     % Experimental
     % Right leg
@@ -69,7 +71,7 @@ for i = 1%:1:n
     line([lSJC(i,2) lEJC(i,2) lWJC(i,2)], ...
          [lSJC(i,3) lEJC(i,3) lWJC(i,3)], 'Color', 'r')
     % Whole-body CoM
-    plot(hatCM(i,2), hatCM(i,3), 'wx')
+    plot(hatCM(i,2), hatCM(i,3), 'rx')
     plot(RCM(i,2), RCM(i,3), 'rx')
     plot(LCM(i,2), LCM(i,3), 'rx')
     plot(WBCM(i,2), WBCM(i,3), 'ro', 'MarkerSize', 4) 

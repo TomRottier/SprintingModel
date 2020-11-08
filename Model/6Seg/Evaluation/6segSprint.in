@@ -1,0 +1,63 @@
+File: 6seg.in
+-----------------------------------------------------------------------------
+Replace this line with a message to appear on all output files.
+----------------------------------------------------------+------------------
+Description          Quantity             Units           | Value
+----------------------------------------------------------|------------------
+Constant:            G                    M/S^2           | -9.81
+Constant:            IA                   KG.M^2          |  0.0096
+Constant:            IB                   KG.M^2          |  0.0792
+Constant:            IC                   KG.M^2          |  0.2122
+Constant:            ID                   KG.M^2          |  0.2122
+Constant:            IE                   KG.M^2          |  0.0792
+Constant:            IF                   KG.M^2          |  1.489
+Constant:            K1                   N/M             |  16.81744904      
+Constant:            K2                   N/M/S^2         |  1.014041853   
+Constant:            K3                   N/M             |  41346.06915   
+Constant:            K4                   N/M/S^2         |  10072.00533    
+Constant:            L1                   M               |  0.156
+Constant:            L2                   M               |  0.224
+Constant:            L3                   M               |  0.261
+Constant:            L4                   M               |  0.453
+Constant:            L5                   M               |  0.258
+Constant:            L6                   M               |  0.447
+Constant:            L7                   M               |  0.4
+Constant:            MA                   KG              |  1.385
+Constant:            MB                   KG              |  5.271
+Constant:            MC                   KG              |  12.54
+Constant:            MD                   KG              |  12.54
+Constant:            ME                   KG              |  5.271
+Constant:            MF                   KG              |  50.935
+
+Initial Value:       Q1                   M               |  0.0
+Initial Value:       Q2                   M               |  0.0
+Initial Value:       HAT ANGLE            DEG             |  81.451
+Initial Value:       ANKLE ANGLE          DEG             |  108.37
+Initial Value:       KNEE ANGLE           DEG             |  157.07
+Initial Value:       HIP ANGLE            DEG             |  144.11
+Initial Value:       VOCMX                M/S             |  9.6975
+Initial Value:       VOCMY                M/S             | -0.7577
+Initial Value:       HAT ANGVEL           DEG/S           | -25.02
+Initial Value:       ANKLE ANGVEL         DEG/S           | -330.94
+Initial Value:       KNEE ANGVEL          DEG/S           | -160.13
+Initial Value:       HIP ANGVEL           DEG/S           |  428.84
+
+Initial Time:        TINITIAL             S               |  0.0
+Final Time:          TFINAL               S               |  0.2
+Integration Step:    INTEGSTP             S               |  0.001
+Print-Integer:       PRINTINT             Positive Integer|  1
+Absolute Error:      ABSERR                               |  1.0E-08
+Relative Error:      RELERR                               |  1.0E-07
+----------------------------------------------------------+------------------
+
+DANGER: Do not insert TABS while editing this file.
+
+Note:
+
+  INTEGSTP*PRINTINT is the time-interval for writing of output.
+
+  ABSERR should be set equal to 10^(-8)*Xsmall, where Xsmall is the estimated
+         smallest maximum absolute value of the variables being integrated.
+
+  RELERR should be set equal to 10^(-d), where d is the desired number of
+         significant digits of numerical integration results.
