@@ -1,0 +1,76 @@
+File: 7segsprint.in
+-----------------------------------------------------------------------------
+Replace this line with a message to appear on all output files.
+----------------------------------------------------------+------------------
+Description          Quantity             Units           | Value
+----------------------------------------------------------|------------------
+Constant:            FOOTANG              DEG             |  19.58
+Constant:            G                    M/S^2           | -9.81
+Constant:            IA                   KG.M^2          |  0.0003
+Constant:            IB                   KG.M^2          |  0.0059
+Constant:            IC                   KG.M^2          |  0.1584
+Constant:            ID                   KG.M^2          |  0.4245
+Constant:            IE                   KG.M^2          |  0.4245
+Constant:            IF                   KG.M^2          |  0.1584
+Constant:            IG                   KG.M^2          |  1.489
+Constant:            K1                   N/M             |  41.76985050         
+Constant:            K2                   N/M/S^2         |  644.7524277       
+Constant:            K3                   N/M             |  77540.37148    
+Constant:            K4                   N/M/S^2         |  10594.47829   
+Constant:            K5                   N/M             |  41.76985050         
+Constant:            K6                   N/M/S^2         |  644.7524277       
+Constant:            K7                   N/M             |  77540.37148    
+Constant:            K8                   N/M/S^2         |  10594.47829   
+Constant:            L1                   M               |  0.050
+Constant:            L10                  M               |  0.447
+Constant:            L11                  M               |  0.586
+Constant:            L2                   M               |  0.085
+Constant:            L3                   M               |  0.121
+Constant:            L4                   M               |  0.076
+Constant:            L5                   M               |  0.222
+Constant:            L6                   M               |  0.139
+Constant:            L7                   M               |  0.261
+Constant:            L8                   M               |  0.453
+Constant:            L9                   M               |  0.258
+Constant:            MA                   KG              |  0.477
+Constant:            MB                   KG              |  1.385
+Constant:            MC                   KG              |  5.271
+Constant:            MD                   KG              |  12.54
+Constant:            ME                   KG              |  12.54
+Constant:            MF                   KG              |  5.271
+Constant:            MG                   KG              |  50.935
+
+Initial Value:       Q1                   M               |  0.0
+Initial Value:       Q2                   M               |  0.0
+Initial Value:       HAT                  DEG             |  81.451
+Initial Value:       MTP                  DEG             |  143.563
+Initial Value:       ANKLE                DEG             |  120.5016
+Initial Value:       KNEE                 DEG             |  157.074
+Initial Value:       HIP                  DEG             |  144.110
+Initial Value:       U1                   M/S             |  9.67406
+Initial Value:       U2                   M/S             | -0.72030 
+Initial Value:       HAT                  DEG/S           | -24.9253
+Initial Value:       MTP                  DEG/S           |  1064.10
+Initial Value:       ANKLE                DEG/S           | -650.361
+Initial Value:       KNEE                 DEG/S           | -160.134
+Initial Value:       HIP                  DEG/S           |  429.803
+
+Initial Time:        TINITIAL             S               |  0.0
+Final Time:          TFINAL               S               |  0.2
+Integration Step:    INTEGSTP             S               |  0.001
+Print-Integer:       PRINTINT             Positive Integer|  1
+Absolute Error:      ABSERR                               |  1.0E-08
+Relative Error:      RELERR                               |  1.0E-07
+----------------------------------------------------------+------------------
+
+DANGER: Do not insert TABS while editing this file.
+
+Note:
+
+  INTEGSTP*PRINTINT is the time-interval for writing of output.
+
+  ABSERR should be set equal to 10^(-8)*Xsmall, where Xsmall is the estimated
+         smallest maximum absolute value of the variables being integrated.
+
+  RELERR should be set equal to 10^(-d), where d is the desired number of
+         significant digits of numerical integration results.
