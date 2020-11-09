@@ -12,7 +12,7 @@
 %   Tom Rottier 2020
 % ------------------------------------------------------------------------------
 DEGREES OFF         % Sometimes get problems with using PI if not specified
-AUTOZ ON            % May speed up simulation?
+%AUTOZ ON            % May speed up simulation?
 % Physical declarations
 NEWTONIAN N
 BODIES A,B,C,D,E,F,G 

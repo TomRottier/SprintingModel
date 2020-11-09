@@ -17,6 +17,9 @@ C velocities, specified in the .in file. Activation function parameters
 C define how the activation or the torque generators varies with time
 C read in from activation7.in.
 C
+C Script checks model conserves energy and angular momentum under 
+C appropiate conditions
+C
 C   Tom Rottier 2020
 C***********************************************************************
       PROGRAM MAIN
@@ -343,15 +346,22 @@ C** Calculate forces
       ENDIF
 
 C** Specified variables
-      CALL EVALSPLINE2(T,NROW,TT,CCHAT,GS,GSp,GSpp)
-      CALL EVALSPLINE2(T,NROW,TT,CCHIP,EA,EAp,EApp)
-      CALL EVALSPLINE2(T,NROW,TT,CCKNEE,FA,FAp,FApp)
-      EA   = EA  *DEGtoRAD 
-      EAp  = EAp *DEGtoRAD 
-      EApp = EApp*DEGtoRAD 
-      FA   = FA  *DEGtoRAD 
-      FAp  = FAp *DEGtoRAD 
-      FApp = FApp*DEGtoRAD 
+      ! CALL EVALSPLINE2(T,NROW,TT,CCHAT,GS,GSp,GSpp)
+      ! CALL EVALSPLINE2(T,NROW,TT,CCHIP,EA,EAp,EApp)
+      ! CALL EVALSPLINE2(T,NROW,TT,CCKNEE,FA,FAp,FApp)
+      ! EA   = EA  *DEGtoRAD 
+      ! EAp  = EAp *DEGtoRAD 
+      ! EApp = EApp*DEGtoRAD 
+      ! FA   = FA  *DEGtoRAD 
+      ! FAp  = FAp *DEGtoRAD 
+      ! FApp = FApp*DEGtoRAD 
+
+      EA   = 0.0D0
+      EAp  = 0.0D0
+      EApp = 0.0D0
+      FA   = 0.0D0
+      FAp  = 0.0D0
+      FApp = 0.0D0
 
 C** Intermediate variables      
       Z(3) = COS(Q4)
@@ -1471,15 +1481,22 @@ C** Convert joint angles to generalised coordinates/speeds
       U6 = -KANGVEL
       U7 = HANGVEL
       
-      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHIP,EA,EAp,EApp)
-      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCKNEE,FA,FAp,FApp)
-      EA   = EA  *DEGtoRAD 
-      EAp  = EAp *DEGtoRAD 
-      EApp = EApp*DEGtoRAD 
-      FA   = FA  *DEGtoRAD 
-      FAp  = FAp *DEGtoRAD 
-      FApp = FApp*DEGtoRAD 
-      CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHAT,GS,GSp,GSpp)
+      ! CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHAT,GS,GSp,GSpp)
+      ! CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHIP,EA,EAp,EApp)
+      ! CALL EVALSPLINE2(TINITIAL,NROW,TT,CCKNEE,FA,FAp,FApp)
+      ! EA   = EA  *DEGtoRAD 
+      ! EAp  = EAp *DEGtoRAD 
+      ! EApp = EApp*DEGtoRAD 
+      ! FA   = FA  *DEGtoRAD 
+      ! FAp  = FAp *DEGtoRAD 
+      ! FApp = FApp*DEGtoRAD 
+
+      EA   = 0.0D0
+      EAp  = 0.0D0
+      EApp = 0.0D0
+      FA   = 0.0D0
+      FAp  = 0.0D0
+      FApp = 0.0D0
 
 C** Convert CoM velocities to generalised speeds
       U1 = VOCMX + 0.5*(2*MG*GS*SIN(Q3)*U3+2*(L10*ME+L10*MF+L10*MG+L9*MD
