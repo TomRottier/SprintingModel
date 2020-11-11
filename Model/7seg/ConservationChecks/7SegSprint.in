@@ -39,6 +39,8 @@ Constant:            MD                   KG              |  12.54
 Constant:            ME                   KG              |  12.54
 Constant:            MF                   KG              |  5.271
 Constant:            MG                   KG              |  50.935
+Constant:            MTPB                 N/M/S^2         |  0.0
+Constant:            MTPK                 N/M             |  0.0
 
 Initial Value:       Q1                   M               |  0.0
 Initial Value:       Q2                   M               |  0.0

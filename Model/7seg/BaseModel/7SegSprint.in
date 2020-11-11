@@ -39,12 +39,14 @@ Constant:            MD                   KG              |  12.54
 Constant:            ME                   KG              |  12.54
 Constant:            MF                   KG              |  5.271
 Constant:            MG                   KG              |  50.935
+Constant:            MTPB                 N/M/S^2         |  0.0
+Constant:            MTPK                 N/M             |  0.0
 
 Initial Value:       Q1                   M               |  0.0
 Initial Value:       Q2                   M               |  0.0
 Initial Value:       HAT                  DEG             |  81.451
 Initial Value:       MTP                  DEG             |  143.563
-Initial Value:       ANKLE                DEG             |  120.5016
+Initial Value:       ANKLE                DEG             |  120.502
 Initial Value:       KNEE                 DEG             |  157.074
 Initial Value:       HIP                  DEG             |  144.110
 Initial Value:       U1                   M/S             |  9.67406
