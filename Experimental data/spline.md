@@ -11,3 +11,14 @@ Quintic smoothing splines fitted to data:
   - File: angles.csv
   - Data: Swing leg hip and knee joint angles
   - Smoothing: 1.0E-10
+
+- Sprinter joint angles:
+  - File: Technique\sprinter.csv
+  - Data: Swing leg hip and knee joint angles
+  - Smoothing: 1.0E-10
+
+- Teamsport joint angles:
+  - File: Technique\teamsport.csv
+  - Data: Swing leg hip and knee joint angles
+  - Smoothing: 1.0E-10
+  
