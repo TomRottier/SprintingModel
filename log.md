@@ -1,5 +1,14 @@
 # Log
 
+## 11/11/2020
+
+- Spline technique data
+- Evaluation done
+
+## 10/11/2020
+
+- Evaluation #1 with aerial time in cost function
+
 ## 09/11/2020
 
 - 7 seg evaluation script

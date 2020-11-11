@@ -4,8 +4,9 @@ C configuration angles along with CoM kinematics
 C
 C Parameters to optimise:
 C   - Activation timings: 42, 7 per torque generator (6)
-C   - K-K8:               stiffness and damping parameters for
+C   - K1-K8:              stiffness and damping parameters for
 C                         viscoelastic contact model at toe and MTP
+C   - MTPK,MTPB:          stiffness and damping for MTP joint
 C
 C
 C   Tom Rottier 2020
@@ -23,7 +24,8 @@ C** Model variables
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP),METQP(10),MFTQP(10)
       COMMON/CONSTNTS/ FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,K2,K3,K4,K5,K6,
-     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG
+     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG,MTPB
+     &,MTPK
       COMMON/INITIAL / Q1I,Q2I,Q3I,Q4I,Q5I,Q6I,Q7I,U1I,U2I,U3I,U4I,U5I,U
      &6I,U7I
       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,Z(430),COEF(7,7),RHS(7)
@@ -34,7 +36,7 @@ C** Model variables
       COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME
 C** SPAN variables
       INTEGER N, NEPS
-      PARAMETER(N=50,NEPS=4)
+      PARAMETER(N=52,NEPS=4)
       DOUBLE PRECISION  LB(N), UB(N), X(N), XOPT(N), C(N), VM(N),
      &                  FSTAR(NEPS), XP(N), T, EPS, RT, FOPT
       INTEGER  NACP(N), WORK(N), NS, NT, NFCNEV, IER, ISEED1, ISEED2,
@@ -51,7 +53,7 @@ C**   Read message from input file
 C**   Read values of constants from input file
       READ(20,7010,END=7100,ERR=7101) FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,
      &K2,K3,K4,K5,K6,K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,M
-     &D,ME,MF,MG
+     &D,ME,MF,MG,MTPB,MTPK
 
 C**   Read the initial value of each variable from input file
       READ(20,7010,END=7100,ERR=7101) Q1I,Q2I,Q3I,Q4I,Q5I,Q6I,Q7I,U1I,U2
@@ -105,13 +107,13 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       RT = 0.75
       ISEED1 = 7
       ISEED2 = 8
-      NS = 4
-      NT = 5
+      NS = 24
+      NT = 20
       MAXEVL = 100000000
       IPRINT = 1
 
 C** Set upper and lower bounds on parameters
-      DO I = 1, N-8, NACTP
+      DO I = 1, N-10, NACTP
         LB(I)    = 0.0D0
         LB(I+1)  = 0.0D0
         LB(I+2)  = 0.1D0
@@ -121,7 +123,7 @@ C** Set upper and lower bounds on parameters
         LB(I+6)  = 0.0D0
       ENDDO
 
-      DO I = 1, N-8, NACTP
+      DO I = 1, N-10, NACTP
         UB(I)    = 1.1D0
         UB(I+1)  = 0.1D0
         UB(I+2)  = 0.3D0
@@ -131,6 +133,13 @@ C** Set upper and lower bounds on parameters
         UB(I+6)  = 1.1D0
       ENDDO
 
+C** MTP Spring stiffness and damping
+      LB(I) = 0.00D0
+      UB(I) = 300.0D0
+      LB(I+1) = 0.0D0
+      UB(I+1) = 300.0D0
+
+C** Contact springs stiffness and damping
       LB(N-7) = 1.0D0
       LB(N-6) = 1.0D0
       LB(N-5) = 10000.0D0
@@ -164,24 +173,26 @@ C***  Set input values of the input/output parameters
       X(22:28) = HFACTP
       X(29:35) = KFACTP
       X(36:42) = AFACTP
-      X(43) = K1
-      X(44) = K2
-      X(45) = K3
-      X(46) = K4
-      X(47) = K5
-      X(48) = K6
-      X(49) = K7
-      X(50) = K8
+      X(N-9) = MTPK
+      X(N-8) = MTPB
+      X(N-7) = K1
+      X(N-6) = K2
+      X(N-5) = K3
+      X(N-4) = K4
+      X(N-3) = K5
+      X(N-2) = K6
+      X(N-1) = K7
+      X(N)   = K8
 
-! C**** Call SPAN
-!       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
-!      &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
-!      &        FSTAR,XP,NACP,WORK)
+C**** Call SPAN
+      CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
+     &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
+     &        FSTAR,XP,NACP,WORK)
       
-      DO I = 1, 20
-      CALL FCN(N,X,COST)
-      PRINT*, COST
-      ENDDO
+      ! DO I = 1, 10
+      ! CALL FCN(N,X,COST)
+      ! PRINT*, COST
+      ! ENDDO
 
       STOP
 7000  FORMAT(//,99A1,///)
@@ -224,7 +235,8 @@ C***********************************************************************
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP),METQP(10),MFTQP(10)
       COMMON/CONSTNTS/ FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,K2,K3,K4,K5,K6,
-     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG
+     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG,MTPB
+     &,MTPK
       COMMON/INITIAL / Q1I,Q2I,Q3I,Q4I,Q5I,Q6I,Q7I,U1I,U2I,U3I,U4I,U5I,U
      &6I,U7I
       COMMON/VARIBLES/ Q1,Q2,Q3,Q4,Q5,Q6,Q7,U1,U2,U3,U4,U5,U6,U7
@@ -256,14 +268,16 @@ C** Initialise parameters
       HFACTP = X(22:28)
       KFACTP = X(29:35)
       AFACTP = X(36:42)
-      K1 = X(43)
-      K2 = X(44)
-      K3 = X(45)
-      K4 = X(46)
-      K5 = X(47)
-      K6 = X(48)
-      K7 = X(49)
-      K8 = X(50)
+      MTPK = X(N-9)
+      MTPB = X(N-8)
+      K1 = X(N-7)
+      K2 = X(N-6)
+      K3 = X(N-5)
+      K4 = X(N-4)
+      K5 = X(N-3)
+      K6 = X(N-2)
+      K7 = X(N-1)
+      K8 = X(N)
 
 C** Initialise variables
       Q1 = Q1I
@@ -335,12 +349,12 @@ C** Initialise torques for integration
       CALL UPDATE(T)
 
 C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
-      CALL KUTTA(EQNS1, 12, VAR, T, INTEGSTP, ABSERR, RELERR, 0, *5920)
+      CALL KUTTA(EQNS1, 14, VAR, T, INTEGSTP, ABSERR, RELERR, 0, *5920)
 
 C**   Check exit conditions
 5900  IF(TFINAL.GE.TINITIAL.AND.T+.01D0*INTEGSTP.GE.TFINAL) EXIT=.TRUE.
       IF(TFINAL.LE.TINITIAL.AND.T+.01D0*INTEGSTP.LE.TFINAL) EXIT=.TRUE.
-      IF (Q2 .GT. 0.0D0) EXIT = .TRUE.
+      IF (Q2 .GT. 1.0D-05 .AND. POP2Y .GT. 1.0D-05) EXIT = .TRUE.
 
       IF (EXIT) THEN
         IDX = IDX - 1
@@ -392,8 +406,7 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         TSWJ = ABS(TSW - SWINGTIME)
         VCMJ = ABS(VCMXF-VCMXI)
   
-        COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+1000.0D0*TAJ+100.0D0*VCMJ
-      !   COST = TAJ+VCMJ
+        COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+1000.0D0*TSWJ+100.0D0*VCMJ
         IF (T .LT. 0.095D0) COST = 3000.0D0
         RETURN
       ENDIF
@@ -426,7 +439,8 @@ C**********************************************************************
       DIMENSION        VAR(*), VARp(*)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
       COMMON/CONSTNTS/ FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,K2,K3,K4,K5,K6,
-     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG
+     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG,MTPB
+     &,MTPK
       COMMON/VARIBLES/ Q1,Q2,Q3,Q4,Q5,Q6,Q7,U1,U2,U3,U4,U5,U6,U7
       COMMON/ALGBRAIC/ AANG,AANGVEL,AETOR,AFTOR,ATOR,COP,GRF,HANG,HANGVE
      &L,HETOR,HFTOR,HTOR,HZ,KANG,KANGVEL,KECM,KETOR,KFTOR,KTOR,MANG,MANG
@@ -483,8 +497,8 @@ C** Calculate forces
         RY1 = 0.0D0
       ENDIF
       IF (POP2Y .LT. 0.0D0) THEN
-        RY2 = -K3*POP2Y - K4*ABS(POP2Y)*VOP2Y
-        RX2 = (-K1*POP2X - K2*VOP2X)*RY2
+        RY2 = -K7*POP2Y - K8*ABS(POP2Y)*VOP2Y
+        RX2 = (-K5*POP2X - K6*VOP2X)*RY2
       ELSE
         RX2 = 0.0D0
         RY2 = 0.0D0
@@ -1010,7 +1024,7 @@ C**   Update derivative array prior to integration step
       VARp(14) = U7p
 
       RETURN
-      END SUBROUTINE EQNS1
+      END
 
 
 C**********************************************************************
@@ -1026,7 +1040,8 @@ C***********************************************************************
       INTEGER          NROW
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
       COMMON/CONSTNTS/ FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,K2,K3,K4,K5,K6,
-     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG
+     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG,MTPB
+     &,MTPK
       COMMON/INITIAL / Q1I,Q2I,Q3I,Q4I,Q5I,Q6I,Q7I,U1I,U2I,U3I,U4I,U5I,U
      &6I,U7I
       COMMON/ALGBRAIC/ AANG,AANGVEL,AETOR,AFTOR,ATOR,COP,GRF,HANG,HANGVE
@@ -1201,6 +1216,8 @@ C** Local variables
       U6 = U6I*DEGtoRAD
       U7 = U7I*DEGtoRAD
 
+      POP2X   = Q1
+      POP2Y   = Q2
       MANG    = Q4
       AANG    = Q5
       KANG    = Q6
@@ -1221,7 +1238,11 @@ C** Convert joint angles to generalised coordinates/speeds
       U5 = AANGVEL
       U6 = -KANGVEL
       U7 = HANGVEL
-      
+
+C** Calculate Q1,Q2 given that MTP contacts first (and therefore at 0,0)
+      Q1 = POP2X + L2*COS(Q3-Q4-Q5-Q6-Q7)
+      Q2 = POP2Y + L2*SIN(Q3-Q4-Q5-Q6-Q7)
+
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHIP,EA,EAp,EApp)
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCKNEE,FA,FAp,FApp)
       EA   = EA  *DEGtoRAD 
@@ -1282,9 +1303,8 @@ C***********************************************************************
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP),METQP(10),MFTQP(10)
       COMMON/CONSTNTS/ FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,K2,K3,K4,K5,K6,
-     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG
-      COMMON/INITIAL / Q1I,Q2I,Q3I,Q4I,Q5I,Q6I,Q7I,U1I,U2I,U3I,U4I,U5I,U
-     &6I,U7I
+     &K7,K8,L1,L10,L11,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG,MTPB
+     &,MTPK
       COMMON/VARIBLES/ Q1,Q2,Q3,Q4,Q5,Q6,Q7,U1,U2,U3,U4,U5,U6,U7
       COMMON/ALGBRAIC/ AANG,AANGVEL,AETOR,AFTOR,ATOR,COP,GRF,HANG,HANGVE
      &L,HETOR,HFTOR,HTOR,HZ,KANG,KANGVEL,KECM,KETOR,KFTOR,KTOR,MANG,MANG
@@ -1326,14 +1346,15 @@ C***********************************************************************
      &KFSECANG,KFSECANGVEL,KFCCANG,KFCCANGVEL,INTEGSTP,2)
       CALL MUSCLEMODEL(T,AFTQP(1:9),AFACTP,AFTQP(10),AANG,AANGVEL,AFTOR,
      &AFSECANG,AFSECANGVEL,AFCCANG,AFCCANGVEL,INTEGSTP,2)
-      CALL MUSCLEMODEL(T,METQP(1:9),AEACTP,METQP(10),MANG,MANGVEL,METOR,
-     &MESECANG,MESECANGVEL,MECCANG,MECCANGVEL,INTEGSTP,2)
-      CALL MUSCLEMODEL(T,MFTQP(1:9),AFACTP,MFTQP(10),MANG,MANGVEL,MFTOR,
-     &MFSECANG,MFSECANGVEL,MFCCANG,MFCCANGVEL,INTEGSTP,2)
+!       CALL MUSCLEMODEL(T,METQP(1:9),AEACTP,METQP(10),MANG,MANGVEL,METOR,
+!      &MESECANG,MESECANGVEL,MECCANG,MECCANGVEL,INTEGSTP,2)
+!       CALL MUSCLEMODEL(T,MFTQP(1:9),AFACTP,MFTQP(10),MANG,MANGVEL,MFTOR,
+!      &MFSECANG,MFSECANGVEL,MFCCANG,MFCCANGVEL,INTEGSTP,2)
 
       HTOR = HETOR - HFTOR
       KTOR = KETOR - KFTOR
       ATOR = AETOR - AFTOR 
-      MTOR = METOR - MFTOR
+      ! MTOR = METOR - MFTOR
+      MTOR = MTPK*(3.141592653589793D0-MANG) - MTPB*MANGVEL
 
       END SUBROUTINE UPDATE

@@ -39,7 +39,6 @@ hz = data.Parameters.POINT.RATE;
 points = data.Markers.Data ./ 1000;     % In metres
 mnames = data.Markers.Names(134:end);   % Only modelled markers
 % mnames = strrep(mnames, '_', '');       % Remove all '_' from marker names
-M = 89.3;
 
 % Output structure
 CMout = struct('Names', [], 'Data', [], 'Inertia', []);
@@ -61,6 +60,9 @@ inertia = {[0.085 0.477 0.035 0.0003];   % Fore foot
            [0.323 3.162 0.138 0.0588];   % Upper arm
            [0.469 1.855 0.168 0.0568]};  % Lower arm
        
+inertia2 = cell2mat(inertia);       
+M = sum(2.*inertia2(:,2)) - sum(inertia2([5 6 7], 2));
+
 proxKey = containers.Map(segments, proxJC);
 distKey = containers.Map(segments, distJC);
 inertiaKey = containers.Map(segments, inertia);
@@ -77,7 +79,7 @@ CMout.Inertia.Data = inertia;
 
 %% Get CoM
 CM = [];
-WBCM = zeros(size(points, 1), 3);
+WBCM = zeros(size(points, [1 2]));
 for i = 1:length(segments)
     % Load segment information
     segment = segments{i};

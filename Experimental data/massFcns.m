@@ -6,7 +6,6 @@ draw = 0;
 
 cm = dout.Average.CoM;  % Shortcut
 
-        
 to = find(dout.Average.Force.Data.Avg(:,3) < 80, 1);  % Takeoff
 legs = ['L', 'R'];
 leg = dout.Average.Information.Leg;         % Stance leg
@@ -20,10 +19,10 @@ HJC = dout.Average.Markers.Data.Avg(:,:,...
 
 % Inertia data
 inertia = cell2mat(dout.Information.Inertia.Data);
-footM = inertia(1,2); shankM = inertia(2,2); thighM = inertia(3,2);
-lwTrunkM = inertia(4,2); upTrunkM = inertia(5,2); headM = inertia(6,2);
-upArmM = inertia(7,2); lwArmM = inertia(8,2);
-legM = footM+shankM+thighM;
+ffootM = inertia(1,2); rfootM = inertia(2,2); shankM = inertia(3,2); thighM = inertia(4,2);
+lwTrunkM = inertia(5,2); upTrunkM = inertia(6,2); headM = inertia(7,2);
+upArmM = inertia(8,2); lwArmM = inertia(9,2);
+legM = ffootM+rfootM+shankM+thighM;
 hatM = lwTrunkM+upTrunkM+headM+2*upArmM+2*lwArmM;
 
 %% CoM of trunk and arms
@@ -38,7 +37,8 @@ hatCM = (cm.Data.Avg(:,:,contains(cm.Names, 'LwTrunk')).*lwTrunkM + ...
 hatCM_HJC = hatCM - HJC;
 
 %% CoM of swing leg
-swingCM = (cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Foot'])).*footM + ...
+swingCM = (cm.Data.Avg(:,:,contains(cm.Names, [swleg 'FFoot'])).*ffootM + ...
+    cm.Data.Avg(:,:,contains(cm.Names, [swleg 'RFoot'])).*rfootM + ...
     cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Shank'])).*shankM + ...
     cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Thigh'])).*thighM) ./ legM;
 
@@ -46,7 +46,8 @@ swingCM = (cm.Data.Avg(:,:,contains(cm.Names, [swleg 'Foot'])).*footM + ...
 swingCM_HJC = swingCM - HJC;
 
 %% CoM of stance leg
-stanceCM = (cm.Data.Avg(:,:,contains(cm.Names, [leg 'Foot'])).*footM + ...
+stanceCM = (cm.Data.Avg(:,:,contains(cm.Names, [leg 'FFoot'])).*ffootM + ...
+    cm.Data.Avg(:,:,contains(cm.Names, [leg 'RFoot'])).*rfootM + ...
     cm.Data.Avg(:,:,contains(cm.Names, [leg 'Shank'])).*shankM + ...
     cm.Data.Avg(:,:,contains(cm.Names, [leg 'Thigh'])).*thighM) ./ legM;
 

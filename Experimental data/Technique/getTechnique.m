@@ -120,7 +120,57 @@ trunk = atan2d(d(:,2,:), d(:,1,:));
 
 hipang = 180 - Q(:,3,:) + trunk;
 kneang = 180 - Q(:,3,:) + Q(:,2,:);
+ankang = 180 - Q(:,1,:) + Q(:,2,:);
 
+% Angular velocites
+hipangv = tr_diff(hipang,0.001);
+kneangv = tr_diff(kneang,0.001);
+ankangv = tr_diff(ankang,0.001);
+
+set(figure(2),'WIndowStyle','docked')
+subplot(3,1,1); hold on; cla
+plot(hipang(:,:,1))
+plot(hipang(:,:,2))
+title('hip')
+legend('sprinter','teamsport')
+
+subplot(3,1,2); hold on; cla
+plot(kneang(:,:,1))
+plot(kneang(:,:,2))
+title('knee')
+
+subplot(3,1,3); hold on; cla
+plot(ankang(:,:,1))
+plot(ankang(:,:,2))
+title('ankle')
+
+set(figure(3),'WIndowStyle','docked')
+subplot(3,1,1); hold on; cla
+plot(hipangv(:,:,1))
+plot(hipangv(:,:,2))
+title('hip')
+legend('sprinter','teamsport')
+
+subplot(3,1,2); hold on; cla
+plot(kneangv(:,:,1))
+plot(kneangv(:,:,2))
+title('knee')
+
+subplot(3,1,3); hold on; cla
+plot(ankangv(:,:,1))
+plot(ankangv(:,:,2))
+title('ankle')
+
+% Initial conditions
+% Number of frames: 456
+%                  ipsilateral | contralateral
+% sprinter  to/td: 58/416        286/181
+% teamsport to/td: 58/413        287/175 
+
+initcond_s = [hipang(416,1,1) kneang(416,1,1) ankang(416,1,1) ...
+              hipangv(416,1,1) kneangv(416,1,1) ankangv(416,1,1)];
+initcond_t = [hipang(413,1,2) kneang(413,1,2) ankang(413,1,2) ...
+              hipangv(413,1,2) kneangv(413,1,2) ankangv(413,1,2)];
 
 %% Reorder data
 % Takeoff and touchdown frames for both legs estimated from video
