@@ -263,6 +263,7 @@ C**   Inform user of input and output filename(s)
       STOP
 7100  WRITE(*,*) 'Premature end of file while reading 7segsprint.in '
 7101  WRITE(*,*) 'Error while reading file 7segsprint.in'
+      STOP
 7200  FORMAT(//, 8(///, 10(8X, F7.2, /)))
 7210  WRITE(*,*) 'Error reading torque parameters'
       STOP
@@ -1510,6 +1511,7 @@ C** Convert CoM velocities to generalised speeds
      &/(MA+MB+MC+MD+ME+MF+MG)
 
       END SUBROUTINE INITCOND
+
 C***********************************************************************
       SUBROUTINE UPDATE(T)
 C Wrapper to calculate joint torques for each timestep 
