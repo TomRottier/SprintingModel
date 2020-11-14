@@ -13,14 +13,14 @@ Constant:            ID                   KG.M^2          |  0.4245
 Constant:            IE                   KG.M^2          |  0.4245
 Constant:            IF                   KG.M^2          |  0.1584
 Constant:            IG                   KG.M^2          |  1.489
-Constant:            K1                   N/M             |  0.0
-Constant:            K2                   N/M/S^2         |  0.0
-Constant:            K3                   N/M             |  0.0
-Constant:            K4                   N/M/S^2         |  0.0
-Constant:            K5                   N/M             |  0.0
-Constant:            K6                   N/M/S^2         |  0.0
-Constant:            K7                   N/M             |  0.0
-Constant:            K8                   N/M/S^2         |  0.0
+Constant:            K1                   N/M             |  1.000706304    
+Constant:            K2                   N/M/S^2         |  999.9409872    
+Constant:            K3                   N/M             |  37854.49704    
+Constant:            K4                   N/M/S^2         |  10000.19621    
+Constant:            K5                   N/M             |  585.2284930    
+Constant:            K6                   N/M/S^2         |  1.000032338    
+Constant:            K7                   N/M             |  168741.4341    
+Constant:            K8                   N/M/S^2         |  117855.7243    
 Constant:            L1                   M               |  0.050
 Constant:            L10                  M               |  0.447
 Constant:            L11                  M               |  0.586
@@ -39,8 +39,8 @@ Constant:            MD                   KG              |  12.54
 Constant:            ME                   KG              |  12.54
 Constant:            MF                   KG              |  5.271
 Constant:            MG                   KG              |  50.935
-Constant:            MTPB                 N/M/S^2         |  0.0
-Constant:            MTPK                 N/M             |  0.0
+Constant:            MTPB                 N/M/S^2         |  0.9623603195    
+Constant:            MTPK                 N/M             |  22.62964543    
 
 Initial Value:       Q1                   M               |  0.0
 Initial Value:       Q2                   M               |  0.0

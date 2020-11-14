@@ -2,6 +2,7 @@ clear; close all; clc;
 %% Import data
 sprinter = importdata('sprinter_xypts.csv', ',', 1);
 teamsport = importdata('teamsport_xypts.csv', ',', 1);
+load ..\data.mat
 
 output = 1;     % Write to output
 
@@ -117,10 +118,12 @@ cm(:,2,:) = (ma*(l1-l2).*sind(Q(:,1,:))-(l4*ma-mb*(l3-l4)).* ...
 % Trunk angle 
 p1 = points_f(:,1:2,:); p2 = points_f(:,9:10,:);   
 d = p2 - p1;        % dx,dy
-% trunk = atan2d(d(:,2,:), d(:,1,:)); 
-trun
+trunk = atan2d(d(:,2,:), d(:,1,:)); 
+trunk2 = dout.Average.Angles.Data.Avg(:,1,1);
 
-hipang = 180 - Q(:,3,:) + trunk;
+hipangs = 180 - [Q(416:end,3,1); Q(1:415,3,1)] + trunk2(1:456);
+hipangt = 180 - [Q(416:end,3,2); Q(1:415,3,2)] + trunk2(1:456);
+
 kneang = 180 - Q(:,3,:) + Q(:,2,:);
 ankang = 180 - Q(:,1,:) + Q(:,2,:);
 

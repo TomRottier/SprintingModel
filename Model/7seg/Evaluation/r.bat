@@ -1,3 +1,3 @@
 @echo off
 
-if "%1" == "e" mpiexec -np %2 7SegSprint_eval.exe
+mpiexec -np %1 7SegSprint_eval.exe

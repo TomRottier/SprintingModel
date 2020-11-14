@@ -124,13 +124,13 @@ C** Set upper and lower bounds on parameters
       ENDDO
 
       DO I = 1, N-10, NACTP
-        UB(I)    = 1.1D0
+        UB(I)    = 1.0D0
         UB(I+1)  = 0.1D0
         UB(I+2)  = 0.3D0
-        UB(I+3)  = 1.1D0
+        UB(I+3)  = 1.0D0
         UB(I+4)  = 0.1D0
         UB(I+5)  = 0.3D0
-        UB(I+6)  = 1.1D0
+        UB(I+6)  = 1.0D0
       ENDDO
 
 C** MTP Spring stiffness and damping
@@ -167,22 +167,22 @@ C***  Set input values of the input/output parameters
          X(I) = LB(I) + VM(I)*0.5D0
 20    CONTINUE
 
-      X(1:7)   = HEACTP
-      X(8:14)  = KEACTP
-      X(15:21) = AEACTP
-      X(22:28) = HFACTP
-      X(29:35) = KFACTP
-      X(36:42) = AFACTP
-      X(N-9) = MTPK
-      X(N-8) = MTPB
-      X(N-7) = K1
-      X(N-6) = K2
-      X(N-5) = K3
-      X(N-4) = K4
-      X(N-3) = K5
-      X(N-2) = K6
-      X(N-1) = K7
-      X(N)   = K8
+      ! X(1:7)   = HEACTP
+      ! X(8:14)  = KEACTP
+      ! X(15:21) = AEACTP
+      ! X(22:28) = HFACTP
+      ! X(29:35) = KFACTP
+      ! X(36:42) = AFACTP
+      ! X(N-9) = MTPB
+      ! X(N-8) = MTPK
+      ! X(N-7) = K1
+      ! X(N-6) = K2
+      ! X(N-5) = K3
+      ! X(N-4) = K4
+      ! X(N-3) = K5
+      ! X(N-2) = K6
+      ! X(N-1) = K7
+      ! X(N)   = K8
 
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
@@ -268,8 +268,8 @@ C** Initialise parameters
       HFACTP = X(22:28)
       KFACTP = X(29:35)
       AFACTP = X(36:42)
-      MTPK = X(N-9)
-      MTPB = X(N-8)
+      MTPB = X(N-9)
+      MTPK = X(N-8)
       K1 = X(N-7)
       K2 = X(N-6)
       K3 = X(N-5)
