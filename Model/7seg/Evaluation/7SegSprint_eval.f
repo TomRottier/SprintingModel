@@ -140,21 +140,21 @@ C** MTP Spring stiffness and damping
       UB(I+1) = 300.0D0
 
 C** Contact springs stiffness and damping
-      LB(N-7) = 1.0D0
-      LB(N-6) = 1.0D0
+      LB(N-7) = 0.0D0
+      LB(N-6) = 0.0D0
       LB(N-5) = 10000.0D0
       LB(N-4) = 10000.0D0
-      LB(N-3) = 1.0D0
-      LB(N-2) = 1.0D0
+      LB(N-3) = 0.0D0
+      LB(N-2) = 0.0D0
       LB(N-1) = 10000.0D0
       LB(N)   = 10000.0D0
 
-      UB(N-7) = 1000.0D0
-      UB(N-6) = 1000.0D0
+      UB(N-7) = 10000.0D0
+      UB(N-6) = 10000.0D0
       UB(N-5) = 1000000.0D0
       UB(N-4) = 1000000.0D0
-      UB(N-3) = 1000.0D0
-      UB(N-2) = 1000.0D0
+      UB(N-3) = 10000.0D0
+      UB(N-2) = 10000.0D0
       UB(N-1) = 1000000.0D0
       UB(N)   = 1000000.0D0
 
@@ -167,22 +167,22 @@ C***  Set input values of the input/output parameters
          X(I) = LB(I) + VM(I)*0.5D0
 20    CONTINUE
 
-      ! X(1:7)   = HEACTP
-      ! X(8:14)  = KEACTP
-      ! X(15:21) = AEACTP
-      ! X(22:28) = HFACTP
-      ! X(29:35) = KFACTP
-      ! X(36:42) = AFACTP
-      ! X(N-9) = MTPB
-      ! X(N-8) = MTPK
-      ! X(N-7) = K1
-      ! X(N-6) = K2
-      ! X(N-5) = K3
-      ! X(N-4) = K4
-      ! X(N-3) = K5
-      ! X(N-2) = K6
-      ! X(N-1) = K7
-      ! X(N)   = K8
+      X(1:7)   = HEACTP
+      X(8:14)  = KEACTP
+      X(15:21) = AEACTP
+      X(22:28) = HFACTP
+      X(29:35) = KFACTP
+      X(36:42) = AFACTP
+      X(N-9) = MTPB
+      X(N-8) = MTPK
+      X(N-7) = K1
+      X(N-6) = K2
+      X(N-5) = K3
+      X(N-4) = K4
+      X(N-3) = K5
+      X(N-2) = K6
+      X(N-1) = K7
+      X(N)   = K8
 
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
@@ -407,6 +407,7 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         VCMJ = ABS(VCMXF-VCMXI)
   
         COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+1000.0D0*TSWJ+100.0D0*VCMJ
+     &  +1000.0D0*TAJ
         IF (T .LT. 0.095D0) COST = 3000.0D0
         RETURN
       ENDIF
