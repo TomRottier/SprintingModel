@@ -46,16 +46,16 @@ Initial Value:       Q1                   M               |  0.0
 Initial Value:       Q2                   M               |  0.0
 Initial Value:       HAT                  DEG             |  81.451
 Initial Value:       MTP                  DEG             |  143.563
-Initial Value:       ANKLE                DEG             |  120.502
-Initial Value:       KNEE                 DEG             |  157.074
-Initial Value:       HIP                  DEG             |  144.110
+Initial Value:       ANKLE                DEG             |  132.530
+Initial Value:       KNEE                 DEG             |  154.454
+Initial Value:       HIP                  DEG             |  140.004
 Initial Value:       U1                   M/S             |  9.67406
 Initial Value:       U2                   M/S             | -0.72030 
 Initial Value:       HAT                  DEG/S           | -24.9253
 Initial Value:       MTP                  DEG/S           |  1064.10
-Initial Value:       ANKLE                DEG/S           | -650.361
-Initial Value:       KNEE                 DEG/S           | -160.134
-Initial Value:       HIP                  DEG/S           |  429.803
+Initial Value:       ANKLE                DEG/S           | -539.970
+Initial Value:       KNEE                 DEG/S           | -227.383
+Initial Value:       HIP                  DEG/S           |  284.851
 
 Initial Time:        TINITIAL             S               |  0.0
 Final Time:          TFINAL               S               |  0.2
