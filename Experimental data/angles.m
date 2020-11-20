@@ -55,11 +55,11 @@ segs = cat(2, rHAT,lHAT,rThigh,lThigh,rShank,lShank,rRFoot,lRFoot,rFFoot,lFFoot)
 segsvel = tr_diff(segs, 0.001);
 
 % Joint angles - both hips defined relative to stance side (lHAT)
-rMTP = 180 - rFFoot + rRFoot; lMTP = 180 - lFFoot + lRFoot;
+rMTPa = 180 - rFFoot + rRFoot; lMTPa = 180 - lFFoot + lRFoot;
 rAnkle = 180 - rRFoot + rShank; lAnkle = 180 - lRFoot + lShank;
 rKnee = 180 + rShank - rThigh; lKnee = 180 + lShank - lThigh;
 rHip = 180 - rThigh + lHAT; lHip = 180 - lThigh + lHAT; 
-joints =  cat(2, rHip,lHip,rKnee,lKnee,rAnkle,lAnkle,rMTP,lMTP);
+joints =  cat(2, rHip,lHip,rKnee,lKnee,rAnkle,lAnkle,rMTPa,lMTPa);
 jointvel = tr_diff(joints, 0.001);
 
 % Segment lengths

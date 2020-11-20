@@ -144,10 +144,8 @@ kneangv = tr_diff(kneang,0.001);
 ankangv = tr_diff(ankang,0.001);
 
 % Initial conditions - assume trunk stays the same 
-initcond_s = [(180-Q(td1_s,3,1)+trunk2(1)) kneang(td1_s,1,1) ankang(td1_s,1,1) ...
+initcond_s = [hipang_s(td1_s) kneang(td1_s,1,1) ankang(td1_s,1,1) ...
               hipangv_s kneangv(td1_s,1,1) ankangv(td1_s,1,1)];
-initcond_t = [(180-Q(td1_t,3,2)+trunk2(1)) kneang(td1_t,1,2) ankang(td1_t,1,2) ...
-              hipangv_t kneangv(td1_t,1,2) ankangv(td1_t,1,2)];
 
 set(figure(2),'WindowStyle','docked')
 subplot(3,1,1); hold on; cla
