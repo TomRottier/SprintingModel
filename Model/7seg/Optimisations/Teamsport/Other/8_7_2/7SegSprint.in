@@ -13,14 +13,14 @@ Constant:            ID                   KG.M^2          |  0.4245
 Constant:            IE                   KG.M^2          |  0.4245
 Constant:            IF                   KG.M^2          |  0.1584
 Constant:            IG                   KG.M^2          |  1.489
-Constant:            K1                   N/M             |  0.1328169804E-01
-Constant:            K2                   N/M/S^2         |  9961.747270    
-Constant:            K3                   N/M             |  26302.27250    
-Constant:            K4                   N/M/S^2         |  1003.773342    
-Constant:            K5                   N/M             |  316.6573712    
-Constant:            K6                   N/M/S^2         |  0.3612146435E-05
-Constant:            K7                   N/M             |  140355.8723    
-Constant:            K8                   N/M/S^2         |  91569.71261    
+Constant:            K1                   N/M             |  1.000706304    
+Constant:            K2                   N/M/S^2         |  999.9409872    
+Constant:            K3                   N/M             |  37854.49704    
+Constant:            K4                   N/M/S^2         |  10000.19621    
+Constant:            K5                   N/M             |  585.2284930    
+Constant:            K6                   N/M/S^2         |  1.000032338    
+Constant:            K7                   N/M             |  168741.4341    
+Constant:            K8                   N/M/S^2         |  117855.7243    
 Constant:            L1                   M               |  0.050
 Constant:            L10                  M               |  0.447
 Constant:            L11                  M               |  0.586
@@ -39,8 +39,8 @@ Constant:            MD                   KG              |  12.54
 Constant:            ME                   KG              |  12.54
 Constant:            MF                   KG              |  5.271
 Constant:            MG                   KG              |  50.935
-Constant:            MTPB                 N/M/S^2         |  0.7981605098    
-Constant:            MTPK                 N/M             |  22.60558321    
+Constant:            MTPB                 N/M/S^2         |  0.9623603195    
+Constant:            MTPK                 N/M             |  22.62964543    
 
 Initial Value:       Q1                   M               |  0.0
 Initial Value:       Q2                   M               |  0.0
@@ -49,7 +49,7 @@ Initial Value:       MTP                  DEG             |  143.563
 Initial Value:       ANKLE                DEG             |  120.502
 Initial Value:       KNEE                 DEG             |  157.074
 Initial Value:       HIP                  DEG             |  144.110
-Initial Value:       U1                   M/S             |  9.67406
+Initial Value:       U1                   M/S             |  8.7
 Initial Value:       U2                   M/S             | -0.72030 
 Initial Value:       HAT                  DEG/S           | -24.9253
 Initial Value:       MTP                  DEG/S           |  1064.10
@@ -58,7 +58,7 @@ Initial Value:       KNEE                 DEG/S           | -160.134
 Initial Value:       HIP                  DEG/S           |  429.803
 
 Initial Time:        TINITIAL             S               |  0.0
-Final Time:          TFINAL               S               |  0.111
+Final Time:          TFINAL               S               |  0.2
 Integration Step:    INTEGSTP             S               |  0.001
 Print-Integer:       PRINTINT             Positive Integer|  1
 Absolute Error:      ABSERR                               |  1.0E-08

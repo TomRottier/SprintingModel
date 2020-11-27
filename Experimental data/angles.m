@@ -1,4 +1,4 @@
-clear; close all; clc
+% clear; close all; clc
 %% Recalculate joint angles and segment lengths from marker data
 load 'C:\Users\tomro\SprintingModel\Experimental data\data.mat';
 points = dout.Average.Markers.Data.Avg;

@@ -7,8 +7,8 @@ datam = matchf.data;
 datas = sprintf.data;
 datat = teamsprtf.data;
 
-n = min([length(datas) length(datat)]);
-
+n = min([length(datas) length(datat) length(datam)]);
+filename = 'comparison.gif';
 %%
 set(figure(1),'WindowStyle','docked'); cla; hold on
 xlim([-1 1.5]); ylim([-.1 2.4]);
@@ -36,6 +36,17 @@ for i = 1:1:n
 %     plot(data(i,12),data(i,13), 'ko')
 
     drawnow 
-    pause(0.05)
+%     pause(0.09)
+
+  % Capture the plot as an image 
+      frame = getframe(figure(1)); 
+      im = frame2im(frame); 
+      [imind,cm] = rgb2ind(im,256); 
+      % Write to the GIF File 
+      if i == 1 
+          imwrite(imind,cm,filename,'gif', 'Loopcount',inf,'DelayTime',0); 
+      else 
+          imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',0); 
+      end 
 end
 

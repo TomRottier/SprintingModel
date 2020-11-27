@@ -1,5 +1,9 @@
 # Log
 
+## 12/11/2020 - 27/11/2020
+
+- Optimisations done
+
 ## 11/11/2020
 
 - Spline technique data
