@@ -25,14 +25,12 @@ C   - K:          SEC stiffness
 C   - THETA:      joint angle
 C   - OMEGA:      joint angular velocity
 C   - DT:         integrator step
-C   - CCANG:      CC angle (input current angle, output next time step)
+C   - CCANG:      CC angle (input current angle)
 C   - N:          number of ramps for activation
 C
 C Outputs:
 C   - TQ:         torque produced at the joint
-C
-C
-C Optional outputs:
+C   - CCANG:      CC angle at next timestep
 C   - SECANG:     SEC angle
 C   - CCANGVEL:   CC angular velocity
 C   - SECANGVEL:  SEC angular velocity (input current, output next)
@@ -70,81 +68,85 @@ C       T0    = ACTP(3)
 C       TR    = ACTP(4)
 C       A1    = ACTP(2)
 C
+C Steps:
+C     1. Calculate SEC angle at current timestep from joint angle and 
+C        CC angle.
+C     2. Calculate torque in SEC from stiffness and SEC angle, assumes
+C        SEC torque = CC torque.
+C     3. Calculate CC angular velocity from CC torque.
+C     4. Estimate CC angle at next timestep by numerical integration.
+C
 C***********************************************************************
       IMPLICIT DOUBLE PRECISION (A-Z)
       INTEGER N
-      DIMENSION TQP(9),ACTP(1+N*3),TQWP(7)
+      DIMENSION TQP(9),ACTP(1+N*3),TQVP(7)
             
-C Assign torque-angular velocity parameters to new array and normalise 
-      TQWP    = TQP(1:7)
-      T0      = TQWP(2)
-      TQMAX   = TQWP(1)
-      TQWP(1) = TQP(1) / T0
-      TQWP(2) = 1.0D0
-    
+C Assign torque-angular velocity parameters to new array
+      TQVP    = TQP(1:7)
+C Normalise parameters      
+      TMAX    = TQP(1)
+      T0      = TQP(2)
+      TQVP(1) = TQP(1) / T0
+      TQVP(2) = 1.0D0
+
+C Local variables
+      SECANGMAX = TMAX/K
+      CCANGMIN = THETA - SECANGMAX
+
 C Calculate activation
       CALL ACTIVATION(T,ACTP,ACT,N)
 
-C Max SEC angle
-      SECANGMAX = TQMAX/K  
-    
-C Initial CC angle if T = 0
-C Joint angular velocity opposite to CC angular velocity
+C Initialise CC angle 
       IF (ABS(T) .LT. DT) THEN
-        CCANGVEL = -OMEGA
+        CCANGVEL = OMEGA
         SECANGVEL = 0.0D0
-C Calculate initial CC angle and torque      
-        TV = -1.0D0
-        CALL TQVEL(TQWP,CCANGVEL,TV,.TRUE.)
-        CALL INITCCANG(T0,ACT,TV,THETA,K,TQWP(1),TQP(8),TQP(9),CCANG,SEC
+C CCANGVEL has opposite sign for torque-velocity function        
+        CALL TQVEL(TQVP,-CCANGVEL,TV,.TRUE.) 
+        CALL INITCCANG(T0,ACT,TV,THETA,K,TQVP(1),TQP(8),TQP(9),CCANG,SEC
      &                 ANG)
-        TQ = MAX(0.0D0, MIN(TQMAX, K*SECANG)) 
-        CCANGVEL = -CCANGVEL
-        CCANGVEL2 = CCANGVEL
-
-C Non-intial time        
-      ELSEIF (T .GT. 0.0D0) THEN
-            IF (CCANG .GT. THETA) CCANG = THETA
-            SECANG = THETA - CCANG
-            IF (SECANG .GT. SECANGMAX) THEN
-              SECANG = SECANGMAX
-              CCANG = THETA - SECANG
-            ENDIF
-            TQ = K*SECANG
-            TA = EXP((-(CCANG - TQP(8))**2) / (2.0D0*TQP(9)**2))
-            IF (TA .LT. 0.001D0) TA = 0.001D0
-C If activation 0, set torques and SECANG/ANGVEL to 0 (stops fluctuations)
-            IF (ACT .GE. 0.01D0) THEN
-              TV = TQ/(T0*ACT*TA)
-            ELSE
-              CCANGVEL = OMEGA
-              CCANG = THETA
-              SECANG = 0.0D0
-              SECANGVEL = 0.0D0
-              TQ = 0.0D0
-              GOTO 4000
-            ENDIF
-            IF (TV .GE. TQWP(1)) THEN
-              CCANGVEL2 = -TQWP(3)
-            ELSE
-              IF (TV .LE. 0.0D0) THEN
-                CCANGVEL2 = TQWP(3)
-              ELSE
-                CALL TQVEL(TQWP,CCANGVEL2,TV,.FALSE.)
-                IF (CCANGVEL2 .LT. -TQWP(3)) CCANGVEL2 = -TQWP(3)
-              ENDIF
-            ENDIF
-
-C Integrate CC angular velocity to get CC ang at next time step
-C Negate CCANGVEL when using to integrate (shortening = negative)
-            CCANGVEL2 = -CCANGVEL2
-            IF (CCANG .GE. THETA) CCANGVEL2 = OMEGA
-            CCANG = CCANG + 0.5D0*(CCANGVEL + CCANGVEL2)*DT
-            CCANGVEL = CCANGVEL2
-            SECANGVEL = OMEGA - CCANGVEL
+        TQ = K*SECANG
+        CCANG = CCANG + CCANGVEL*DT ! Will mean outputs CCANG one timestep in advance
+        RETURN
       ENDIF
-      
-4000  RETURN
+
+C************ Determine joint torque ************
+
+C****** Calculate SEC angle ******
+      IF (CCANG .GT. THETA) CCANG = THETA
+      IF (CCANG .LT. CCANGMIN) CCANG = CCANGMIN
+      SECANG = THETA - CCANG
+
+C****** Calculate SEC torque, SEC torque = CC torque ******     
+      TQ = K*SECANG
+
+C****** Calculate CC angular velocity ******
+C Torque-angle value
+      TA  = EXP((-(CCANG - TQP(8))**2) / (2.0D0*TQP(9)**2))
+      IF (TA .LT. 0.01D0) TA = 0.01D0
+C If activation = 0, no torque produced therefore no SEC stretch      
+      IF (ACT .LT. 0.01D0) THEN
+        CCANGVEL = OMEGA
+        CCANG = THETA
+        SECANG = 0.0D0
+        SECANGVEL = 0.0D0
+        TQ = 0.0D0
+        RETURN
+      ENDIF
+C Torque-velocity value
+      TV = TQ / (T0*ACT*TA)
+      IF (TV .GT. TQVP(1)) TV = TQVP(1)
+      IF (TV .LT. 0.0D0) TV = 0.0D0
+C Calculate CCANGVEL      
+      CALL TQVEL(TQVP,CCANGVEL2,TV,.FALSE.)
+C CCANGVEL needs opposite sign to torque-velocity function
+      CCANGVEL2 = -CCANGVEL2      
+
+C******** Estimate CC angle at next timestep ******
+      CCANG = CCANG + 0.5*(CCANGVEL+CCANGVEL2)*DT
+      CCANGVEL = CCANGVEL2
+      SECANGVEL = OMEGA - CCANGVEL
+
+      RETURN
       END SUBROUTINE
 
 C***********************************************************************
@@ -316,13 +318,11 @@ C***********************************************************************
 C Calculates either the torque-angular velocity value based on CC
 C angular velocity or finds the CC angular velocity if torque-angular  
 C velocity entered.
-C If calculating CC angular velocity input torque as negative number
 C CC torque-angular velocity relationship modelled using equations from
-C Yeadon et al. (2006) differential activation from Forrester et al.
-C (2011)
+C Yeadon et al. (2006) does not include differential activation
 C
 C Inputs:
-C   - P: 7 paramaters for torque generator.
+C   - P: 7 parameters for torque generator.
 C
 C Inputs/Outputs:
 C   - CCANGVEL: CC angular velocity
@@ -333,11 +333,8 @@ C
 C***********************************************************************
       IMPLICIT DOUBLE PRECISION (A-Z)
       DIMENSION P(7)
-      LOGICAL FINDTQ,DIFFACT
+      LOGICAL FINDTQ
 
-C Assume differential activation      
-      DIFFACT = .TRUE.
-      
 C Assign parameters      
       TMAX = P(1)
       T0   = P(2)
@@ -348,49 +345,44 @@ C Assign parameters
       W1   = P(6)
       WR   = P(7)
       AMAX = 1.0D0
-            
-C Check if no differential activation      
-      IF (AMIN .GT. 0.99D0) DIFFACT = .FALSE.
-      
-C If finding torque
+
+C Intermediate variables
+      TC = T0 * WC / WMAX
+      C  = TC * (WMAX + WC)
+      WE = ((TMAX - T0) / (K * T0)) * ((WMAX * WC) / (WMAX + WC))
+      E  = -WE * (TMAX - T0)
+
+
+C*********** Find torque ***********
       IF (FINDTQ) THEN
-        IF (CCANGVEL .GT. 0) THEN
-C Concentric velocity hyperbola    
-          TC    = T0 * WC / WMAX
-          C     = TC * (WMAX + WC)
-          TQW   = C / (WC + CCANGVEL) - TC
-          IF (TQW .LT. 0.0D0) TQW = 0.0D0
-        ELSEIF (CCANGVEL .LE. 0) THEN
-C Eccentric velocity hyperbola
-          WE    = ((TMAX - T0) / (K * T0)) * ((WMAX * WC) / (WMAX + WC))
-          E     = -WE * (TMAX - T0)
-          TQW   = E / (WE - CCANGVEL) + TMAX
+C Concentric contraction
+        IF (CCANGVEL .GT. 0.0D0 .AND. CCANGVEL .LT. WMAX) THEN
+          TQV = C / (WC + CCANGVEL) - TC
+C Concentric torque = 0 if greater than max contraction speed          
+        ELSEIF (CCANGVEL .GE. WMAX) THEN
+          TQV = 0.0D0
+C Eccentric contraction
+        ELSEIF (CCANGVEL .LE. 0.0D0) THEN
+          TQV = E / (WE - CCANGVEL) + TMAX
         ENDIF
-C Differential activation
-        A = AMIN + (AMAX - AMIN) / (1 + EXP(-(CCANGVEL - W1) / WR))
-        TQV = A*TQW
-        
-C If finding CC angular velocity
-      ELSEIF (.NOT. FINDTQ) THEN
-C Closed-form solution if no differential activation
-        IF (.NOT. DIFFACT) THEN
-          IF (TQV .LT. 1.0D0) THEN
-            TC    = T0 * WC / WMAX
-            C     = TC * (WMAX + WC)
-		CCANGVEL = C / (TQV + TC) - WC
-          ELSEIF (TQV .GT. 1.0D0) THEN
-            WE = ((TMAX - T0) / (K * T0)) * ((WMAX * WC) / (WMAX + WC))
-            E  = -WE * (TMAX - T0)
-            CCANGVEL = WE - E / (TQV - TMAX)
-          ENDIF
-        ELSEIF (DIFFACT) THEN
-          WRITE(*,*) 'Cant account for differential activation... yet'
-          STOP
+      ENDIF
+
+C*********** Find angular velocity ***********
+      IF (.NOT. FINDTQ) THEN
+C Concentric contraction
+        IF (TQV .GT. 0.0D0 .AND. TQV .LT. 1.0D0) THEN
+		  CCANGVEL = C / (TQV + TC) - WC
+C Eccentric contraction
+        ELSEIF (TQV .GE. 1.0D0 .AND. TQV .LT. TMAX) THEN 
+          CCANGVEL = WE - E / (TQV - TMAX)
+C Bound CC angular velocity to -WMAX         
+        ELSEIF (TQV .GE. TMAX) THEN
+          CCANGVEL = -WMAX
         ENDIF
-      ENDIF      
+      ENDIF
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE  
 
 C**********************************************************************
       SUBROUTINE TORQUE9(W,TH,P,ACT,TQ)
