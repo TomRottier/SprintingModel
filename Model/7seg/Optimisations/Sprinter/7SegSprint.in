@@ -49,7 +49,7 @@ Initial Value:       MTP                  DEG             |  143.563
 Initial Value:       ANKLE                DEG             |  120.502
 Initial Value:       KNEE                 DEG             |  157.074
 Initial Value:       HIP                  DEG             |  144.110
-Initial Value:       U1                   M/S             |  10.7
+Initial Value:       U1                   M/S             |  10.6
 Initial Value:       U2                   M/S             | -0.72030 
 Initial Value:       HAT                  DEG/S           | -24.9253
 Initial Value:       MTP                  DEG/S           |  1064.10
@@ -59,8 +59,8 @@ Initial Value:       HIP                  DEG/S           |  429.803
 
 Initial Time:        TINITIAL             S               |  0.0
 Final Time:          TFINAL               S               |  0.2
-Integration Step:    INTEGSTP             S               |  0.001
-Print-Integer:       PRINTINT             Positive Integer|  1
+Integration Step:    INTEGSTP             S               |  0.0001
+Print-Integer:       PRINTINT             Positive Integer|  10
 Absolute Error:      ABSERR                               |  1.0E-08
 Relative Error:      RELERR                               |  1.0E-07
 ----------------------------------------------------------+------------------

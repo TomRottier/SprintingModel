@@ -105,7 +105,7 @@ C CCANGVEL has opposite sign for torque-velocity function
         CALL INITCCANG(T0,ACT,TV,THETA,K,TQVP(1),TQP(8),TQP(9),CCANG,SEC
      &                 ANG)
         TQ = K*SECANG
-        CCANG = CCANG + CCANGVEL*DT ! Will mean outputs CCANG one timestep in advance
+        CCANG = CCANG + CCANGVEL*DT ! Outputs CCANG one timestep ahead
         RETURN
       ENDIF
 
@@ -115,6 +115,14 @@ C****** Calculate SEC angle ******
       IF (CCANG .GT. THETA) CCANG = THETA
       IF (CCANG .LT. CCANGMIN) CCANG = CCANGMIN
       SECANG = THETA - CCANG
+C If SEC angle = 0 then CC angular velocity = OMEGA      
+      IF (SECANG .LE. 0.0D0) THEN
+        TQ = 0.0D0
+        CCANGVEL2 = OMEGA
+        SECANGVEL = 0.0D0
+        CCANG = CCANG + 0.5D0*(CCANGVEL+CCANGVEL2)*DT
+        RETURN
+      ENDIF
 
 C****** Calculate SEC torque, SEC torque = CC torque ******     
       TQ = K*SECANG
@@ -142,7 +150,7 @@ C CCANGVEL needs opposite sign to torque-velocity function
       CCANGVEL2 = -CCANGVEL2      
 
 C******** Estimate CC angle at next timestep ******
-      CCANG = CCANG + 0.5*(CCANGVEL+CCANGVEL2)*DT
+      CCANG = CCANG + 0.5D0*(CCANGVEL+CCANGVEL2)*DT
       CCANGVEL = CCANGVEL2
       SECANGVEL = OMEGA - CCANGVEL
 

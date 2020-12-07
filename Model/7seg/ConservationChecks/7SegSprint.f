@@ -324,26 +324,6 @@ C**   Update variables after integration step
       Q6p = U6
       Q7p = U7
 
-C** Calculate forces
-      POP2X = Q1 - L2*COS(Q3-Q4-Q5-Q6-Q7)
-      POP2Y = Q2 - L2*SIN(Q3-Q4-Q5-Q6-Q7)
-      VOP2X = U1 + L2*SIN(Q3-Q4-Q5-Q6-Q7)*(U3-U4-U5-U6-U7)
-      VOP2Y = U2 - L2*COS(Q3-Q4-Q5-Q6-Q7)*(U3-U4-U5-U6-U7)  
-
-      IF (Q2 .LT. 0.0D0) THEN
-        RY1 = -K3*Q2 - K4*ABS(Q2)*U2
-        RX1 = (-K1*Q1 - K2*U1)*RY1
-      ELSE
-        RX1 = 0.0D0
-        RY1 = 0.0D0
-      ENDIF
-      IF (POP2Y .LT. 0.0D0) THEN
-        RY2 = -K7*POP2Y - K8*ABS(POP2Y)*VOP2Y
-        RX2 = (-K5*POP2X - K6*VOP2X)*RY2
-      ELSE
-        RX2 = 0.0D0
-        RY2 = 0.0D0
-      ENDIF
 
 C** Specified variables
       CALL EVALSPLINE2(T,NROW,TT,CCHAT,GS,GSp,GSpp)
@@ -381,6 +361,27 @@ C** Intermediate variables
       Z(27) = Z(1)*Z(24) - Z(2)*Z(22)
       Z(29) = Z(19)*Z(25) + Z(20)*Z(27)
       Z(31) = Z(19)*Z(27) + Z(21)*Z(25)
+
+C** Calculate forces
+      POP2X = Q1 - L2*Z(29)
+      VOP2X = U1 - L2*Z(31)*(U3-U4-U5-U6-U7)
+      POP2Y = Q2 - L2*Z(30)
+      VOP2Y = U2 - L2*Z(32)*(U3-U4-U5-U6-U7)
+      IF (Q2 .LT. 0.0D0) THEN
+        RY1 = -K3*Q2 - K4*ABS(Q2)*U2
+        RX1 = (-K1*Q1 - K2*U1)*RY1
+      ELSE
+        RX1 = 0.0D0
+        RY1 = 0.0D0
+      ENDIF
+      IF (POP2Y .LT. 0.0D0) THEN
+        RY2 = -K7*POP2Y - K8*ABS(POP2Y)*VOP2Y
+        RX2 = (-K5*POP2X - K6*VOP2X)*RY2
+      ELSE
+        RX2 = 0.0D0
+        RY2 = 0.0D0
+      ENDIF
+
       Z(33) = Z(15)*Z(3) - Z(16)*Z(4)
       Z(34) = Z(15)*Z(4) + Z(16)*Z(3)
       Z(35) = -Z(15)*Z(4) - Z(16)*Z(3)

@@ -4,6 +4,14 @@ load 'C:\Users\tomro\SprintingModel\Experimental data\data.mat';
 points = dout.Average.Markers.Data.Avg;
 mnames = dout.Average.Markers.Names;
 leg = dout.Average.Information.Leg;
+hatCM = dout.Average.CoM.Data.Avg(:,:,end-2) - origin;
+
+% Interpolate to 0.0001 timestep
+dt = 0.0001;
+time = dout.Average.Time.Absolute;
+time_10 = (0:dt:time(end))';
+points = interp1(time, points, time_10, 'spline');
+hatCM = interp1(time, hatCM, time_10, 'spline');
 
 % Points
 origin = [0 0 0]; %points(:,:,contains(mnames, [leg 'TOE']));
@@ -30,7 +38,6 @@ UTJC = points(:,:,contains(mnames, 'UTJC')) - origin;
 APEX = points(:,:,contains(mnames, 'APEX')) - origin;
 HJC = (rHJC + lHJC) ./ 2;
 
-hatCM = dout.Average.CoM.Data.Avg(:,:,end-2) - origin;
 
 % dx,dy
 rd1 = rMTP - rTOE; ld1 = lMTP - lTOE;
@@ -52,7 +59,7 @@ rHAT = atan2d(rd5(:,3), rd5(:,2));
 lHAT = atan2d(ld5(:,3), ld5(:,2));
 
 segs = cat(2, rHAT,lHAT,rThigh,lThigh,rShank,lShank,rRFoot,lRFoot,rFFoot,lFFoot);
-segsvel = tr_diff(segs, 0.001);
+segsvel = tr_diff(segs, dt);
 
 % Joint angles - both hips defined relative to stance side (lHAT)
 rMTPa = 180 - rFFoot + rRFoot; lMTPa = 180 - lFFoot + lRFoot;
@@ -60,7 +67,7 @@ rAnkle = 180 - rRFoot + rShank; lAnkle = 180 - lRFoot + lShank;
 rKnee = 180 + rShank - rThigh; lKnee = 180 + lShank - lThigh;
 rHip = 180 - rThigh + lHAT; lHip = 180 - lThigh + lHAT; 
 joints =  cat(2, rHip,lHip,rKnee,lKnee,rAnkle,lAnkle,rMTPa,lMTPa);
-jointvel = tr_diff(joints, 0.001);
+jointvel = tr_diff(joints, dt);
 
 % Segment lengths
 rFFootL = mean(sqrt(sum(rd1.^2, 2))); lFFootL = mean(sqrt(sum(ld1.^2, 2)));
@@ -76,11 +83,10 @@ ThighL = mean([rThighL lThighL]);
 
 % Output
 n = size(points, 1); m = size(joints, 2) + 3;
-time = dout.Average.Time.Absolute;
 out = [n m strings(1,m-2); 
       ["Time","rHAT","lHAT","RHip","LHip","RKnee","LKnee","RAnkle","LAnkle","RMTP","LMTP"];
-      time rHAT lHAT joints]; 
-writematrix(out, 'matchingData2.csv');
+      time_10 rHAT lHAT joints]; 
+writematrix(out, 'matchingData2_10.csv');
 
 %%
 set(figure(1),'WindowStyle','docked'); hold on; cla

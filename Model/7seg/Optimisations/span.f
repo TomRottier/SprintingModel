@@ -604,10 +604,10 @@ C**** Check termination criteria.
 410   CONTINUE
 415   CONTINUE
 
-C If cost less than 0.1 quit         
-      IF (ABS(FOPT) .LT. 0.01D0) THEN
-        QUIT = .TRUE.
-      ENDIF   
+! C If cost less than 0.1 quit         
+!       IF (ABS(FOPT) .LT. 0.01D0) THEN
+!         QUIT = .TRUE.
+!       ENDIF   
 
 
 C**** Terminate SA if appropriate.

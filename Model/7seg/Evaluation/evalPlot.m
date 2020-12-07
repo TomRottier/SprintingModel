@@ -30,12 +30,15 @@ mdata2 = mdata2(1:n,:);
 I = 1;
 
 % Stride parameters
-vcmy = datas{1}(end,end); vcmx = datas{1}(end,end-1);
+vcmy = datas{1}(end,end); %vcmx = datas{1}(end,end-1);
 cmytd = datas{1}(1,end-2); cmyto = datas{1}(end,end-2); ds = cmytd - cmyto;
 ta = (-vcmy - sqrt(vcmy^2 - 4*-4.905*-ds)) / -9.81;
 taj = abs(ta - 0.132);
+tcj = abs(time(end) - 0.11);
 tsw = 2*ta + time(end);
-tswj = abs(tsw-0.374); vcmxj = abs(vcmx-9.67406);
+tswj = abs(tsw-0.374);  %vcmxj = abs(vcmx-9.67406);
+Lc = datas{1}(end,end-3) - datas{1}(1,end-3); vcmx = Lc/time(end);
+vcmxj = abs(vcmx - datas{1}(1,end-1));
 
 % SSE
 hatj = tr_rmse(datas{4}(:,2), mdata2(:,3));

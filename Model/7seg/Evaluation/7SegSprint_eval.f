@@ -18,7 +18,7 @@ C** Model variables
       INTEGER          I,J,NACTP,NROW,NCOL
       PARAMETER        (NACTP=7)
       CHARACTER        MESSAGE(99)
-      DIMENSION        Y(500,11)
+      DIMENSION        Y(5000,11)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
@@ -33,7 +33,7 @@ C** Model variables
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP,METQP,MFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
-      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME
+      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI
 C** SPAN variables
       INTEGER N, NEPS
       PARAMETER(N=52,NEPS=4)
@@ -96,6 +96,8 @@ C** Read matching data
       CLOSE(UNIT=44)
       AERIALTIME = 0.132D0
       SWINGTIME  = 0.374D0
+      CONTACTTIME = 0.110D0
+      VCMXI = U1I
 
 C**   Convert to generalised coordinates
       CALL INITCOND()
@@ -105,10 +107,10 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       MAX = .FALSE.
       EPS = 1.0D-03
       RT = 0.75
-      ISEED1 = 7
-      ISEED2 = 8
+      ISEED1 = 3
+      ISEED2 = 4
       NS = 24
-      NT = 20
+      NT = 5
       MAXEVL = 100000000
       IPRINT = 1
 
@@ -140,23 +142,23 @@ C** MTP Spring stiffness and damping
       UB(I+1) = 300.0D0
 
 C** Contact springs stiffness and damping
-      LB(N-7) = 0.0D0
-      LB(N-6) = 0.0D0
-      LB(N-5) = 10000.0D0
-      LB(N-4) = 10000.0D0
-      LB(N-3) = 0.0D0
-      LB(N-2) = 0.0D0
-      LB(N-1) = 10000.0D0
-      LB(N)   = 10000.0D0
+      ! LB(N-7) = 0.0D0
+      ! LB(N-6) = 0.0D0
+      ! LB(N-5) = 1000.0D0
+      ! LB(N-4) = 1000.0D0
+      ! LB(N-3) = 0.0D0
+      ! LB(N-2) = 0.0D0
+      ! LB(N-1) = 1000.0D0
+      ! LB(N)   = 1000.0D0
 
-      UB(N-7) = 10000.0D0
-      UB(N-6) = 10000.0D0
-      UB(N-5) = 1000000.0D0
-      UB(N-4) = 1000000.0D0
-      UB(N-3) = 10000.0D0
-      UB(N-2) = 10000.0D0
-      UB(N-1) = 1000000.0D0
-      UB(N)   = 1000000.0D0
+      ! UB(N-7) = 1000.0D0
+      ! UB(N-6) = 1000.0D0
+      ! UB(N-5) = 100000.0D0
+      ! UB(N-4) = 100000.0D0
+      ! UB(N-3) = 10000.0D0
+      ! UB(N-2) = 10000.0D0
+      ! UB(N-1) = 500000.0D0
+      ! UB(N)   = 500000.0D0
 
 C***  Set input values of the input/output parameters
       T = 5.0
@@ -184,12 +186,18 @@ C***  Set input values of the input/output parameters
       X(N-1) = K7
       X(N)   = K8
 
+      DO I = 43, N
+        LB(I) = X(I) - X(I)*0.2D0
+        UB(I) = X(I) + X(I)*0.2D0
+      ENDDO
+
+
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
      &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
      &        FSTAR,XP,NACP,WORK)
       
-      ! DO I = 1, 10
+      ! DO I = 1, 1
       ! CALL FCN(N,X,COST)
       ! PRINT*, COST
       ! ENDDO
@@ -229,7 +237,7 @@ C***********************************************************************
       PARAMETER        (NACTP=7)
       EXTERNAL         EQNS1
       DIMENSION        VAR(14)
-      DIMENSION        X(N),Y(500,11)
+      DIMENSION        X(N),Y(5000,11)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
@@ -259,7 +267,7 @@ C***********************************************************************
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP,METQP,MFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
-      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME
+      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI
 
 C** Initialise parameters
       HEACTP = X(1:7)
@@ -313,6 +321,12 @@ C**   Initialize time, print counter, variables array for integrator
       VAR(13) = U6
       VAR(14) = U7
 
+C** Initialise torques for integration
+      CALL UPDATE(T)
+
+C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
+      CALL KUTTA(EQNS1, 14, VAR, T, INTEGSTP, ABSERR, RELERR, 0, *5920)
+
 C** Initialise variables for COST
       IDX = 2
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHAT,GS,GSp,GSpp)
@@ -324,37 +338,24 @@ C** Initialise variables for COST
       FA   = FA  *DEGtoRAD 
       FAp  = FAp *DEGtoRAD 
       FApp = FApp*DEGtoRAD 
-      CMYTD = Q2 - 0.5*(2*MF*(L7-L8)*SIN(EA-FA-Q3)+2*(L10*MF+ME*(L10-L9)
-     &)*SIN(EA-Q3)+2*(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME+L2*MF+L2*MG)*SIN(Q3-
-     &Q4-Q5-Q6-Q7)-2*MG*GS*SIN(Q3)-L3*MB*SIN(FOOTANG+Q3-Q5-Q6-Q7)-2*(L10
-     &*ME+L10*MF+L10*MG+L9*MD)*SIN(Q3-Q7)-2*(L7*MC+L8*MD+L8*ME+L8*MF+L8*
-     &MG)*SIN(Q3-Q6-Q7)-(L4*MB+2*L6*MC+2*L6*MD+2*L6*ME+2*L6*MF+2*L6*MG)*
-     &SIN(Q3-Q5-Q6-Q7))/(MA+MB+MC+MD+ME+MF+MG)
-      VCMXI = U1 - 0.5*(2*MG*GS*SIN(Q3)*U3+2*(L10*ME+L10*MF+L10*MG+L9*MD
-     &)*SIN(Q3-Q7)*(U3-U7)+2*(L10*MF+ME*(L10-L9))*SIN(EA-Q3)*(EAp-U3-U8)
-     &+L3*MB*SIN(FOOTANG+Q3-Q5-Q6-Q7)*(U3-U5-U6-U7)+2*MF*(L7-L8)*SIN(EA-
-     &FA-Q3)*(EAp-FAp-U3-U8-U9)+2*(L7*MC+L8*MD+L8*ME+L8*MF+L8*MG)*SIN(Q3
-     &-Q6-Q7)*(U3-U6-U7)+(L4*MB+2*L6*MC+2*L6*MD+2*L6*ME+2*L6*MF+2*L6*MG)
-     &*SIN(Q3-Q5-Q6-Q7)*(U3-U5-U6-U7)-2*MG*GSp*COS(Q3)-2*(L1*MA+L2*MB+L2
-     &*MC+L2*MD+L2*ME+L2*MF+L2*MG)*SIN(Q3-Q4-Q5-Q6-Q7)*(U3-U4-U5-U6-U7))
-     &/(MA+MB+MC+MD+ME+MF+MG)
-
+      Z(61) = MG*GS/MT
+      CMYTD = Q2 + Z(57)*Z(26) + Z(58)*Z(45) + Z(59)*Z(49) + Z(60)*Z(52)
+     & + Z(61)*Z(2) + 0.5D0*Z(56)*Z(41) + 0.5D0*Z(62)*Z(37) - Z(55)*Z(30
+     &)
+      CMXTD = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(51)
+     & + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*Z(29
+     &)
       HATS = 0.0D0
       HIPS = 0.0D0
       KNEES = 0.0D0
       ANKLES  = 0.0D0
       MTPS = 0.0D0
 
-C** Initialise torques for integration
-      CALL UPDATE(T)
 
-C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
-      CALL KUTTA(EQNS1, 14, VAR, T, INTEGSTP, ABSERR, RELERR, 0, *5920)
-
-C**   Check exit conditions
+C** Main loop
 5900  IF(TFINAL.GE.TINITIAL.AND.T+.01D0*INTEGSTP.GE.TFINAL) EXIT=.TRUE.
       IF(TFINAL.LE.TINITIAL.AND.T+.01D0*INTEGSTP.LE.TFINAL) EXIT=.TRUE.
-      IF (Q2 .GT. 1.0D-05 .AND. POP2Y .GT. 1.0D-05) EXIT = .TRUE.
+      ! IF (Q2 .GT. 1.0D-05 .AND. POP2Y .GT. 1.0D-05) EXIT = .TRUE.
 
       IF (EXIT) THEN
         IDX = IDX - 1
@@ -363,28 +364,21 @@ C**   Check exit conditions
         KNEEJ  = KNEES  / IDX
         ANKLEJ = ANKLES / IDX
         MTPJ   = MTPS   / IDX
-        CMYTO = Q2 - 0.5*(2*MF*(L7-L8)*SIN(EA-FA-Q3)+2*(L10*MF+ME*(L10-L
-     &  9))*SIN(EA-Q3)+2*(L1*MA+L2*MB+L2*MC+L2*MD+L2*ME+L2*MF+L2*MG)*SIN
-     &  (Q3-Q4-Q5-Q6-Q7)-2*MG*GS*SIN(Q3)-L3*MB*SIN(FOOTANG+Q3-Q5-Q6-Q7)-
-     &  2*(L10*ME+L10*MF+L10*MG+L9*MD)*SIN(Q3-Q7)-2*(L7*MC+L8*MD+L8*ME+L
-     &  8*MF+L8*MG)*SIN(Q3-Q6-Q7)-(L4*MB+2*L6*MC+2*L6*MD+2*L6*ME+2*L6*MF
-     &  +2*L6*MG)*SIN(Q3-Q5-Q6-Q7))/(MA+MB+MC+MD+ME+MF+MG)
-        VCMXF = U1 - 0.5*(2*MG*GS*SIN(Q3)*U3+2*(L10*ME+L10*MF+L10*MG+L9*
-     &  MD)*SIN(Q3-Q7)*(U3-U7)+2*(L10*MF+ME*(L10-L9))*SIN(EA-Q3)*(EAp-U3
-     &  -U8)+L3*MB*SIN(FOOTANG+Q3-Q5-Q6-Q7)*(U3-U5-U6-U7)+2*MF*(L7-L8)*S
-     &  IN(EA-FA-Q3)*(EAp-FAp-U3-U8-U9)+2*(L7*MC+L8*MD+L8*ME+L8*MF+L8*MG
-     &  )*SIN(Q3-Q6-Q7)*(U3-U6-U7)+(L4*MB+2*L6*MC+2*L6*MD+2*L6*ME+2*L6*M
-     &  F+2*L6*MG)*SIN(Q3-Q5-Q6-Q7)*(U3-U5-U6-U7)-2*MG*GSp*COS(Q3)-2*(L1
-     &  *MA+L2*MB+L2*MC+L2*MD+L2*ME+L2*MF+L2*MG)*SIN(Q3-Q4-Q5-Q6-Q7)*(U3
-     &  -U4-U5-U6-U7))/(MA+MB+MC+MD+ME+MF+MG)
-        VCMYF =  U2 + 0.5*(2*MG*GSp*SIN(Q3)+2*MG*GS*COS(Q3)*U3+2*(L10*ME
-     &  +L10*MF+L10*MG+L9*MD)*COS(Q3-Q7)*(U3-U7)+L3*MB*COS(FOOTANG+Q3-Q5
-     &  -Q6-Q7)*(U3-U5-U6-U7)+2*(L7*MC+L8*MD+L8*ME+L8*MF+L8*MG)*COS(Q3-Q
-     &  6-Q7)*(U3-U6-U7)+(L4*MB+2*L6*MC+2*L6*MD+2*L6*ME+2*L6*MF+2*L6*MG)
-     &  *COS(Q3-Q5-Q6-Q7)*(U3-U5-U6-U7)-2*(L10*MF+ME*(L10-L9))*COS(EA-Q3
-     &  )*(EAp-U3-U8)-2*MF*(L7-L8)*COS(EA-FA-Q3)*(EAp-FAp-U3-U8-U9)-2*(L
-     &  1*MA+L2*MB+L2*MC+L2*MD+L2*ME+L2*MF+L2*MG)*COS(Q3-Q4-Q5-Q6-Q7)*(U
-     &  3-U4-U5-U6-U7))/(MA+MB+MC+MD+ME+MF+MG)
+        Z(61) = MG*GS/MT
+        Z(102) = MG*GSp/MT
+        Z(103) = Z(59)*EAp
+        Z(104) = Z(60)*(EAp-FAp)
+        CMYTO = Q2 + Z(57)*Z(26) + Z(58)*Z(45) + Z(59)*Z(49) + Z(60)*Z(5
+     &  2)+ Z(61)*Z(2) + 0.5D0*Z(56)*Z(41) + 0.5D0*Z(62)*Z(37) - Z(55)*Z
+     &  (30)
+        CMXTO = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(5
+     &  1) + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*
+     &  Z(29)
+        VCMYF = Z(102)*Z(2) + U2 + Z(61)*Z(1)*U3 + Z(58)*Z(47)*(U3-U7) +
+     &  Z(57)*Z(28)*(U3-U6-U7) + 0.5D0*Z(56)*Z(43)*(U3-U5-U6-U7) + 0.5D0
+     &  *Z(62)*Z(39)*(U3-U5-U6-U7) - Z(48)*(Z(103)-Z(59)*U3-Z(59)*U8) - 
+     &  Z(55)*Z(32)*(U3-U4-U5-U6-U7) - Z(54)*(Z(104)-Z(60)*U3-Z(60)*U8-Z
+     &  (60)*U9)
         DS = CMYTD - CMYTO
 
 C** Check if quadratic has solution
@@ -402,13 +396,14 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         ENDIF
   
         TSW = T + 2.0D0*TA
+        TCJ = ABS(T - CONTACTTIME)
         TAJ = ABS(TA - AERIALTIME)
         TSWJ = ABS(TSW - SWINGTIME)
-        VCMJ = ABS(VCMXF-VCMXI)
+        VCMJ = ABS(((CMXTO - CMXTD) / T) - VCMXI)
   
+!         COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+1000.0D0*TCJ+1000.0D0*TAJ+
+!      &  100.0*VCMJ
         COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+1000.0D0*TSWJ+100.0D0*VCMJ
-     &  +1000.0D0*TAJ
-        IF (T .LT. 0.095D0) COST = 3000.0D0
         RETURN
       ENDIF
 
@@ -418,7 +413,8 @@ C** Integrate
 C** Update torques after integration
       CALL UPDATE(T)
 
-C** Intermediate cost      
+C** Intermediate cost
+      IF (T - Y(IDX,1) .LT. INTEGSTP)
       HATS   = HATS   + (Y(IDX,3)  - Q3*RADtoDEG)**2
       HIPS   = HIPS   + (Y(IDX,5)  - HANG*RADtoDEG)**2
       KNEES  = KNEES  + (Y(IDX,7)  - KANG*RADtoDEG)**2
@@ -484,27 +480,6 @@ C**   Update variables after integration step
       Q6p = U6
       Q7p = U7
 
-C** Calculate forces
-      POP2X = Q1 - L2*COS(Q3-Q4-Q5-Q6-Q7)
-      POP2Y = Q2 - L2*SIN(Q3-Q4-Q5-Q6-Q7)
-      VOP2X = U1 + L2*SIN(Q3-Q4-Q5-Q6-Q7)*(U3-U4-U5-U6-U7)
-      VOP2Y = U2 - L2*COS(Q3-Q4-Q5-Q6-Q7)*(U3-U4-U5-U6-U7)  
-
-      IF (Q2 .LT. 0.0D0) THEN
-        RY1 = -K3*Q2 - K4*ABS(Q2)*U2
-        RX1 = (-K1*Q1 - K2*U1)*RY1
-      ELSE
-        RX1 = 0.0D0
-        RY1 = 0.0D0
-      ENDIF
-      IF (POP2Y .LT. 0.0D0) THEN
-        RY2 = -K7*POP2Y - K8*ABS(POP2Y)*VOP2Y
-        RX2 = (-K5*POP2X - K6*VOP2X)*RY2
-      ELSE
-        RX2 = 0.0D0
-        RY2 = 0.0D0
-      ENDIF
-
 C** Specified variables
       CALL EVALSPLINE2(T,NROW,TT,CCHAT,GS,GSp,GSpp)
       CALL EVALSPLINE2(T,NROW,TT,CCHIP,EA,EAp,EApp)
@@ -541,6 +516,27 @@ C** Intermediate variables
       Z(27) = Z(1)*Z(24) - Z(2)*Z(22)
       Z(29) = Z(19)*Z(25) + Z(20)*Z(27)
       Z(31) = Z(19)*Z(27) + Z(21)*Z(25)
+
+C** Calculate forces
+      POP2X = Q1 - L2*Z(29)
+      VOP2X = U1 - L2*Z(31)*(U3-U4-U5-U6-U7)
+      POP2Y = Q2 - L2*Z(30)
+      VOP2Y = U2 - L2*Z(32)*(U3-U4-U5-U6-U7)
+      IF (Q2 .LT. 0.0D0) THEN
+        RY1 = -K3*Q2 - K4*ABS(Q2)*U2
+        RX1 = (-K1*Q1 - K2*U1)*RY1
+      ELSE
+        RX1 = 0.0D0
+        RY1 = 0.0D0
+      ENDIF
+      IF (POP2Y .LT. 0.0D0) THEN
+        RY2 = -K7*POP2Y - K8*ABS(POP2Y)*VOP2Y
+        RX2 = (-K5*POP2X - K6*VOP2X)*RY2
+      ELSE
+        RX2 = 0.0D0
+        RY2 = 0.0D0
+      ENDIF
+
       Z(33) = Z(15)*Z(3) - Z(16)*Z(4)
       Z(34) = Z(15)*Z(4) + Z(16)*Z(3)
       Z(35) = -Z(15)*Z(4) - Z(16)*Z(3)

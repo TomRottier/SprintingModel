@@ -58,9 +58,9 @@ Initial Value:       KNEE                 DEG/S           | -160.134
 Initial Value:       HIP                  DEG/S           |  429.803
 
 Initial Time:        TINITIAL             S               |  0.0
-Final Time:          TFINAL               S               |  0.2
-Integration Step:    INTEGSTP             S               |  0.001
-Print-Integer:       PRINTINT             Positive Integer|  1
+Final Time:          TFINAL               S               |  0.11
+Integration Step:    INTEGSTP             S               |  0.0001
+Print-Integer:       PRINTINT             Positive Integer|  10
 Absolute Error:      ABSERR                               |  1.0E-08
 Relative Error:      RELERR                               |  1.0E-07
 ----------------------------------------------------------+------------------
