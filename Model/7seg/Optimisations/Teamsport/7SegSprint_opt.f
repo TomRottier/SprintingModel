@@ -31,6 +31,7 @@ C** Model variables
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
       COMMON/DATAIN  / AERIALTIME,SWINGTIME,VCMXI
+
 C** SPAN variables
       INTEGER N, NEPS
       PARAMETER(N=42,NEPS=4)
@@ -141,6 +142,13 @@ C***  Set input values of the input/output parameters
       X(22:28) = HFACTP
       X(29:35) = KFACTP
       X(36:42) = AFACTP
+
+      DO I = 1, N
+        UB(I) = MIN(1.0D0, 1.150D0*X(I))
+        LB(I) = 0.85D0*X(I)
+        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
+        VM(I) = UB(I) - LB(I)
+      ENDDO
 
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
@@ -282,9 +290,9 @@ C** Initialise variables for COST
       CMYTD = Q2 + Z(57)*Z(26) + Z(58)*Z(45) + Z(59)*Z(49) + Z(60)*Z(52)
      & + Z(61)*Z(2) + 0.5D0*Z(56)*Z(41) + 0.5D0*Z(62)*Z(37) - Z(55)*Z(30
      &)
-!       CMXTD = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(51)
-!      & + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*Z(29
-!      &)
+      CMXTD = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(51)
+     & + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*Z(29
+     &)
 
 
 C** Main loop
@@ -301,9 +309,9 @@ C** Main loop
         CMYTO = Q2 + Z(57)*Z(26) + Z(58)*Z(45) + Z(59)*Z(49) + Z(60)*Z(5
      &  2)+ Z(61)*Z(2) + 0.5D0*Z(56)*Z(41) + 0.5D0*Z(62)*Z(37) - Z(55)*Z
      &  (30)
-!         CMXTO = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(5
-!      &  1) + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*
-!      &  Z(29)
+        CMXTO = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(5
+     &  1) + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*
+     &  Z(29)
         VCMXF = Z(102)*Z(1) + U1 + Z(58)*Z(46)*(U3-U7) + Z(57)*Z(27)*(U3
      &  -U6-U7) + 0.5D0*Z(56)*Z(42)*(U3-U5-U6-U7) + 0.5D0*Z(62)*Z(38)*(U
      &  3-U5-U6-U7) - Z(61)*Z(2)*U3 - Z(50)*(Z(103)-Z(59)*U3-Z(59)*U8) -
@@ -333,8 +341,8 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         TSW = T + 2.0D0*TA
         TAJ = ABS(TA - AERIALTIME)
         TSWJ = ABS(TSW - SWINGTIME)
-      !   VCMJ = ABS(((CMXTO - CMXTD) / T) - VCMXI)
-        VCMJ = ABS(VCMXF - VCMXI)
+        VCMX = ((CMXTO - CMXTD) + VCMXF*TA) / (T + TA)
+        VCMJ = ABS(VCMX - VCMXI)
   
         COST = 10*TSWJ+VCMJ
         RETURN
