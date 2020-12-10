@@ -37,7 +37,9 @@ taj = abs(ta - 0.132);
 tcj = abs(time(end) - 0.11);
 tsw = 2*ta + time(end);
 tswj = abs(tsw-0.374);  %vcmxj = abs(vcmx-9.67406);
-Lc = datas{1}(end,end-3) - datas{1}(1,end-3); vcmx = Lc/time(end);
+Lc = datas{1}(end,end-3) - datas{1}(1,end-3);
+vcmxf = datas{1}(end,end-1);
+vcmx = (Lc + vcmxf*ta) / (ta+time(end));
 vcmxj = abs(vcmx - datas{1}(1,end-1));
 
 % SSE

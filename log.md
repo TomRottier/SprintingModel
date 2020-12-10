@@ -1,5 +1,9 @@
 # Log
 
+## 27/11/2020 - 08/12/2020
+
+- Repeat optimisations with new cost function
+
 ## 12/11/2020 - 27/11/2020
 
 - Optimisations done

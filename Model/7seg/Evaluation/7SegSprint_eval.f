@@ -36,7 +36,7 @@ C** Model variables
       COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI
 C** SPAN variables
       INTEGER N, NEPS
-      PARAMETER(N=52,NEPS=4)
+      PARAMETER(N=42,NEPS=4)
       DOUBLE PRECISION  LB(N), UB(N), X(N), XOPT(N), C(N), VM(N),
      &                  FSTAR(NEPS), XP(N), T, EPS, RT, FOPT
       INTEGER  NACP(N), WORK(N), NS, NT, NFCNEV, IER, ISEED1, ISEED2,
@@ -115,31 +115,31 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       IPRINT = 1
 
 C** Set upper and lower bounds on parameters
-      DO I = 1, N-10, NACTP
-        LB(I)    = 0.0D0
-        LB(I+1)  = 0.0D0
-        LB(I+2)  = 0.1D0
-        LB(I+3)  = 0.0D0
-        LB(I+4)  = 0.0D0
-        LB(I+5)  = 0.1D0
-        LB(I+6)  = 0.0D0
-      ENDDO
+      ! DO I = 1, N-10, NACTP
+      !   LB(I)    = 0.0D0
+      !   LB(I+1)  = 0.0D0
+      !   LB(I+2)  = 0.1D0
+      !   LB(I+3)  = 0.0D0
+      !   LB(I+4)  = 0.0D0
+      !   LB(I+5)  = 0.1D0
+      !   LB(I+6)  = 0.0D0
+      ! ENDDO
 
-      DO I = 1, N-10, NACTP
-        UB(I)    = 1.0D0
-        UB(I+1)  = 0.1D0
-        UB(I+2)  = 0.3D0
-        UB(I+3)  = 1.0D0
-        UB(I+4)  = 0.1D0
-        UB(I+5)  = 0.3D0
-        UB(I+6)  = 1.0D0
-      ENDDO
+      ! DO I = 1, N-10, NACTP
+      !   UB(I)    = 1.0D0
+      !   UB(I+1)  = 0.1D0
+      !   UB(I+2)  = 0.3D0
+      !   UB(I+3)  = 1.0D0
+      !   UB(I+4)  = 0.1D0
+      !   UB(I+5)  = 0.3D0
+      !   UB(I+6)  = 1.0D0
+      ! ENDDO
 
 C** MTP Spring stiffness and damping
-      LB(I) = 0.00D0
-      UB(I) = 300.0D0
-      LB(I+1) = 0.0D0
-      UB(I+1) = 300.0D0
+      ! LB(I) = 0.00D0
+      ! UB(I) = 300.0D0
+      ! LB(I+1) = 0.0D0
+      ! UB(I+1) = 300.0D0
 
 C** Contact springs stiffness and damping
       ! LB(N-7) = 0.0D0
@@ -175,20 +175,27 @@ C***  Set input values of the input/output parameters
       X(22:28) = HFACTP
       X(29:35) = KFACTP
       X(36:42) = AFACTP
-      X(N-9) = MTPB
-      X(N-8) = MTPK
-      X(N-7) = K1
-      X(N-6) = K2
-      X(N-5) = K3
-      X(N-4) = K4
-      X(N-3) = K5
-      X(N-2) = K6
-      X(N-1) = K7
-      X(N)   = K8
+      ! X(N-9) = MTPB
+      ! X(N-8) = MTPK
+      ! X(N-7) = K1
+      ! X(N-6) = K2
+      ! X(N-5) = K3
+      ! X(N-4) = K4
+      ! X(N-3) = K5
+      ! X(N-2) = K6
+      ! X(N-1) = K7
+      ! X(N)   = K8
 
-      DO I = 43, N
+      DO I = 1, N
         LB(I) = X(I) - X(I)*0.2D0
         UB(I) = X(I) + X(I)*0.2D0
+        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
+        IF (UB(I) .GT. 1.0D0) UB(I) = 1.0D0
+        VM(I) = UB(I) - LB(I)
+      ENDDO
+
+      DO I = 3, N, 7
+        IF (LB(I) .LT. 0.1D0) LB(I) = 0.1D0
       ENDDO
 
 
@@ -232,7 +239,7 @@ C    - COST:   cost function for given parameters
 C
 C***********************************************************************
       IMPLICIT DOUBLE PRECISION (A - Z)
-      INTEGER          N,IDX,NACTP,NROW
+      INTEGER          N,IDX,NACTP,NROW,PRINTINT,IPRINT
       LOGICAL          EXIT
       PARAMETER        (NACTP=7)
       EXTERNAL         EQNS1
@@ -276,16 +283,16 @@ C** Initialise parameters
       HFACTP = X(22:28)
       KFACTP = X(29:35)
       AFACTP = X(36:42)
-      MTPB = X(N-9)
-      MTPK = X(N-8)
-      K1 = X(N-7)
-      K2 = X(N-6)
-      K3 = X(N-5)
-      K4 = X(N-4)
-      K5 = X(N-3)
-      K6 = X(N-2)
-      K7 = X(N-1)
-      K8 = X(N)
+      ! MTPB = X(N-9)
+      ! MTPK = X(N-8)
+      ! K1 = X(N-7)
+      ! K2 = X(N-6)
+      ! K3 = X(N-5)
+      ! K4 = X(N-4)
+      ! K5 = X(N-3)
+      ! K6 = X(N-2)
+      ! K7 = X(N-1)
+      ! K8 = X(N)
 
 C** Initialise variables
       Q1 = Q1I
@@ -304,6 +311,7 @@ C** Initialise variables
       U7 = U7I
 
 C**   Initialize time, print counter, variables array for integrator
+      IPRINT = 0
       EXIT = .FALSE.
       T      = TINITIAL
       VAR(1) = Q1
@@ -328,7 +336,7 @@ C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
       CALL KUTTA(EQNS1, 14, VAR, T, INTEGSTP, ABSERR, RELERR, 0, *5920)
 
 C** Initialise variables for COST
-      IDX = 2
+      IDX = 1
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHAT,GS,GSp,GSpp)
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCHIP,EA,EAp,EApp)
       CALL EVALSPLINE2(TINITIAL,NROW,TT,CCKNEE,FA,FAp,FApp)
@@ -355,10 +363,10 @@ C** Initialise variables for COST
 C** Main loop
 5900  IF(TFINAL.GE.TINITIAL.AND.T+.01D0*INTEGSTP.GE.TFINAL) EXIT=.TRUE.
       IF(TFINAL.LE.TINITIAL.AND.T+.01D0*INTEGSTP.LE.TFINAL) EXIT=.TRUE.
-      ! IF (Q2 .GT. 1.0D-05 .AND. POP2Y .GT. 1.0D-05) EXIT = .TRUE.
+      IF (Q2 .GT. 1.0D-05 .AND. POP2Y .GT. 1.0D-05) EXIT = .TRUE.
 
       IF (EXIT) THEN
-        IDX = IDX - 1
+        IDX = IDX
         HATJ   = HATS   / IDX
         HIPJ   = HIPS   / IDX
         KNEEJ  = KNEES  / IDX
@@ -374,6 +382,11 @@ C** Main loop
         CMXTO = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(5
      &  1) + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*
      &  Z(29)
+        VCMXF = Z(102)*Z(1) + U1 + Z(58)*Z(46)*(U3-U7) + Z(57)*Z(27)*(U3
+     &  -U6-U7) + 0.5D0*Z(56)*Z(42)*(U3-U5-U6-U7) + 0.5D0*Z(62)*Z(38)*(U
+     &  3-U5-U6-U7) - Z(61)*Z(2)*U3 - Z(50)*(Z(103)-Z(59)*U3-Z(59)*U8) -
+     &  Z(55)*Z(31)*(U3-U4-U5-U6-U7) - Z(53)*(Z(104)-Z(60)*U3-Z(60)*U8 -
+     &  Z(60)*U9)
         VCMYF = Z(102)*Z(2) + U2 + Z(61)*Z(1)*U3 + Z(58)*Z(47)*(U3-U7) +
      &  Z(57)*Z(28)*(U3-U6-U7) + 0.5D0*Z(56)*Z(43)*(U3-U5-U6-U7) + 0.5D0
      &  *Z(62)*Z(39)*(U3-U5-U6-U7) - Z(48)*(Z(103)-Z(59)*U3-Z(59)*U8) - 
@@ -399,12 +412,28 @@ C** If VCMYF negative then a negative aerial is mathematically possible
         TCJ = ABS(T - CONTACTTIME)
         TAJ = ABS(TA - AERIALTIME)
         TSWJ = ABS(TSW - SWINGTIME)
-        VCMJ = ABS(((CMXTO - CMXTD) / T) - VCMXI)
+        VCMX = ((CMXTO - CMXTD) + VCMXF*TA) / (T + TA)
+        VCMJ = ABS(VCMX - VCMXI)
   
 !         COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+1000.0D0*TCJ+1000.0D0*TAJ+
 !      &  100.0*VCMJ
-        COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+1000.0D0*TSWJ+100.0D0*VCMJ
+        COST =10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+5000.0D0*TSWJ+1000.0D0*VCMJ
+      !   print*, idx
+      !   print*, hatj,hipj,kneej,anklej,mtpj
+      !   print*, tswj,vcmj
+      !   stop
         RETURN
+      ENDIF
+
+C** Intermediate cost
+      IF (IPRINT .EQ. 0) THEN
+        HATS   = HATS   + (Y(IDX,3)  - Q3*RADtoDEG)**2
+        HIPS   = HIPS   + (Y(IDX,5)  - HANG*RADtoDEG)**2
+        KNEES  = KNEES  + (Y(IDX,7)  - KANG*RADtoDEG)**2
+        ANKLES = ANKLES + (Y(IDX,9)  - AANG*RADtoDEG)**2
+        MTPS   = MTPS   + (Y(IDX,11) - MANG*RADtoDEG)**2
+        IDX = IDX + 1
+        IPRINT = PRINTINT
       ENDIF
 
 C** Integrate      
@@ -413,14 +442,7 @@ C** Integrate
 C** Update torques after integration
       CALL UPDATE(T)
 
-C** Intermediate cost
-      IF (T - Y(IDX,1) .LT. INTEGSTP)
-      HATS   = HATS   + (Y(IDX,3)  - Q3*RADtoDEG)**2
-      HIPS   = HIPS   + (Y(IDX,5)  - HANG*RADtoDEG)**2
-      KNEES  = KNEES  + (Y(IDX,7)  - KANG*RADtoDEG)**2
-      ANKLES = ANKLES + (Y(IDX,9)  - AANG*RADtoDEG)**2
-      MTPS   = MTPS   + (Y(IDX,11) - MANG*RADtoDEG)**2
-      IDX = IDX + 1
+      IPRINT = IPRINT - 1
       GOTO 5900
 
 
