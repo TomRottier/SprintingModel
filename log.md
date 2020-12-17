@@ -1,5 +1,11 @@
 # Log
 
+## 08/12/2020 - 17/12/2020
+
+- Redo some optimsisations
+- Add CoM differences into optimisations (not used)
+- Final write up and commit
+
 ## 27/11/2020 - 08/12/2020
 
 - Repeat optimisations with new cost function

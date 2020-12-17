@@ -93,31 +93,43 @@ legend('hip','knee','ankle','mtp','sw. hip', 'sw. knee', ...
 
 %% Joint angles
 data = datas{4};
+skip = 3;
+time2 = time(1:skip:end); mdata22 = mdata2(1:skip:end,:);
 set(figure(3),'WindowStyle','docked')
+set(groot, 'DefaultLineMarkerSize', 3)
+
 subplot(3,2,1); hold on; cla
-plot(time, data(:,2), '-')
-plot(time, mdata2(:,3), 's')
-title(['HAT angle  rmse: ' num2str(round(hatj, 3))])
+plot(time, data(:,2), 'k-')
+plot(time2, mdata22(:,3), 'ks')
+title(['HAT angle  RMSE: ' num2str(round(hatj, 3))])
+ylim([40 160])
 
 subplot(3,2,2); hold on; cla
-plot(time, data(:,3), '-')
-plot(time, mdata2(:,5), 's')
-title(['hip angle rmse: ' num2str(round(hipj, 3))])
+plot(time, data(:,3), 'k-')
+plot(time2, mdata22(:,5), 'ks')
+title(['Hip angle RMSE: ' num2str(round(hipj, 3))])
+ylim([80 200])
 
 subplot(3,2,3); hold on; cla
-plot(time, data(:,4), '-')
-plot(time, mdata2(:,7), 's')
-title(['knee angle rmse: ' num2str(round(kneej, 3))])
+plot(time, data(:,4), 'k-')
+plot(time2, mdata22(:,7), 'ks')
+title(['Knee angle RMSE: ' num2str(round(kneej, 3))])
+ylim([80 200])
+ylabel('Angle (degrees)')
 
 subplot(3,2,4); hold on; cla
-plot(time, data(:,5), '-')
-plot(time, mdata2(:,9), 's')
-title(['ankle angle rmse: ' num2str(round(anklej, 3))])
+plot(time, data(:,5), 'k-')
+plot(time2, mdata22(:,9), 'ks')
+title(['Ankle angle RMSE: ' num2str(round(anklej, 3))])
+ylim([80 200])
 
 subplot(3,2,5); hold on; cla
-plot(time, data(:,6), '-')
-plot(time, mdata2(:,11), 's')
-title(['mtp angle rmse: ' num2str(round(mtpj, 3))])
+plot(time, data(:,6), 'k-')
+plot(time2, mdata22(:,11), 'ks')
+title(['MTP angle RMSE: ' num2str(round(mtpj, 3))])
+ylim([80 200])
+xlabel('Time (s)')
+legend('model','matching data')
 
 %% CoM
 data = datas{1}(:,end-9:end);

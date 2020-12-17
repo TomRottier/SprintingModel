@@ -1,7 +1,7 @@
 clear; close all; clc
 %% Import data
 % Folders
-p1 = 'Sprinter\';
+p1 = 'Sprinter\10_0\';
 p2 = 'Teamsport\9_2\';
 name1 = 'sprinter'; name2 = 'teamsport';
 
@@ -265,6 +265,25 @@ for i = 1:3
     plot(time1, data1(:,5), 'k-')
     plot(time2, data2(:,5), 'r-')
     ylabel('CC angular velocity (deg/s)')
+    
+    % Flexor torques
+    set(figure(),'WindowStyle','docked');
+    subplot(3,1,1); hold on; cla
+    plot(time1, data1(:,8), 'k-')
+    plot(time2, data2(:,8), 'r-')
+    title([titles{i} ' flexor'])
+    ylabel('torque (N.m')
+    
+    subplot(3,1,2); hold on; cla
+    plot(time1, data1(:,10), 'k-')
+    plot(time2, data2(:,10), 'r-')
+    ylabel('CC angle (deg)')
+    
+    subplot(3,1,3); hold on; cla
+    plot(time1, data1(:,11), 'k-')
+    plot(time2, data2(:,11), 'r-')
+    ylabel('CC angular velocity (deg/s)')
+
 end
 
     

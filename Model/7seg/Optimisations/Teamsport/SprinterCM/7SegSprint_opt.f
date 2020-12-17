@@ -13,10 +13,11 @@ C***********************************************************************
       IMPLICIT         DOUBLE PRECISION (A - Z)
 C** Model variables
       INTEGER          ILOOP,PRINTINT
-      INTEGER          I,J,NACTP,NROW,NCOL
+      INTEGER          I,J,NACTP,NROW,NROW2
       PARAMETER        (NACTP=7)
       CHARACTER        MESSAGE(99)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
+      DIMENSION        TT2(500),CCHIP2(6,500),CCKNEE2(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP),METQP(10),MFTQP(10)
@@ -30,6 +31,7 @@ C** Model variables
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP,METQP,MFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
+      COMMON/SPLCOEF2/ TT2,CCHIP2,CCKNEE2,NROW2
       COMMON/DATAIN  / AERIALTIME,SWINGTIME,VCMXI
 
 C** SPAN variables
@@ -74,7 +76,7 @@ C** Read activation parameters
       CLOSE(UNIT=41)
 
 C** Read spline coefficients for angles and HAT CoM location
-      OPEN(UNIT=42, FILE='angles_coef.csv', STATUS='OLD')
+      OPEN(UNIT=42, FILE='teamsport_coef.csv', STATUS='OLD')
       READ(42,*) NROW
       READ(42,*) (TT(I), I=1, NROW)
       READ(42,*) ((CCHIP(J,I), J=1, 6), I=1, NROW)
@@ -85,6 +87,12 @@ C** Read spline coefficients for angles and HAT CoM location
       READ(43,*)
       READ(43,*) ((CCHAT(J,I), J=1, 6), I=1, NROW)
       CLOSE(UNIT=43)
+      OPEN(UNIT=44, FILE='sprinter_coef.csv', STATUS='OLD')
+      READ(44,*) NROW2
+      READ(44,*) (TT2(I), I=1, NROW2)
+      READ(44,*) ((CCHIP2(J,I), J=1, 6), I=1, NROW2)
+      READ(44,*) ((CCKNEE2(J,I), J=1, 6), I=1, NROW2)
+      CLOSE(UNIT=44)
 
 C** Matching data
       AERIALTIME = 0.132D0
@@ -102,7 +110,7 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       ISEED1 = 7
       ISEED2 = 8
       NS = 24
-      NT = 20
+      NT = 5
       MAXEVL = 100000000
       IPRINT = 1
 
@@ -142,6 +150,14 @@ C***  Set input values of the input/output parameters
       X(22:28) = HFACTP
       X(29:35) = KFACTP
       X(36:42) = AFACTP
+
+      DO I = 1, N
+        UB(I) = 1.2D0*X(I)
+        IF (UB(I) .GT. 1.0D0) UB(I) = 1.0D0
+        LB(I) = 0.8D0*X(I)
+        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
+        VM(I) = UB(I) - LB(I)
+      ENDDO
 
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
@@ -183,13 +199,14 @@ C    - COST:   cost function for given parameters
 C
 C***********************************************************************
       IMPLICIT DOUBLE PRECISION (A - Z)
-      INTEGER          N,IDX,NACTP,NROW
+      INTEGER          N,IDX,NACTP,NROW,NROW2
       LOGICAL          EXIT
       PARAMETER        (NACTP=7)
       EXTERNAL         EQNS1
       DIMENSION        VAR(14)
       DIMENSION        X(N)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
+      DIMENSION        TT2(500),CCHIP2(6,500),CCKNEE2(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP),METQP(10),MFTQP(10)
@@ -218,6 +235,7 @@ C***********************************************************************
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP,METQP,MFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
+      COMMON/SPLCOEF2/ TT2,CCHIP2,CCKNEE2,NROW2
       COMMON/DATAIN  / AERIALTIME,SWINGTIME,VCMXI
 
 C** Initialise parameters
@@ -299,9 +317,9 @@ C** Main loop
         Z(102) = MG*GSp/MT
         Z(103) = Z(59)*EAp
         Z(104) = Z(60)*(EAp-FAp)
-        CMYTO = Q2 + Z(57)*Z(26) + Z(58)*Z(45) + Z(59)*Z(49) + Z(60)*Z(5
-     &  2)+ Z(61)*Z(2) + 0.5D0*Z(56)*Z(41) + 0.5D0*Z(62)*Z(37) - Z(55)*Z
-     &  (30)
+!         CMYTO = Q2 + Z(57)*Z(26) + Z(58)*Z(45) + Z(59)*Z(49) + Z(60)*Z(5
+!      &  2)+ Z(61)*Z(2) + 0.5D0*Z(56)*Z(41) + 0.5D0*Z(62)*Z(37) - Z(55)*Z
+!      &  (30)
         CMXTO = Q1 + Z(57)*Z(25) + Z(58)*Z(44) + Z(59)*Z(48) + Z(60)*Z(5
      &  1) + Z(61)*Z(1) + 0.5D0*Z(56)*Z(40) + 0.5D0*Z(62)*Z(36) - Z(55)*
      &  Z(29)
@@ -315,7 +333,21 @@ C** Main loop
      &  *Z(62)*Z(39)*(U3-U5-U6-U7) - Z(48)*(Z(103)-Z(59)*U3-Z(59)*U8) - 
      &  Z(55)*Z(32)*(U3-U4-U5-U6-U7) - Z(54)*(Z(104)-Z(60)*U3-Z(60)*U8-Z
      &  (60)*U9)
-        DS = CMYTD - CMYTO
+C Determine CoM from team sport technique
+        CALL EVALSPLINE2(T-INTEGSTP,NROW2,TT2,CCHIP2,EA2,EAp2,EApp2)
+        CALL EVALSPLINE2(T-INTEGSTP,NROW2,TT2,CCKNEE2,FA2,FAp2,FApp2)
+        EA2   = EA2  *DEGtoRAD 
+        FA2   = FA2  *DEGtoRAD 
+        POCMSTANCEY = Q2 + Z(66)*Z(26) + Z(67)*Z(45) + 0.5D0*Z(65)*Z(41)
+     &  +0.5D0*Z(68)*Z(37) - Z(64)*Z(30)
+        POGOY = Q2 + L10*Z(45) + L6*Z(41) + L8*Z(26) + GS*Z(2) - L2*Z(30
+     &  )
+        POCMSWINGY = Q2 + L10*SIN(Q3-Q7) + L8*SIN(Q3-Q6-Q7) + L6*SIN(Q3-
+     &  Q5-Q6-Q7) - L2*SIN(Q3-Q4-Q5-Q6-Q7) - (MF*(L7-L8)*SIN(EA2-FA2-Q3)
+     &  +(L10*MF+ME*(L10-L9))*SIN(EA2-Q3))/(ME+MF)
+        CMYTO2 = (POCMSTANCEY*(MA+MB+MC+MD)+POCMSWINGY*(ME+MF)+POGOY*MG)
+     &  / MT
+        DS = CMYTD - CMYTO2
 
 C** Check if quadratic has solution
 C** If VCMYF negative then a negative aerial is mathematically possible

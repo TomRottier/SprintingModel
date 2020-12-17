@@ -102,7 +102,7 @@ C*    Recommended values: NT = 100, NS = even multiple of ncpu
       ISEED1 = 7
       ISEED2 = 8
       NS = 24
-      NT = 5
+      NT = 100
       MAXEVL = 100000000
       IPRINT = 1
 
@@ -143,12 +143,12 @@ C***  Set input values of the input/output parameters
       X(29:35) = KFACTP
       X(36:42) = AFACTP
 
-      DO I = 1, N
-        UB(I) = MIN(1.0D0, 1.150D0*X(I))
-        LB(I) = 0.85D0*X(I)
-        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
-        VM(I) = UB(I) - LB(I)
-      ENDDO
+      ! DO I = 1, N
+      !   UB(I) = MIN(1.0D0, 1.150D0*X(I))
+      !   LB(I) = 0.85D0*X(I)
+      !   IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
+      !   VM(I) = UB(I) - LB(I)
+      ! ENDDO
 
 C**** Call SPAN
       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
