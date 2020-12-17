@@ -28,7 +28,6 @@
 - 7 seg evaluation script
 - AUTOZ test
 
-
 ## 08/11/2020
 
 - New 7 segment model
