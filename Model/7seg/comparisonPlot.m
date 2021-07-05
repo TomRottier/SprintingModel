@@ -41,7 +41,7 @@ RCM = dout.Average.CoM.Data.Avg(:,:,end-1) - origin;
 LCM = dout.Average.CoM.Data.Avg(:,:,end) - origin;
 
 %% Simulation data
-pname = 'C:\Users\tomro\SprintingModel\Model\7Seg\Evaluation\VCM1000\';
+pname = 'C:\Users\tomro\SprintingModel\model3\evaluation\evaluation\';
 fname = '7segSprint.1';
 data = importdata([pname fname], ' ', 8); data = data.data;
 
@@ -97,110 +97,124 @@ for i = 1:1:n
     pause(0.01)
 end
 
-%% Figure
-set(figure(2),'WindowStyle','docked'); hold on; clf
+%% Evaluation
+set(figure(2),'WindowStyle','docked'); clf
+set(figure(2),'DefaultLineLineWidth', 1.5)
+
 L = 5;
-f = [1 30 50 70 92];
+f = [1 30 50 70 88];
+d = 0.7;
 col1 = 'k'; 
 col2 = 'k';
 
 for i = 1:L
+    
     j = f(i);
     
     % Experimental data
-    % [left bottom width height]
-    subplot('Position', [(i-1)/L, 0.51, 1/L , 0.49])
+%     subplot(2,1,1); hold on;
+    subplot('Position', [0.0 0.49 1.0 0.49]); hold on
     set(gca, 'XColor', 'none', 'YColor', 'none')
-    ylim([-.1 1.8]); axis equal
-    hold on
+    axis equal; xlim([-.9 3.8])
     % Draw
     % Right leg
-    line([rTOE(j,2) rMTP(j,2) rHEL(j,2) rAJC(j,2) rKJC(j,2) rHJC(j,2)], ...
+    line([rTOE(j,2) rMTP(j,2) rHEL(j,2) rAJC(j,2) rKJC(j,2) rHJC(j,2)] + (i-1)*d, ...
          [rTOE(j,3) rMTP(j,3) rHEL(j,3) rAJC(j,3) rKJC(j,3) rHJC(j,3)],....
          'Color', col1)
-    line([rMTP(j,2) rAJC(j,2)], [rMTP(j,3) rAJC(j,3)], 'Color', col1)
+    line([rMTP(j,2) rAJC(j,2)] + (i-1)*d,...
+         [rMTP(j,3) rAJC(j,3)], 'Color', col1)
     % Left leg
-    line([lTOE(j,2) lMTP(j,2) lHEL(j,2) lAJC(j,2) lKJC(j,2) lHJC(j,2)], ...
+    line([lTOE(j,2) lMTP(j,2) lHEL(j,2) lAJC(j,2) lKJC(j,2) lHJC(j,2)] + (i-1)*d, ...
          [lTOE(j,3) lMTP(j,3) lHEL(j,3) lAJC(j,3) lKJC(j,3) lHJC(j,3)],....
          'Color', col1)
-    line([lMTP(j,2) lAJC(j,2)], [lMTP(j,3) lAJC(j,3)], 'Color', col1)
+    line([lMTP(j,2) lAJC(j,2)] + (i-1)*d,...
+         [lMTP(j,3) lAJC(j,3)], 'Color', col1)
     % Trunk
-    line([HJC(j,2) LTJC(j,2) UTJC(j,2) APEX(j,2)], ...
+    line([HJC(j,2) LTJC(j,2) UTJC(j,2) APEX(j,2)] + (i-1)*d, ...
          [HJC(j,3) LTJC(j,3) UTJC(j,3) APEX(j,3)], 'Color', col1)
     % Rjght arm
-    line([rSJC(j,2) rEJC(j,2) rWJC(j,2)], ...
+    line([rSJC(j,2) rEJC(j,2) rWJC(j,2)] + (i-1)*d, ...
          [rSJC(j,3) rEJC(j,3) rWJC(j,3)], 'Color', col1)
     % Left arm
-    line([lSJC(j,2) lEJC(j,2) lWJC(j,2)], ...
+    line([lSJC(j,2) lEJC(j,2) lWJC(j,2)] + (i-1)*d, ...
          [lSJC(j,3) lEJC(j,3) lWJC(j,3)], 'Color', col1)
     % Whole-body CoM
-%     plot(hatCM(j,2), hatCM(j,3), 'rx')
-%     plot(RCM(j,2), RCM(j,3), 'rx')
-%     plot(LCM(j,2), LCM(j,3), 'rx')
-    plot(WBCM(j,2), WBCM(j,3), [col1 'o'], 'MarkerSize', 4) 
-    line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
-
-    % Model
-    subplot('Position', [(i-1)/L, 0.01, 1/L, 0.49])
+%     plot(hatCM(j,2) + (i-1)*d, hatCM(j,3), 'rx')
+%     plot(RCM(j,2) + (i-1)*d, RCM(j,3), 'rx')
+%     plot(LCM(j,2) + (i-1)*d, LCM(j,3), 'rx')
+    plot(WBCM(j,2) + (i-1)*d, WBCM(j,3), [col1 'o'], 'MarkerSize', 4) 
+%     line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
+    
+    
+    % Evaluation
+%     subplot(2,1,2); hold on; 
+    subplot('Position', [0.0 0.0 1.0 0.49]); hold on
     set(gca, 'XColor', 'none', 'YColor', 'none')
-    ylim([-.1 1.8]); axis equal
-    hold on
+    axis equal; xlim([-.9 3.8])
     % Draw
-    line(data(j,2:2:16), data(j,3:2:17), 'Color', col2)    % Stance leg and HAT segments
-    line(data(j,[12 18]), data(j,[13 19]), 'Color', col2)  % Swing leg
-    line(data(j,[4 8]), data(j, [5 9]), 'Color', col2)     % Foot
-%     plot(data(j,end-9), data(j,end-8), [col2 'x'])       % HAT CoM
-%     plot(data(j,end-7), data(j,end-6), [col2 'x'])       % Stance leg CoM
-%     plot(data(j,end-5), data(j,end-4), [col2 'x'])       % Swing leg CoM
-    plot(data(j,end-3), data(j,end-2), [col2 'o'], 'MarkerSize', 4)% CoM
-    line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
-
+    line(data(j,2:2:16) + (i-1)*d, data(j,3:2:17), 'Color', col2)    % Stance leg and HAT segments
+    line(data(j,[12 18]) + (i-1)*d, data(j,[13 19]), 'Color', col2)  % Swing leg
+    line(data(j,[4 8]) + (i-1)*d, data(j, [5 9]), 'Color', col2)     % Foot
+%     plot(data(j,end-9) + (i-1)*d, data(j,end-8), [col2 'x'])       % HAT CoM
+%     plot(data(j,end-7) + (i-1)*d, data(j,end-6), [col2 'x'])       % Stance leg CoM
+%     plot(data(j,end-5) + (i-1)*d, data(j,end-4), [col2 'x'])       % Swing leg CoM
+    plot(data(j,end-3) + (i-1)*d, data(j,end-2), [col2 'o'], 'MarkerSize', 4)% CoM
+%     line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
 end
 
 %% Optimisations
-pnames = 'C:\Users\tomro\SprintingModel\Model\7Seg\Optimisations\Sprinter\10_0\';
-pnamet = 'C:\Users\tomro\SprintingModel\Model\7Seg\Optimisations\Teamsport\9_2\';
+pnames = 'C:\Users\tomro\SprintingModel\model3\optimisation\sprinter\10_0\';
+pnamet = 'C:\Users\tomro\SprintingModel\model3\optimisation\college\9_1\';
 fname = '7segSprint.1';
 datas = importdata([pnames fname], ' ', 8); datas = datas.data;
 datat = importdata([pnamet fname], ' ', 8); datat = datat.data;
 
-set(figure(),'WindowStyle','docked'); hold on; clf
+% Simulation data relative to toe
+% datas(:,2:2:end) = datas(:,2:2:end) - datas(1,4);
+% datat(:,3:2:end) = datat(:,3:2:end) - datat(1,5);
+
+set(figure(3),'WindowStyle','docked'); clf
+set(figure(3),'DefaultLineLineWidth', 1.5)
+
 L = 5;
-f = [1 30 50 70 89];
+f = [1 30 50 70 86];
+d = 0.7;
 col1 = 'k'; 
 col2 = 'k';
 
 for i = 1:L
+    
     j = f(i);
     
     % Sprinter
-    % [left bottom width height]
-    subplot('Position', [(i-1)/L, 0.51, 1/L , 0.49])
+%     subplot(2,1,1); hold on;
+    subplot('Position', [0.0 0.49 1.0 0.49]); hold on
     set(gca, 'XColor', 'none', 'YColor', 'none')
-    ylim([-.1 1.8]); axis equal
-    hold on
+    axis equal; xlim([-.9 3.8])
     % Draw
-    line(datas(j,2:2:16), datas(j,3:2:17), 'Color', col2)    % Stance leg and HAT segments
-    line(datas(j,[12 18]), datas(j,[13 19]), 'Color', col2)  % Swing leg
-    line(datas(j,[4 8]), datas(j, [5 9]), 'Color', col2)     % Foot
-%     plot(datas(j,end-9), datas(j,end-8), [col2 'x'])       % HAT CoM
-%     plot(datas(j,end-7), datas(j,end-6), [col2 'x'])       % Stance leg CoM
-%     plot(datas(j,end-5), datas(j,end-4), [col2 'x'])       % Swing leg CoM
-    plot(datas(j,end-3), datas(j,end-2), [col2 'o'], 'MarkerSize', 4)% CoM
-    line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
-
+    line(datas(j,2:2:16) + (i-1)*d, datas(j,3:2:17), 'Color', col2)    % Stance leg and HAT segments
+    line(datas(j,[12 18])+ (i-1)*d, datas(j,[13 19]), 'Color', col2)  % Swing leg
+    line(datas(j,[4 8])+ (i-1)*d, datas(j, [5 9]), 'Color', col2)     % Foot
+%     plot(datas(j,end-9) + (i-1)*d, datas(j,end-8), [col2 'x'])       % HAT CoM
+%     plot(datas(j,end-7) + (i-1)*d, datas(j,end-6), [col2 'x'])       % Stance leg CoM
+%     plot(datas(j,end-5) + (i-1)*d, datas(j,end-4), [col2 'x'])       % Swing leg CoM
+    plot(datas(j,end-3) + (i-1)*d, datas(j,end-2), [col2 'o'], 'MarkerSize', 4)% CoM
+%     line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
+    
+    
     % Teamsport
-    subplot('Position', [(i-1)/L, 0.01, 1/L, 0.49])
+%     subplot(2,1,2); hold on; 
+    subplot('Position', [0.0 0.0 1.0 0.49]); hold on
     set(gca, 'XColor', 'none', 'YColor', 'none')
-    ylim([-.1 1.8]); axis equal
-    hold on
+    axis equal; xlim([-.9 3.8])
     % Draw
-    line(datat(j,2:2:16), datat(j,3:2:17), 'Color', col2)    % Stance leg and HAT segments
-    line(datat(j,[12 18]), datat(j,[13 19]), 'Color', col2)  % Swing leg
-    line(datat(j,[4 8]), datat(j, [5 9]), 'Color', col2)     % Foot
-%     plot(datat(j,end-9), datat(j,end-8), [col2 'x'])       % HAT CoM
-%     plot(datat(j,end-7), datat(j,end-6), [col2 'x'])       % Stance leg CoM
-%     plot(datat(j,end-5), datat(j,end-4), [col2 'x'])       % Swing leg CoM
-    plot(datat(j,end-3), datat(j,end-2), [col2 'o'], 'MarkerSize', 4)% CoM
-    line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
+    line(datat(j,2:2:16) + (i-1)*d, datat(j,3:2:17), 'Color', col2)    % Stance leg and HAT segments
+    line(datat(j,[12 18]) + (i-1)*d, datat(j,[13 19]), 'Color', col2)  % Swing leg
+    line(datat(j,[4 8]) + (i-1)*d, datat(j, [5 9]), 'Color', col2)     % Foot
+%     plot(datat(j,end-9) + (i-1)*d, datat(j,end-8), [col2 'x'])       % HAT CoM
+%     plot(datat(j,end-7) + (i-1)*d, datat(j,end-6), [col2 'x'])       % Stance leg CoM
+%     plot(datat(j,end-5) + (i-1)*d, datat(j,end-4), [col2 'x'])       % Swing leg CoM
+    plot(datat(j,end-3) + (i-1)*d, datat(j,end-2), [col2 'o'], 'MarkerSize', 4)% CoM
+%     line(xlim, [0 0], 'Color', 'k', 'LineWidth', .8)
 end
+

@@ -37,7 +37,7 @@ timem = datasm{1}(:,1); times = datass{1}(:,1); timet = datast{1}(:,1);
 nm = length(timem); ns = length(times); nt = length(timet);
 
 % Line styles
-linm = 'k-'; lins = 'k--'; lint = 'k:'; lind = 'ks';
+linm = 'k-'; lins = 'k-'; lint = 'k:'; lind = 'ks';
 set(groot, 'DefaultLineLineWidth', 1.5);
 
 %% Evaluation
@@ -62,32 +62,32 @@ set(groot, 'DefaultLineMarkerSize', 3)
 subplot(3,2,1); hold on; cla
 plot(timem, data(:,2), linm)
 plot(time2, angdata2(:,3), lind)
-title(['HAT angle  RMSE: ' num2str(round(hatj, 3))])
+title(['HAT angle RMSE: ' num2str(round(hatj, 2)) char(0176)])
 ylim([40 160])
 
 subplot(3,2,2); hold on; cla
 plot(timem, data(:,3), linm)
 plot(time2, angdata2(:,5), lind)
-title(['Hip angle RMSE: ' num2str(round(hipj, 3))])
+title(['Hip angle RMSE: ' num2str(hipj, '%.2f') char(0176)])
 ylim(yrange)
 
 subplot(3,2,3); hold on; cla
 plot(timem, data(:,4), linm)
 plot(time2, angdata2(:,7), lind)
-title(['Knee angle RMSE: ' num2str(round(kneej, 3))])
+title(['Knee angle RMSE: ' num2str(kneej, '%.2f') char(0176)])
 ylim(yrange)
-ylabel('Angle (degrees)')
+ylabel(['Angle (' char(0176) ')'])
 
 subplot(3,2,4); hold on; cla
 plot(timem, data(:,5), linm)
 plot(time2, angdata2(:,9), lind)
-title(['Ankle angle RMSE: ' num2str(round(anklej, 3))])
+title(['Ankle angle RMSE: ' num2str(anklej, '%.2f') char(0176)])
 ylim(yrange)
 
 subplot(3,2,5); hold on; cla
 plot(timem, data(:,6), linm)
 plot(time2, angdata2(:,11), lind)
-title(['MTP angle RMSE: ' num2str(round(mtpj, 3))])
+title(['MTP angle RMSE: ' num2str(mtpj, '%.2f') char(0176)])
 ylim(yrange)
 xlabel('Time (s)')
 % legend('model','matching data')
@@ -171,12 +171,12 @@ plot(timet, datat(:,6), lint)
 %%%%%%%% CC Angular velocity %%%%%%%%
 titles = {'Hip','Knee','Ankle'};
 set(figure(),'WindowStyle','docked')
-for i = 1:3
+for i = 2:3
     datas = datass{i+6}; datat = datast{i+6};
-    subplot(3,1,i); hold on; cla
+    subplot(2,1,i-1); hold on; cla
     plot(times, datas(:,5), lins)
     plot(timet, datat(:,5), lint)
     title(titles{i})
 end
 subplot(3,1,2); ylabel('Angular velocity (deg.s^{-1})')
-subplot(3,1,3); xlabel('Time (s)')
+subplot(3,1,2); xlabel('Time (s)')

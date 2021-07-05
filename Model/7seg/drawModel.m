@@ -11,17 +11,13 @@ set(gca, 'XColor', 'none', 'YColor', 'none')
 axis equal
 for i = 1%:1:n
     cla
+
     line(data_sim(i,2:2:16), data_sim(i,3:2:17), 'Color', 'k')
     line(data_sim(i,[12 18]), data_sim(i,[13 19]), 'Color', 'k')
     line(data_sim(i,[4 8]), data_sim(i,[5 9]), 'Color', 'k')
-
-    % Torque generators
-    plot(data_sim(i,[8 10 12]), data_sim(i,[9 11 13]), 'ko',...
-        'MarkerFaceColor', 'w', 'MarkerSize', 4)
     
-    % MTP spring
-    plot(data_sim(i,4), data_sim(i,5), 'ko',...
-        'MarkerFaceColor', 'w', 'MarkerSize', 4)
+    % Ground
+    line(xlim, [0 0], 'Color', 'k', 'LineStyle', '-', 'LineWidth', 0.5)
         
     % Foot springs
     [xs1, ys1] = spring(data_sim(i,2),data_sim(i,3)-0.04,...
@@ -32,8 +28,22 @@ for i = 1%:1:n
     plot(xs1,ys1, 'k', 'LineWidth', 0.1)
     plot(xs2,ys2, 'k', 'LineWidth', 0.1)
     
-    % Ground
-    line(xlim, [0 0], 'Color', 'k', 'LineStyle', '-', 'LineWidth', 0.5)
+    % Torque generators
+    plot(data_sim(i,[8 10 12]), data_sim(i,[9 11 13]), 'ko',...
+        'MarkerFaceColor', 'w', 'MarkerSize', 5.5, 'LineWidth', 1)
+    
+    % Hip
+    semi_circle(data_sim(i,12)-0.001, data_sim(i,13), 0.02);   
+    
+    % MTP spring
+    plot(data_sim(i,4), data_sim(i,5), 'ko',...
+        'MarkerFaceColor', [.7 .7 .7], 'MarkerSize', 5.5, 'LineWidth', 1)
+    
+    % Angle-driven joints
+    plot(data_sim(i,14), data_sim(i, 15), 'ko',...
+        'MarkerFaceColor', 'k', 'MarkerSize', 5.5, 'LineWidth', 1)
+
+    
     drawnow 
     pause(0.01)
 end
@@ -74,4 +84,16 @@ c = r*b;    % vector of transversal positions
 u1 = R/mod_R; u2 = [-u1(2) u1(1)]; % unitary longitudinal and transversal vectors 
 xs = xa + u1(1)*(mod_R/(2*ne+1)).*ei + u2(1)*c; % horizontal coordinates
 ys = ya + u1(2)*(mod_R/(2*ne+1)).*ei + u2(2)*c; % vertical coordinates
+end
+
+%% Semi-circle plot
+function semi_circle(x,y,r)
+    % Vertical filled semi-circle straight edge pointing right
+    n = 100;    % Number of verticies
+    t = (1:n)./n;
+    xn = x - r*sin(pi*t);
+    yn = y + r*cos(pi*t);
+    
+    fill(xn,yn,'k','LineWidth', 0.5)
+    
 end
