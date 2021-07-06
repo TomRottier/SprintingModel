@@ -1,10 +1,9 @@
 using Plots, DelimitedFiles, Dierckx, MAT
 using Plots:PlotMeasures.px
-
 # Load data
-fnames = "optimisation/sprinter/10_0/7segsprint.1"
-fnamec = "optimisation/college/9_1/7segsprint.1"
-fnamee = "evaluation/evaluation/7segsprint.1"
+fnames = "Model/7segv2/optimisation/sprinter/10_2_new/7segsprint.1"
+fnamec = "Model/7segv2/optimisation/college/9_3_new/7segsprint.1"
+fnamee = "Model/7segv2/evaluation/evaluation_new/7segsprint.1"
 
 fnames = [fnames, fnamec, fnamee]
 

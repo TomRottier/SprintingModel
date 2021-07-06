@@ -1,8 +1,8 @@
 clear; close all; clc
 %% Import data
 % Folders
-p1 = 'Sprinter\10_0\';
-p2 = 'Teamsport\9_2\';
+p1 = 'C:\Users\tomro\SprintingModel\Model\7segv2\optimisation\sprinter\10_2_new\';
+p2 = 'C:\Users\tomro\SprintingModel\Model\7segv2\optimisation\college\9_3_new\';
 name1 = 'sprinter'; name2 = 'teamsport';
 
 datas1 = cell(1,11); datas2 = cell(size(datas1));
@@ -26,16 +26,16 @@ set(groot, 'DefaultLineLineWidth', 1.5)
 
 %% Stride parameters
 % Contact length
-Lc1 = diff(datas1{1}([1 end],end-3)); Lc2 = diff(datas2{1}([1 end],end-3));
+Lc1 = diff(datas1{1}([1 end],26)); Lc2 = diff(datas2{1}([1 end],26));
 
 % Contact time
 Tc1 = time1(end); Tc2 = time2(end);
 
 % ds
-ds1 = diff(datas1{1}([end 1],end-2)); ds2 = diff(datas2{1}([end 1],end-2));
+ds1 = diff(datas1{1}([end 1],27)); ds2 = diff(datas2{1}([end 1],27));
 
 % Aerial time
-vcmy1 = datas1{1}(end,end); vcmy2 = datas2{1}(end,end);
+vcmy1 = datas1{1}(end,29); vcmy2 = datas2{1}(end,29);
 Ta1 = (-vcmy1 - sqrt(vcmy1^2 - 4*-4.905*-ds1)) / -9.81;
 Ta2 = (-vcmy2 - sqrt(vcmy2^2 - 4*-4.905*-ds2)) / -9.81;
 
@@ -44,7 +44,7 @@ Tsw1 = Tc1 + 2*Ta1; Tsw2 = Tc2 + 2*Ta2;
 
 % Horizontal velocity
 % vcmx1 = diff(datas1{1}([1 end],end-1)); vcmx2 = diff(datas2{1}([1 end],end-1));
-vcmxf1 = datas1{1}(end,end-1); vcmxf2 = datas2{1}(end,end-1); 
+vcmxf1 = datas1{1}(end,28); vcmxf2 = datas2{1}(end,28); 
 
 % Step length
 SL1 = Lc1+Ta1*vcmxf1; SL2 = Lc2+Ta2*vcmxf2;

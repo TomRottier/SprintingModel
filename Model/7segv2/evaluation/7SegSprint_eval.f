@@ -144,21 +144,21 @@ C** MTP Spring stiffness and damping
 C** Contact springs stiffness and damping
       LB(N-7) = 0.0D0
       LB(N-6) = 0.0D0
-      LB(N-5) = 1000.0D0
-      LB(N-4) = 1000.0D0
+      LB(N-5) = 0.0D0
+      LB(N-4) = 0.0D0
       LB(N-3) = 0.0D0
       LB(N-2) = 0.0D0
-      LB(N-1) = 10000.0D0
-      LB(N)   = 10000.0D0
+      LB(N-1) = 0.0D0
+      LB(N)   = 0.0D0
 
-      UB(N-7) = 1000.0D0
-      UB(N-6) = 10000.0D0
-      UB(N-5) = 100000.0D0
-      UB(N-4) = 20000.0D0
-      UB(N-3) = 1000.0D0
+      UB(N-7) = 10000.0D0
+      UB(N-6) = 1000.0D0
+      UB(N-5) = 200000.0D0
+      UB(N-4) = 100000.0D0
+      UB(N-3) = 10000.0D0
       UB(N-2) = 1000.0D0
-      UB(N-1) = 500000.0D0
-      UB(N)   = 500000.0D0
+      UB(N-1) = 200000.0D0
+      UB(N)   = 100000.0D0
 
 C***  Set input values of the input/output parameters
       T = 5.0
@@ -186,24 +186,24 @@ C***  Set input values of the input/output parameters
       X(N-1) = K7
       X(N)   = K8
 
-      DO I = N-10, N
+      DO I = 1, N-10
         LB(I) = X(I) - X(I)*0.2D0
         UB(I) = X(I) + X(I)*0.2D0
-!        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
-!        IF (UB(I) .GT. 1.0D0) UB(I) = 1.0D0
+        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
+        IF (UB(I) .GT. 1.0D0) UB(I) = 1.0D0
         VM(I) = UB(I) - LB(I)
       ENDDO
-!
-!      DO I = 42, N
-!        LB(I) = X(I) - X(I)*0.2D0
-!        UB(I) = X(I) + X(I)*0.2D0
-!        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
-!        VM(I) = UB(I) - LB(I)
-!      ENDDO
-!
-!      DO I = 3, N, 7
-!        IF (LB(I) .LT. 0.1D0) LB(I) = 0.1D0
-!      ENDDO
+
+      DO I = 42, N
+        LB(I) = X(I) - X(I)*0.2D0
+        UB(I) = X(I) + X(I)*0.2D0
+        IF (LB(I) .LT. 0.0D0) LB(I) = 0.0D0
+        VM(I) = UB(I) - LB(I)
+      ENDDO
+
+      DO I = 3, N-10, 7
+        IF (LB(I) .LT. 0.1D0) LB(I) = 0.1D0
+      ENDDO
 
 
 !      do i = 1, n
@@ -213,14 +213,14 @@ C***  Set input values of the input/output parameters
 !      stop
 
 C**** Call SPAN
-      CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
-     &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
-     &        FSTAR,XP,NACP,WORK)
+!      CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
+!     &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
+!     &        FSTAR,XP,NACP,WORK)
       
-!      DO I = 1, 1
-!      CALL FCN(N,X,COST)
-!      PRINT*, COST
-!      ENDDO
+      DO I = 1, 1
+      CALL FCN(N,X,COST)
+      PRINT*, COST
+      ENDDO
 
       STOP
 7000  FORMAT(//,99A1,///)
@@ -266,7 +266,7 @@ C***********************************************************************
      &K7,K8,L1,L10,L11,L12,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,MC,MD,ME,MF,MG,
      &MTPB,MTPK
       COMMON/INITIAL / Q1I,Q2I,Q3I,Q4I,Q5I,Q6I,Q7I,U1I,U2I,U3I,U4I,U5I,U
-     &6I,U7I
+     &6I,U7I,POP1XI,POP1YI,POP2XI,POP2YI
       COMMON/VARIBLES/ Q1,Q2,Q3,Q4,Q5,Q6,Q7,U1,U2,U3,U4,U5,U6,U7
       COMMON/ALGBRAIC/ AANG,AANGVEL,AETOR,AFTOR,ATOR,COP,GRF,HANG,HANGVE
      &L,HETOR,HFTOR,HTOR,HZ,KANG,KANGVEL,KECM,KETOR,KFTOR,KTOR,MANG,MANG
@@ -307,6 +307,7 @@ C** Initialise parameters
       K6 = X(N-2)
       K7 = X(N-1)
       K8 = X(N)
+
 
 C** Initialise variables
       Q1 = Q1I
@@ -557,14 +558,14 @@ C** Calculate forces
       POP2Y = Q2 - L2*Z(29)
       VOP2Y = U2 - L2*Z(31)*(U3-U4-U5-U6-U7)
       IF (Q2 .LT. 0.0D0) THEN
-        RY1 = -K3*(Q2-POP1YI) - K4*ABS(Q2-POP1YI)*U2
+        RY1 = -K3*(Q2) - K4*ABS(Q2)*U2
         RX1 = (-K1*(Q1-POP1XI) - K2*U1)*RY1
       ELSE
         RX1 = 0.0D0
         RY1 = 0.0D0
       ENDIF
       IF (POP2Y .LT. 0.0D0) THEN
-        RY2 = -K7*(POP2Y-POP2YI) - K8*ABS(POP2Y-POP2YI)*VOP2Y
+        RY2 = -K7*(POP2Y) - K8*ABS(POP2Y)*VOP2Y
         RX2 = (-K5*(POP2X-POP2XI) - K6*VOP2X)*RY2
       ELSE
         RX2 = 0.0D0

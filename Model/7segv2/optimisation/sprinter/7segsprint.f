@@ -112,7 +112,7 @@ C** Read activation parameters
       CLOSE(UNIT=41)
 
 C** Read spline coefficients for angles and HAT CoM location
-      OPEN(UNIT=42, FILE='angles_coef.csv', STATUS='OLD')
+      OPEN(UNIT=42, FILE='sprinter_coef.csv', STATUS='OLD')
       READ(42,*) NROW
       READ(42,*) (TT(I), I=1, NROW)
       READ(42,*) ((CCHIP(J,I), J=1, 6), I=1, NROW)
@@ -375,14 +375,14 @@ C** Calculate forces
       POP2Y = Q2 - L2*Z(29)
       VOP2Y = U2 - L2*Z(31)*(U3-U4-U5-U6-U7)
       IF (Q2 .LT. 0.0D0) THEN
-        RY1 = -K3*(Q2-POP1YI) - K4*ABS(Q2-POP1YI)*U2
+        RY1 = -K3*(Q2) - K4*ABS(Q2)*U2
         RX1 = (-K1*(Q1-POP1XI) - K2*U1)*RY1
       ELSE
         RX1 = 0.0D0
         RY1 = 0.0D0
       ENDIF
       IF (POP2Y .LT. 0.0D0) THEN
-        RY2 = -K7*(POP2Y-POP2YI) - K8*ABS(POP2Y-POP2YI)*VOP2Y
+        RY2 = -K7*(POP2Y) - K8*ABS(POP2Y)*VOP2Y
         RX2 = (-K5*(POP2X-POP2XI) - K6*VOP2X)*RY2
       ELSE
         RX2 = 0.0D0
