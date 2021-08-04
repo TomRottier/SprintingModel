@@ -1,9 +1,10 @@
 using Plots, DelimitedFiles, Dierckx, MAT
 using Plots:PlotMeasures.px
 # Load data
-fnames = "Model/7segv2/optimisation/sprinter/10_2_new/7segsprint.1"
-fnamec = "Model/7segv2/optimisation/college/9_3_new/7segsprint.1"
-fnamee = "Model/7segv2/evaluation/evaluation_new/7segsprint.1"
+path = "Model/7segv2/"
+fnames = "optimisation/sprinter/10_2_new/7segsprint.1"
+fnamec = "optimisation/college/9_3_new/7segsprint.1"
+fnamee = "evaluation/evaluation_new/7segsprint.1"
 
 fnames = [fnames, fnamec, fnamee]
 
@@ -17,8 +18,12 @@ lw = 3; col = :black
 # Get data and generate GIFs
 for (i, fname) in enumerate(fnames)
     # Read in data
-    data = readdlm(fname, skipstart=8)
-    name = split(fname, "/")[2]
+    data = readdlm(path * fname, skipstart=8)
+    name = split(fname, "/")[end - 2]
+    name == "college" && (title = "sub-elite")
+    name == "sprinter" && (title = "elite")
+    name == "evaluation" && (title = name)
+    name == "evaluation" ? speed = 9.72 : speed = data[1,28]
 
     # Store data in array for later
     all_data[1:size(data, 1),1:size(data, 2),i] = data
@@ -36,10 +41,10 @@ for (i, fname) in enumerate(fnames)
         plot!(data[t,[12,18]], data[t,[13,19]], color=col, lw=lw) # Swing leg
         plot!(data[t,[4,8]], data[t,[5,9]], color=col, lw=lw) # Foot
         plot!([data[t,26]], [data[t,27]], st=:scatter, color=col, mc=:white, shape=:circle, ms=4, msw=2) # CoM
-        # hspan!([0,0], color=col)
+        title!("$(title): $(round(speed, digits=2)) m.s⁻¹")
     end
 
-    gif(anim, "figures/" * name * ".gif", fps=60)
+    gif(anim, path * "figures/" * title * ".gif", fps=60)
 
 end
 
@@ -87,7 +92,7 @@ end
 
 # DPI:pixel width (Elsevier): 300:2244	500:3740	1000:7480
 opt_plt = plot(plots..., layout=(2, 1), margin=0px, dpi=300, size=(2244, 1800))
-savefig(opt_plt, "figures/optimisation.png")
+savefig(opt_plt, path * "figures/optimisation.png")
 
 # Side by side GIFs
 lw = 2
@@ -99,6 +104,7 @@ anim = @animate for t ∈ 1:101
     plot!(all_data_norm[t,[12,18],1], all_data_norm[t,[13,19],1], color=col, lw=lw) # Swing leg
     plot!(all_data_norm[t,[4,8],1], all_data_norm[t,[5,9],1], color=col, lw=lw) # Foot
     plot!([all_data_norm[t,26,1]], [all_data_norm[t,27,1]], st=:scatter, color=col, mc=:white, shape=:circle, ms=4, msw=2) # CoM
+    plot!(title="elite")
 
     plt2 = plot(aspect_ratio=:equal, legend=:none, grid=:off, border=:none)
     xlims!(-0.8, 1.0)
@@ -107,11 +113,12 @@ anim = @animate for t ∈ 1:101
     plot!(all_data_norm[t,[12,18],2], all_data_norm[t,[13,19],2], color=col, lw=lw) # Swing leg
     plot!(all_data_norm[t,[4,8],2], all_data_norm[t,[5,9],2], color=col, lw=lw) # Foot
     plot!([all_data_norm[t,26,2]], [all_data_norm[t,27,2]], st=:scatter, color=col, mc=:white, shape=:circle, ms=4, msw=2) # CoM
+    plot!(title="sub-elite")
 
     plot(plt1, plt2, size=(492, 276), link=:all)
 end
 
-gif(anim, "figures/combined.gif", fps=60)
+gif(anim, path * "figures/combined.gif", fps=60)
 
 ### Evaluation
 # Get experimental data
@@ -184,4 +191,4 @@ end
 
 # DPI:pixel width (Elsevier): 300:2244	500:3740	1000:7480
 eval_plt = plot(exp_plt, sim_plt, layout=(2, 1), margin=0px, dpi=300, size=(2244, 1800))
-savefig(eval_plt, "figures/evaluation.png")
+savefig(eval_plt, path * "figures/evaluation.png")
