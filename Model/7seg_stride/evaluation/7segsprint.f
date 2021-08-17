@@ -154,7 +154,8 @@ C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
 C**   Check exit conditions
 5900  IF( TFINAL.GE.TINITIAL .AND. T+.01D0*INTEGSTP.GE.TFINAL) IPRINT=-7
       IF( TFINAL.LE.TINITIAL .AND. T+.01D0*INTEGSTP.LE.TFINAL) IPRINT=-7
-      IF (STEP2 .AND. (Q2 .LE. 0.0D0 .OR. POP2Y .LE. 0.0D0)) IPRINT = -7
+      IF (.NOT. STEP2 .AND. .NOT. STEP .AND. (Q2 .LE. 0.0D0 .OR. POP2Y .
+     &LE. 0.0D0)) IPRINT = -7
 C** Print      
       IF( IPRINT .LE. 0 ) THEN
         CALL IO(T)

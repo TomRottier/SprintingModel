@@ -2,13 +2,14 @@ using Plots
 using DelimitedFiles
 
 # read in data
-fname = "base\\7segsprint.1"
+# cd("Model//7seg_stride//evaluation//")
+fname = "7segsprint.1"
 data = readdlm(fname, skipstart=8)
-time = data[:,1]
+sim_time = data[:,1]
 
 # plot
 col = :black; lw = 2
-anim = @animate for t ∈ eachindex(time)
+anim = @animate for t ∈ eachindex(sim_time)
     # plot(dpi=100, size=(492, 276), aspect_ratio=:equal, legend=:none, grid=:off, border=:none)
     # plot(dpi=200, size=(492, 276), #=aspect_ratio=:equal,=# legend=:none, grid=:off, border=:none)
     plot(legend=:none, grid=:off, border=:none)
@@ -21,6 +22,6 @@ anim = @animate for t ∈ eachindex(time)
     # title!("$(title): $(round(speed, digits=2)) m.s⁻¹")
 end
 
-gif(anim, "base//plot.gif", fps=60)
+gif(anim, "plot.gif", fps=60)
 
 # plot(time, data[:,28:29], label=["vcmx" "vcmy"], legend=:outertopright)

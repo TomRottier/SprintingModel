@@ -26,7 +26,8 @@ C** Model variables
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP,METQP,MFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
-      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI
+      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI,STRIDETI
+     &ME
 
 C** SPAN variables
       INTEGER N, NEPS
@@ -91,6 +92,7 @@ C** Read matching data
       AERIALTIME = 0.132D0
       SWINGTIME  = 0.374D0
       CONTACTTIME = 0.110D0
+      STRIDETIME = 0.484D0
       VCMXI = U1I
 
 C**   Convert to generalised coordinates
@@ -117,6 +119,9 @@ C** Set upper and lower bounds on parameters
         LB(I+4)  = 0.0D0
         LB(I+5)  = 0.1D0
         LB(I+6)  = 0.0D0
+        LB(I+7)  = 0.0D0
+        LB(I+8)  = 0.1D0
+        LB(I+9)  = 0.0D0
       ENDDO
 
       DO I = 1, N, NACTP
@@ -127,6 +132,9 @@ C** Set upper and lower bounds on parameters
         UB(I+4)  = 0.1D0
         UB(I+5)  = 0.3D0
         UB(I+6)  = 1.0D0
+        UB(I+7)  = 0.1D0
+        UB(I+8)  = 0.3D0
+        UB(I+9)  = 1.0D0
       ENDDO
 
 
@@ -154,14 +162,14 @@ C***  Set input values of the input/output parameters
 !      stop
 
 C**** Call SPAN
-      CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
-     &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
-     &        FSTAR,XP,NACP,WORK)
+c       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
+c      &        ISEED2,T,VM,XOPT,FOPT,NACC,NFCNEV,NOBDS,IER,
+c      &        FSTAR,XP,NACP,WORK)
       
-!      DO I = 1, 1
-!      CALL FCN(N,X,COST)
-!      PRINT*, COST
-!      ENDDO
+      DO I = 1, 1
+      CALL FCN(N,X,COST)
+      PRINT*, COST
+      ENDDO
 
       STOP
 7000  FORMAT(//,99A1,///)
@@ -231,7 +239,8 @@ C***********************************************************************
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP,METQP,MFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
-      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI
+      COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI,STRIDETI
+     &ME
 
 C** Initialise parameters
       HEACTP = X(1:10) 
@@ -305,7 +314,8 @@ C** Initialise variables for COST
 C** Main loop
 5900  IF(TFINAL.GE.TINITIAL.AND.T+.01D0*INTEGSTP.GE.TFINAL) EXIT=.TRUE.
       IF(TFINAL.LE.TINITIAL.AND.T+.01D0*INTEGSTP.LE.TFINAL) EXIT=.TRUE.
-      IF(STEP2 .AND. (Q2 .LE. 0.0D0 .OR. POP2Y .LE. 0.0D0)) EXIT=.TRUE.
+      IF (.NOT. STEP2 .AND. .NOT. STEP .AND. (Q2 .LE. 0.0D0 .OR. POP2Y .
+     &LE. 0.0D0)) EXIT = .TRUE.
 
       IF (EXIT) THEN
         IDX = IDX
@@ -317,13 +327,20 @@ C** Main loop
         PERIODICITY = (Q2-Q2I)**2+(Q3-Q3I)**2+(Q4-Q4I)**2+(Q5-Q5I)**2+(
      &  Q6-Q6I)**2+(Q7-Q7I)**2+(U1-U1I)**2+(U2-U2I)**2+(U3-U3I)**2+(U4-
      &  U4I)**2+(U5-U5I)**2+(U6-U6I)**2+(U7-U7I)**2
+        STRIDEJ = ABS(STRIDETIME-T)
+        ORIENTATION = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ
   
-        COST = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ+PERIODICITY
+        COST = 0.1*ORIENTATION+1000*STRIDEJ
+!        print*, t, stridej, 1000*stridej, orientation, PERIODICITY
         RETURN
       ENDIF
 
 C** Intermediate cost
       IF (IPRINT .EQ. 0) THEN
+        HANG = 3.141592653589793D0 + Q7
+        KANG = 3.141592653589793D0 - Q6
+        AANG = 3.141592653589793D0 + Q5
+        MANG = Q4
         HATS   = HATS   + (Y(IDX,3)  - Q3*RADtoDEG)**2
         HIPS   = HIPS   + (Y(IDX,5)  - HANG*RADtoDEG)**2
         KNEES  = KNEES  + (Y(IDX,7)  - KANG*RADtoDEG)**2
