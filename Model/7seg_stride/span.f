@@ -1,4 +1,4 @@
-C=========================================================================
+c =========================================================================
 C
 C                    SPAN:
 C  Simulated Parallel Annealing by Neighborhood
@@ -607,6 +607,9 @@ C**** Check termination criteria.
 
 C**** Terminate SA if appropriate.
       IF (QUIT) THEN
+            CALL SPAN_COMMUNICATE(ncpu, thiscpu, UB, LB, C, NACP,
+     1 	            work, M, N, X, XOPT, FOPT, VM, NT, NS, F)
+
          DO 420, I = 1, N
             X(I) = XOPT(I)
 420      CONTINUE
@@ -1126,6 +1129,7 @@ C========================================================================
          CALL PRTVEC(VM,N,'FINAL STEP LENGTH')
          WRITE(10,1001) FOPT, NFCNEV, NACC, NOBDS, T, IER
 
+      CALL MPI_FINALIZE(IERROR)
 C Write to output file
       OPEN(UNIT=11, FILE='activation_eval.out', STATUS='UNKNOWN')
       WRITE(11,1002) XOPT(1:N-4)
@@ -1133,7 +1137,6 @@ C Write to output file
 
       endif
 
-      CALL MPI_FINALIZE(IERROR)
 
 1001  FORMAT(/,' OPTIMAL FUNCTION VALUE: ',G20.13
      1       /,' NUMBER OF FUNCTION EVALUATIONS:     ',I10,

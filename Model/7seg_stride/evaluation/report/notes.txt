@@ -1,0 +1,4 @@
+- drop in knee torques seem to be from knee extensor torque generator
+	- cc angular velocity changes from eccentric to concentric (0.201-0.202 for str2.0)
+	- as cc angle gets integrated, a large increase in angle (caused by high eccentric velocities) results in a large decrease in sec angle
+	- large change in sec angle means torque drops sharply

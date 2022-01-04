@@ -115,12 +115,13 @@ C****** Calculate SEC angle ******
       IF (CCANG .GT. THETA) CCANG = THETA
       IF (CCANG .LT. CCANGMIN) CCANG = CCANGMIN
       SECANG = THETA - CCANG
-C If SEC angle = 0 then CC angular velocity = OMEGA      
+C If SEC angle = 0 then CC angular velocity = WMAX to produce zero torque      
       IF (SECANG .LE. 0.0D0) THEN
         TQ = 0.0D0
-        CCANGVEL2 = OMEGA
+        CCANGVEL2 = -TQVP(3)
         SECANGVEL = 0.0D0
         CCANG = CCANG + 0.5D0*(CCANGVEL+CCANGVEL2)*DT
+        CCANGVEL = CCANGVEL2
         RETURN
       ENDIF
 
@@ -132,20 +133,24 @@ C Torque-angle value
       TA  = EXP((-(CCANG - TQP(8))**2) / (2.0D0*TQP(9)**2))
       IF (TA .LT. 0.01D0) TA = 0.01D0
 C If activation = 0, no torque produced therefore no SEC stretch      
-      IF (ACT .LT. 0.01D0) THEN
+      IF (ACT .LT. 0.005D0) THEN
         CCANGVEL = OMEGA
         CCANG = THETA
         SECANG = 0.0D0
         SECANGVEL = 0.0D0
         TQ = 0.0D0
+!        if (abs(t0 - 80.3) .lt. 1e-2) write(*,'(4f7.4)') t,ta,tv,act
+
         RETURN
       ENDIF
 C Torque-velocity value
       TV = TQ / (T0*ACT*TA)
       IF (TV .GT. TQVP(1)) TV = TQVP(1)
       IF (TV .LT. 0.0D0) TV = 0.0D0
+!     if (abs(t0 - 80.3) .lt. 1e-2) write(*,'(4f7.4)') t, ta, tv,act
 C Calculate CCANGVEL      
       CALL TQVEL(TQVP,CCANGVEL2,TV,.FALSE.)
+      IF ( CCANGVEL2 .GT. OMEGA ) CCANGEVL2 = OMEGA
 C CCANGVEL needs opposite sign to torque-velocity function
       CCANGVEL2 = -CCANGVEL2      
 
@@ -512,11 +517,13 @@ C*****************************************************************************
       DOUBLE PRECISION Y(NUMY), F0, F1, F2, Y1, Y2
       DOUBLE PRECISION T, INTEGSTP, ABSERR, RELERR, ERROR, TEST
       DOUBLE PRECISION TFINAL, TT, HC, H, H2, H3, H6, H8
-      COMMON/CKUTTA/   F0(100),F1(100),F2(100),Y1(100),Y2(100)
+      dimension        F0(100),F1(100),F2(100),Y1(100),Y2(100)
+c      COMMON/CKUTTA/   F0(100),F1(100),F2(100),Y1(100),Y2(100)
       ! DATA             HC, NUMCUTS / 0.0D0, 20 /
 
       HC = 0.0D0
       NUMCUTS = 20
+
 C**   If COM=0, call EQNS subroutine and return.
       IF( COM .EQ. 0) THEN
         CALL EQNS(T, Y, F0, 1)

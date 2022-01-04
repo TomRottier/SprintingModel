@@ -69,7 +69,7 @@ C**   Read values of constants from input file
       READ(20,7010,END=7100,ERR=7101) FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,
      &K2,K3,K4,K5,K6,K7,K8,L1,L10,L11,L12,L2,L3,L4,L5,L6,L7,L8,L9,MA,MB,
      &MC,MD,ME,MF,MG,MTPB,MTPK,POP1XI,POP2XI
-
+      
 C**   Read the initial value of each variable from input file
       READ(20,7010,END=7100,ERR=7101) Q1,Q2,Q3,Q4,Q5,Q6,Q7,U1,U2,U3,U4,U
      &5,U6,U7
@@ -155,7 +155,8 @@ C**   Check exit conditions
 5900  IF( TFINAL.GE.TINITIAL .AND. T+.01D0*INTEGSTP.GE.TFINAL) IPRINT=-7
       IF( TFINAL.LE.TINITIAL .AND. T+.01D0*INTEGSTP.LE.TFINAL) IPRINT=-7
       IF (.NOT. STEP2 .AND. .NOT. STEP .AND. (Q2 .LE. 0.0D0 .OR. POP2Y .
-     &LE. 0.0D0)) IPRINT = -7
+     &LE. 0.0D0 .OR. POCMY .LE. CMYTD)) IPRINT = -7
+
 C** Print      
       IF( IPRINT .LE. 0 ) THEN
         CALL IO(T)
@@ -242,7 +243,8 @@ C**   Inform user of input and output filename(s)
      &X',13X,'RY',13X,'VRX',12X,'VRY',11X,'HTOR',11X,'KTOR',11X,'ATOR',1
      &1X,'MTOR',11X,'SHTOR',10X,'SKTOR',/,7X,'(S)',12X,'(N)',12X,'(N)',1
      &0X,'(UNITS)',8X,'(UNITS)',9X,'(N/M)',10X,'(N/M)',10X,'(N/M)',10X,'
-     &(N/M)',10X,'(N/M)',10X,'(N/M)',/)
+     &(N/M)',10X,'(N/M)',10X,'(N/M)',10X, 'HPASS', 10x, 'KPASS', 10X, 'A
+     &PASS',/)
 6024  FORMAT(1X,'FILE: 7segsprint.4 ',//1X,'*** ',99A1,///,8X,'T',13X,'Q
      &3',12X,'HANG',11X,'KANG',11X,'AANG',11X,'MANG',11X,'SHANG',10X,'SK
      &ANG',11X,'U3',11X,'HANGVEL',8X,'KANGVEL',8X,'AANGVEL',8X,'MANGVEL'
@@ -952,7 +954,8 @@ C**********************************************************************
      &P2X,VOP2Y
       COMMON/MISCLLNS/ PI,DEGtoRAD,RADtoDEG,Z(435),COEF(7,7),RHS(7)
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
-
+      common/passtrqs/ hpass,kpass,apass
+      
 C**   Evaluate output quantities
       RX = RX1 + RX2
       RY = RY1 + RY2
@@ -1333,7 +1336,8 @@ C**   Write output to screen and to output file(s)
       WRITE(22,6020) T,Q1,Q2,(Q3*RADtoDEG),(Q4*RADtoDEG),(Q5*RADtoDEG),(
      &Q6*RADtoDEG),(Q7*RADtoDEG),U1,U2,(U3*RADtoDEG),(U4*RADtoDEG),(U5*R
      &ADtoDEG),(U6*DEGtoRAD),(U7*RADtoDEG)
-      WRITE(23,6020) T,RX,RY,VRX,VRY,HTOR,KTOR,ATOR,MTOR,SHTOR,SKTOR
+      WRITE(23,6020) T,RX,RY,VRX,VRY,HTOR,KTOR,ATOR,MTOR,SHTOR,SKTOR,
+     &hpass,kpass,apass
       WRITE(24,6020) T,(Q3*RADtoDEG),(HANG*RADtoDEG),(KANG*RADtoDEG),(AA
      &NG*RADtoDEG),(MANG*RADtoDEG),(SHANG*RADtoDEG),(SKANG*RADtoDEG),(U3
      &*RADtoDEG),(HANGVEL*RADtoDEG),(KANGVEL*RADtoDEG),(AANGVEL*RADtoDEG
@@ -1653,6 +1657,7 @@ C***********************************************************************
       COMMON/INTEG   / TINITIAL,TFINAL,INTEGSTP,ABSERR,RELERR,PRINTINT
       COMMON/TQPARAMS/ HETQP,HFTQP,KETQP,KFTQP,AETQP,AFTQP,METQP,MFTQP
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
+      common/passtrqs/ hpass,kpass,apass
 
       HANG = 3.141592653589793D0 + Q7
       KANG = 3.141592653589793D0 - Q6
@@ -1680,9 +1685,22 @@ C***********************************************************************
 !       CALL MUSCLEMODEL(T,MFTQP(1:9),AFACTP,MFTQP(10),MANG,MANGVEL,MFTOR,
 !      &MFSECANG,MFSECANGVEL,MFCCANG,MFCCANGVEL,INTEGSTP,2)
 
-      HTOR = HETOR - HFTOR
-      KTOR = KETOR - KFTOR
-      ATOR = AETOR - AFTOR 
+C Passive torques
+      hpass = exp(1.4655d0 - 0.0034d0*radtodeg*(pi - kang) - 0.075d0*rad
+     &todeg*(pi - hang)) - exp(1.3403d0 - 0.0226d0*radtodeg*(pi - kang) 
+     &+ 0.0305d0*radtodeg*(pi - hang)) + 8.072d0
+      kpass = exp(1.8d0 - 0.046d0*radtodeg*(aang - (pi/2)) - 0.0352d0*ra
+     &dtodeg*(pi - kang) + 0.0217d0*radtodeg*(pi - hang)) - exp(-3.971d0 
+     &- 0.0004d0*radtodeg*(aang - (pi/2)) + 0.0495d0*radtodeg*(pi - kang
+     &) - 0.0128d0*radtodeg*(pi - hang)) - 4.82d0 + exp(2.22d0 - 0.15*ra
+     &dtodeg*(pi - kang))
+      apass = exp(2.1016d0 - 0.0843d0*radtodeg*(aang - (pi/2)) - 0.0176d
+     &0*radtodeg*(pi - kang)) - exp(-7.9763d0 + 0.1949d0*radtodeg*(aang 
+     &- (pi/2)) + 0.0008d0*radtodeg*(pi - kang)) - 1.792d0
+
+      HTOR = HETOR - HFTOR - hpass
+      KTOR = KETOR - KFTOR - kpass
+      ATOR = AETOR - AFTOR + apass
       ! MTOR = METOR - MFTOR
       MTOR = MTPK*(3.141592653589793D0-MANG) - MTPB*MANGVEL
 

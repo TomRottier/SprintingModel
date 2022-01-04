@@ -8,7 +8,7 @@ C***********************************************************************
       IMPLICIT         DOUBLE PRECISION (A - Z)
 C** Model variables
       INTEGER          ILOOP,PRINTINT
-      INTEGER          I,J,NACTP,NROW,NCOL
+      INTEGER          I,J,NACTP,NROW,NCOL,NDATIN
       PARAMETER        (NACTP=10)
       CHARACTER        MESSAGE(99)
       DIMENSION        Y(5000,11)
@@ -27,7 +27,7 @@ C** Model variables
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
       COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI,STRIDETI
-     &ME
+     &ME,NDATIN
 
 C** SPAN variables
       INTEGER N, NEPS
@@ -85,9 +85,9 @@ C** Read spline coefficients for angles and HAT CoM location
 
 C** Read matching data
       OPEN(UNIT=44, FILE='matchingData2.csv', STATUS='OLD')
-      READ(44,*) NROW, NCOL
+      READ(44,*) NDATIN, NCOL
       READ(44,*)
-      READ(44,*, ERR=7410) ((Y(I,J), J=1, NCOL), I=1, NROW)
+      READ(44,*, ERR=7410) ((Y(I,J), J=1, NCOL), I=1, NDATIN)
       CLOSE(UNIT=44)
       AERIALTIME = 0.132D0
       SWINGTIME  = 0.374D0
@@ -101,12 +101,12 @@ C**   Convert to generalised coordinates
 C**   Set input parameters for SPAN
 C*    Recommended values: NT = 100, NS = even multiple of ncpu
       MAX = .FALSE.
-      EPS = 1.0D-03
+      EPS = 1.0D-00
       RT = 0.75
       ISEED1 = 3
       ISEED2 = 4
-      NS = 24
-      NT = 5
+      NS = 4
+      NT = 1
       MAXEVL = 100000000
       IPRINT = 1
 
@@ -125,21 +125,21 @@ C** Set upper and lower bounds on parameters
       ENDDO
 
       DO I = 1, N, NACTP
-        UB(I)    = 1.0D0
-        UB(I+1)  = 0.1D0
-        UB(I+2)  = 0.3D0
-        UB(I+3)  = 1.0D0
-        UB(I+4)  = 0.1D0
-        UB(I+5)  = 0.3D0
-        UB(I+6)  = 1.0D0
-        UB(I+7)  = 0.1D0
-        UB(I+8)  = 0.3D0
-        UB(I+9)  = 1.0D0
+        UB(I)    = 1.2D0
+        UB(I+1)  = 0.3D0
+        UB(I+2)  = 0.5D0
+        UB(I+3)  = 1.2D0
+        UB(I+4)  = 0.3D0
+        UB(I+5)  = 0.5D0
+        UB(I+6)  = 1.2D0 
+        UB(I+7)  = 0.3D0
+        UB(I+8)  = 0.5D0
+        UB(I+9)  = 1.2D0
       ENDDO
 
 
 C***  Set input values of the input/output parameters
-      T = 5.0
+      T = 100.0
 
       DO 20, I = 1, N
          VM(I) = UB(I) - LB(I)
@@ -155,11 +155,11 @@ C***  Set input values of the input/output parameters
       X(51:60) = AFACTP
 
 
-!      do i = 1, n
-!        if ( x(i) .le. lb(i) ) print*, i, "lb"
-!        if ( x(i) .ge. ub(i) ) print*, i, "ub"
-!      enddo
-!      stop
+      do i = 1, n
+        if ( x(i) .le. lb(i) ) x(i) = 0.5d0 * (ub(i) - lb(i))
+        if ( x(i) .ge. ub(i) ) x(i) = 0.5d0 * (ub(i) - lb(i))
+      enddo
+c      stop
 
 C**** Call SPAN
 c       CALL SPAN(N,X,MAX,RT,EPS,NS,NT,NEPS,MAXEVL,LB,UB,C,IPRINT,ISEED1,
@@ -168,6 +168,8 @@ c      &        FSTAR,XP,NACP,WORK)
       
       DO I = 1, 1
       CALL FCN(N,X,COST)
+      PRINT*, COST
+      CALL FCN(N,XOPT,COST)
       PRINT*, COST
       ENDDO
 
@@ -182,7 +184,7 @@ c      &        FSTAR,XP,NACP,WORK)
 7200  FORMAT(//, 8(///, 10(8X, F7.2, /)))
 7210  WRITE(*,*) 'Error reading torque parameters'
       STOP
-7300  FORMAT(//, 6(///, 10(5X, G30.10, /)))
+7300  FORMAT(//, 6(///, 10(5X, D22.15, /)))
 7310  WRITE(*,*) 'Error reading activation parameters'
 7410  WRITE(*,*) 'Error while reading matching data'
       STOP
@@ -201,7 +203,7 @@ C    - COST:   cost function for given parameters
 C
 C***********************************************************************
       IMPLICIT DOUBLE PRECISION (A - Z)
-      INTEGER          N,IDX,NACTP,NROW,PRINTINT,IPRINT,FORCE_IDX
+      INTEGER          N,IDX,NACTP,NROW,PRINTINT,IPRINT,FORCE_IDX,NDATIN
       LOGICAL          EXIT,STEP1,STEP2,STEP
       PARAMETER        (NACTP=10)
       EXTERNAL         EQNS1
@@ -209,7 +211,7 @@ C***********************************************************************
       DIMENSION        X(N),Y(5000,11)
       DIMENSION        TT(500),CCHIP(6,500),CCKNEE(6,500),CCHAT(6,500)
       DIMENSION        HETQP(10),HFTQP(10),KETQP(10),KFTQP(10),AETQP(10)
-      DIMENSION        FORCE(1000,2)
+      DIMENSION        FORCE(1000,2), ANGLES(1000,5)
      &,AFTQP(10),HEACTP(NACTP),HFACTP(NACTP),KEACTP(NACTP),KFACTP(NACTP)
      &,AEACTP(NACTP),AFACTP(NACTP),METQP(10),MFTQP(10)
       COMMON/CONSTNTS/ FOOTANG,G,IA,IB,IC,ID,IE,IF,IG,K1,K2,K3,K4,K5,K6,
@@ -240,7 +242,7 @@ C***********************************************************************
       COMMON/ACTPARAM/ HEACTP,HFACTP,KEACTP,KFACTP,AEACTP,AFACTP
       COMMON/SPLNCOEF/ TT,CCHIP,CCKNEE,CCHAT,NROW
       COMMON/DATAIN  / Y,AERIALTIME,SWINGTIME,CONTACTTIME,VCMXI,STRIDETI
-     &ME
+     &ME,NDATIN
 
 C** Initialise parameters
       HEACTP = X(1:10) 
@@ -294,6 +296,11 @@ C Virtual forces
       VRX = 0.0D0
       VRY = 0.0D0
 
+C Set angles array to all 0
+      DO  I = 1, 1000
+        ANGLES(I,:) = 0.0D0
+      ENDDO
+
 C** Initialise torques for integration
       CALL UPDATE(T)
 
@@ -302,38 +309,18 @@ C**   Initalize numerical integrator with call to EQNS1 at T=TINITIAL
 
 C** Initialise variables for COST
       IDX = 1
-      CMYTD = Q2 + Z(56)*Z(25) + Z(57)*Z(44) + Z(58)*Z(48) + Z(59)*Z(51)
-     & + Z(60)*Z(2) + 0.5D0*Z(55)*Z(40) + 0.5D0*Z(61)*Z(36) - Z(54)*Z(29
-     &)
-      HATS = 0.0D0
-      HIPS = 0.0D0
-      KNEES = 0.0D0
-      ANKLES  = 0.0D0
-      MTPS = 0.0D0
+      CMYTD = Q2 - 0.5D0*(2*(L10*MF+ME*(L10-L9))*SIN(EA-Q3)+2*(L1*MA+L2*
+     &MB+L2*MC+L2*MD+L2*ME+L2*MF+L2*MG)*SIN(Q3-Q4-Q5-Q6-Q7)-2*MG*GS*SIN(
+     &Q3)-2*L12*MF*SIN(EA-FA-Q3)-L3*MB*SIN(FOOTANG+Q3-Q5-Q6-Q7)-2*(L10*M
+     &E+L10*MF+L10*MG+L9*MD)*SIN(Q3-Q7)-2*(L7*MC+L8*MD+L8*ME+L8*MF+L8*MG
+     &)*SIN(Q3-Q6-Q7)-(L4*MB+2*L6*MC+2*L6*MD+2*L6*ME+2*L6*MF+2*L6*MG)*SI
+     &N(Q3-Q5-Q6-Q7))/(MA+MB+MC+MD+ME+MF+MG)
 
 C** Main loop
-5900  IF(TFINAL.GE.TINITIAL.AND.T+.01D0*INTEGSTP.GE.TFINAL) EXIT=.TRUE.
-      IF(TFINAL.LE.TINITIAL.AND.T+.01D0*INTEGSTP.LE.TFINAL) EXIT=.TRUE.
-      IF (.NOT. STEP2 .AND. .NOT. STEP .AND. (Q2 .LE. 0.0D0 .OR. POP2Y .
-     &LE. 0.0D0)) EXIT = .TRUE.
-
-      IF (EXIT) THEN
-        IDX = IDX
-        HATJ   = HATS   / IDX
-        HIPJ   = HIPS   / IDX
-        KNEEJ  = KNEES  / IDX
-        ANKLEJ = ANKLES / IDX
-        MTPJ   = MTPS   / IDX
-        PERIODICITY = (Q2-Q2I)**2+(Q3-Q3I)**2+(Q4-Q4I)**2+(Q5-Q5I)**2+(
-     &  Q6-Q6I)**2+(Q7-Q7I)**2+(U1-U1I)**2+(U2-U2I)**2+(U3-U3I)**2+(U4-
-     &  U4I)**2+(U5-U5I)**2+(U6-U6I)**2+(U7-U7I)**2
-        STRIDEJ = ABS(STRIDETIME-T)
-        ORIENTATION = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+MTPJ
-  
-        COST = 0.1*ORIENTATION+1000*STRIDEJ
-!        print*, t, stridej, 1000*stridej, orientation, PERIODICITY
-        RETURN
-      ENDIF
+!5900  IF(TFINAL.GE.TINITIAL.AND.T+.01D0*INTEGSTP.GE.TFINAL) EXIT=.TRUE.
+!      IF(TFINAL.LE.TINITIAL.AND.T+.01D0*INTEGSTP.LE.TFINAL) EXIT=.TRUE.
+5900   IF (.NOT. STEP2 .AND. .NOT. STEP .AND. (Q2 .LE. 0.0D0 .OR. POP2Y
+     &.LE. 0.0D0 .OR. POCMY .LE. CMYTD)) EXIT = .TRUE.
 
 C** Intermediate cost
       IF (IPRINT .EQ. 0) THEN
@@ -341,19 +328,81 @@ C** Intermediate cost
         KANG = 3.141592653589793D0 - Q6
         AANG = 3.141592653589793D0 + Q5
         MANG = Q4
-        HATS   = HATS   + (Y(IDX,3)  - Q3*RADtoDEG)**2
-        HIPS   = HIPS   + (Y(IDX,5)  - HANG*RADtoDEG)**2
-        KNEES  = KNEES  + (Y(IDX,7)  - KANG*RADtoDEG)**2
-        ANKLES = ANKLES + (Y(IDX,9)  - AANG*RADtoDEG)**2
-        MTPS   = MTPS   + (Y(IDX,11) - MANG*RADtoDEG)**2
+!        HATS   = HATS   + (Y(IDX,3)  - Q3*RADtoDEG)**2
+!        HIPS   = HIPS   + (Y(IDX,5)  - HANG*RADtoDEG)**2
+!        KNEES  = KNEES  + (Y(IDX,7)  - KANG*RADtoDEG)**2
+!        ANKLES = ANKLES + (Y(IDX,9)  - AANG*RADtoDEG)**2
+!        MTPS   = MTPS   + (Y(IDX,11) - MANG*RADtoDEG)**2
+        ANGLES(IDX, 1) = Q3*RADtoDEG
+        ANGLES(IDX, 2) = HANG*RADtoDEG
+        ANGLES(IDX, 3) = KANG*RADtoDEG
+        ANGLES(IDX, 4) = AANG*RADtoDEG
+        ANGLES(IDX, 5) = MANG*RADtoDEG
         IDX = IDX + 1
         IPRINT = PRINTINT
       ENDIF
 
+      IF (EXIT) THEN
+!        IDX = IDX
+!        HATJ   = HATS   / IDX
+!        HIPJ   = HIPS   / IDX
+!        KNEEJ  = KNEES  / IDX
+!        ANKLEJ = ANKLES / IDX
+!        MTPJ   = MTPS   / IDX
+!        PERIODICITY = (Q2-Q2I)**2+(Q3-Q3I)**2+(Q4-Q4I)**2+(Q5-Q5I)**2+(
+!     &  Q6-Q6I)**2+(Q7-Q7I)**2+(U1-U1I)**2+(U2-U2I)**2+(U3-U3I)**2+(U4-
+!     &  U4I)**2+(U5-U5I)**2+(U6-U6I)**2+(U7-U7I)**2
+!        STRIDEJ = ABS(STRIDETIME-T)
+!        ORIENTATION = 10*HATJ+HIPJ+KNEEJ+ANKLEJ+0.1*MTPJ
+!        COST = 0.1*ORIENTATION+1000*STRIDEJ
+        HANG = 3.141592653589793D0 + Q7
+        KANG = 3.141592653589793D0 - Q6
+        AANG = 3.141592653589793D0 + Q5
+        MANG = Q4
+!        HATS   = HATS   + (Y(IDX,3)  - Q3*RADtoDEG)**2
+!        HIPS   = HIPS   + (Y(IDX,5)  - HANG*RADtoDEG)**2
+!        KNEES  = KNEES  + (Y(IDX,7)  - KANG*RADtoDEG)**2
+!        ANKLES = ANKLES + (Y(IDX,9)  - AANG*RADtoDEG)**2
+!        MTPS   = MTPS   + (Y(IDX,11) - MANG*RADtoDEG)**2
+        ANGLES(IDX, 1) = Q3*RADtoDEG
+        ANGLES(IDX, 2) = HANG*RADtoDEG
+        ANGLES(IDX, 3) = KANG*RADtoDEG
+        ANGLES(IDX, 4) = AANG*RADtoDEG
+        ANGLES(IDX, 5) = MANG*RADtoDEG
+
+        HATS = 0.0D0
+        HIPS = 0.0D0
+        KNEES = 0.0D0
+        ANKLES  = 0.0D0
+        MTPS = 0.0D0
+
+        DO I = 1, NDATIN
+          HATS   = HATS   + (Y(I,3)  - ANGLES(I,1))**2
+          HIPS   = HIPS   + (Y(I,5)  - ANGLES(I,2))**2
+          KNEES  = KNEES  + (Y(I,7)  - ANGLES(I,3))**2
+          ANKLES = ANKLES + (Y(I,9)  - ANGLES(I,4))**2
+          MTPS   = MTPS   + (Y(I,11) - ANGLES(I,5))**2
+        ENDDO
+
+        HATJ   = HATS   / NDATIN
+        HIPJ   = HIPS   / NDATIN
+        KNEEJ  = KNEES  / NDATIN
+        ANKLEJ = ANKLES / NDATIN
+        MTPJ   = MTPS   / NDATIN
+
+         COST = HIPJ+KNEEJ+ANKLEJ
+c         print*, hatj,hipj,kneej,anklej
+        RETURN
+      ENDIF
+
+
 C CoM height
-      POCMY = Q2 + Z(56)*Z(25) + Z(57)*Z(44) + Z(58)*Z(48) + Z(59)*Z(51)
-     & + Z(60)*Z(2) + 0.5D0*Z(55)*Z(40) + 0.5D0*Z(61)*Z(36) - Z(54)*Z(29
-     &)
+      POCMY = Q2 - 0.5D0*(2*(L10*MF+ME*(L10-L9))*SIN(EA-Q3)+2*(L1*MA+L2*
+     &MB+L2*MC+L2*MD+L2*ME+L2*MF+L2*MG)*SIN(Q3-Q4-Q5-Q6-Q7)-2*MG*GS*SIN(
+     &Q3)-2*L12*MF*SIN(EA-FA-Q3)-L3*MB*SIN(FOOTANG+Q3-Q5-Q6-Q7)-2*(L10*M
+     &E+L10*MF+L10*MG+L9*MD)*SIN(Q3-Q7)-2*(L7*MC+L8*MD+L8*ME+L8*MF+L8*MG
+     &)*SIN(Q3-Q6-Q7)-(L4*MB+2*L6*MC+2*L6*MD+2*L6*ME+2*L6*MF+2*L6*MG)*SI
+     &N(Q3-Q5-Q6-Q7))/(MA+MB+MC+MD+ME+MF+MG)
 
 
 C Check when second contact occuring
@@ -1343,9 +1392,22 @@ C***********************************************************************
 !       CALL MUSCLEMODEL(T,MFTQP(1:9),AFACTP,MFTQP(10),MANG,MANGVEL,MFTOR,
 !      &MFSECANG,MFSECANGVEL,MFCCANG,MFCCANGVEL,INTEGSTP,2)
 
-      HTOR = HETOR - HFTOR
-      KTOR = KETOR - KFTOR
-      ATOR = AETOR - AFTOR 
+C Passive torques
+      hpass = exp(1.4655d0 - 0.0034d0*radtodeg*(pi - kang) - 0.075d0*rad
+     &todeg*(pi - hang)) - exp(1.3403d0 - 0.0226d0*radtodeg*(pi - kang) 
+     &+ 0.0305d0*radtodeg*(pi - hang)) + 8.072d0
+      kpass = exp(1.8d0 - 0.046d0*radtodeg*(aang - (pi/2)) - 0.0352d0*ra
+     &dtodeg*(pi - kang) + 0.0217d0*radtodeg*(pi - hang)) - exp(-3.971d0 
+     &- 0.0004d0*radtodeg*(aang - (pi/2)) + 0.0495d0*radtodeg*(pi - kang
+     &) - 0.0128d0*radtodeg*(pi - hang)) - 4.82d0 + exp(2.22d0 - 0.15*ra
+     &dtodeg*(pi - kang))
+      apass = exp(2.1016d0 - 0.0843d0*radtodeg*(aang - (pi/2)) - 0.0176d
+     &0*radtodeg*(pi - kang)) - exp(-7.9763d0 + 0.1949d0*radtodeg*(aang 
+     &- (pi/2)) + 0.0008d0*radtodeg*(pi - kang)) - 1.792d0
+
+      HTOR = HETOR - HFTOR - hpass
+      KTOR = KETOR - KFTOR - kpass
+      ATOR = AETOR - AFTOR + apass
       ! MTOR = METOR - MFTOR
       MTOR = MTPK*(3.141592653589793D0-MANG) - MTPB*MANGVEL
 
